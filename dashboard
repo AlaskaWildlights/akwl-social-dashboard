@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alaska Wild Lights — Social Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --dark:#003B4A;--aurora:#00C08B;--icy:#AFE2E3;--glacial:#00ABC8;
+  --golden:#F5A623;--pink:#E8748A;--paper:#FAFAF8;--surface:#FFFFFF;
+  --b0:rgba(0,59,73,0.08);--b1:rgba(0,59,73,0.14);
+  --t1:#003B4A;--t2:#3A6470;--t3:#7A9EA6;
+  --ig:#833AB4;--ig-bg:#F3E8FF;--fb:#1877F2;--fb-bg:#E8F1FF;
+  --ga:#F5A623;--ga-bg:#FFF4E0;--gbg:#E0F9F3;
+  --sh:0 1px 2px rgba(0,59,73,0.06),0 4px 16px rgba(0,59,73,0.07);
+  --rc:18px;--rl:22px;--rm:14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--t1);font-family:Georgia,serif;font-size:15px;line-height:1.6}
+.shell{max-width:1200px;margin:0 auto;padding:0 24px 80px}
+
+/* header */
+header{padding:28px 0 22px;border-bottom:1px solid var(--b1);margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.hd-left h1{font-size:20px;font-weight:bold;color:var(--dark);letter-spacing:-0.01em}
+.hd-left .sub{font-size:12px;color:var(--t3);margin-top:2px;font-style:italic}
+.hd-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#ts{font-size:12px;color:var(--t3);font-style:italic}
+select{font-family:Georgia,serif;font-size:12px;color:var(--dark);background:var(--surface);border:1px solid var(--b1);border-radius:8px;padding:6px 12px;cursor:pointer;outline:none}
+select:focus{border-color:var(--aurora)}
+
+/* nav */
+.nav{display:flex;gap:2px;margin-bottom:24px;background:var(--surface);border:1px solid var(--b1);border-radius:var(--rl);padding:4px;box-shadow:var(--sh);width:fit-content}
+.nb{font-family:Georgia,serif;font-size:12px;font-style:italic;padding:7px 18px;border:none;background:none;color:var(--t3);cursor:pointer;border-radius:calc(var(--rl) - 4px);transition:all 180ms ease}
+.nb:hover{color:var(--dark);background:rgba(0,59,73,0.05)}
+.nb.a{background:var(--dark);color:var(--icy);box-shadow:0 2px 8px rgba(0,59,73,0.22)}
+.nb.a-ig{background:var(--ig);color:#fff}
+.nb.a-fb{background:var(--fb);color:#fff}
+.nb.a-ga{background:var(--dark);color:var(--golden)}
+
+/* section label */
+.sl{font-size:11px;font-weight:bold;letter-spacing:0.10em;text-transform:uppercase;color:var(--t3);margin-bottom:12px;margin-top:24px}
+
+/* insight bar */
+.insight{background:var(--gbg);border-left:3px solid var(--aurora);border-radius:0 var(--rm) var(--rm) 0;padding:12px 16px;margin-bottom:20px;font-size:13px;color:var(--dark);line-height:1.6}
+.insight.warn{background:#FFF4E0;border-color:var(--golden)}
+.insight.alert{background:#FFF0F3;border-color:var(--pink)}
+.insight strong{font-weight:bold}
+
+/* kpi grid */
+.kg{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin-bottom:20px}
+.kpi{background:var(--surface);border:1px solid var(--b0);border-radius:var(--rc);padding:16px 18px;box-shadow:var(--sh);position:relative;overflow:hidden;transition:transform 180ms ease}
+.kpi:hover{transform:translateY(-2px)}
+.kb{position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--rc) var(--rc) 0 0}
+.kpi.ig .kb{background:var(--ig)}.kpi.fb .kb{background:var(--fb)}.kpi.ga .kb{background:var(--ga)}.kpi.aurora .kb{background:var(--aurora)}
+.kl{font-size:10px;font-weight:bold;letter-spacing:0.08em;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
+.kv{font-size:26px;font-weight:bold;color:var(--dark);line-height:1;font-family:Georgia,serif}
+.kd{font-size:11px;margin-top:4px;font-style:italic}
+.up{color:var(--aurora)}.down{color:var(--pink)}.neu{color:var(--t3)}
+
+/* charts */
+.crow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:720px){.crow{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--b0);border-radius:var(--rc);padding:20px 22px;box-shadow:var(--sh)}
+.card.wide{grid-column:1/-1}
+.ct{font-size:11px;font-weight:bold;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:14px}
+.leg{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px}
+.li{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--t2)}
+.dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+/* perf bars */
+.pr{margin-bottom:14px}
+.ph{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px}
+.pl{color:var(--t2);font-style:italic}.pv{color:var(--dark);font-weight:bold}
+.pt{height:7px;background:rgba(0,59,73,0.07);border-radius:99px;overflow:hidden}
+.pf{height:100%;border-radius:99px;transition:width 900ms cubic-bezier(0.22,0.61,0.36,1)}
+
+/* table */
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;font-size:10px;font-weight:bold;letter-spacing:0.08em;text-transform:uppercase;color:var(--t3);padding:8px 10px;border-bottom:1px solid var(--b1)}
+td{padding:9px 10px;border-bottom:1px solid var(--b0);color:var(--dark)}
+tr:last-child td{border-bottom:none}
+tr.hl td{background:rgba(0,192,139,0.05)}
+.bdg{font-size:9px;padding:2px 8px;border-radius:999px;font-weight:bold;letter-spacing:0.05em}
+.b-ig{background:var(--ig-bg);color:var(--ig)}.b-fb{background:var(--fb-bg);color:var(--fb)}.b-new{background:var(--gbg);color:var(--aurora)}
+
+/* gap bars */
+.gr{margin-bottom:16px}
+.gl{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px}
+.gtr{height:9px;background:rgba(0,59,73,0.07);border-radius:99px;overflow:hidden}
+.gf{height:100%;border-radius:99px}
+
+/* loading */
+#loading{display:flex;align-items:center;justify-content:center;min-height:300px;font-size:14px;color:var(--t3);gap:10px;font-style:italic}
+.spin{width:16px;height:16px;border:2px solid var(--b1);border-top-color:var(--aurora);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#panels{display:none}.panel{display:none}.panel.active{display:block}
+.note{background:var(--icy);border-radius:var(--rm);padding:16px 20px;font-size:13px;color:var(--dark);line-height:1.7}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<header>
+  <div class="hd-left">
+    <h1>Alaska Wild Lights</h1>
+    <div class="sub">Social Media Performance Dashboard</div>
+  </div>
+  <div class="hd-right">
+    <select id="range-sel" onchange="applyRange()">
+      <option value="4">Last 4 weeks</option>
+      <option value="8">Last 8 weeks</option>
+      <option value="0">All data</option>
+    </select>
+    <div id="ts">Loading...</div>
+  </div>
+</header>
+
+<div id="loading"><div class="spin"></div> Loading data...</div>
+
+<div id="panels">
+  <nav class="nav">
+    <button class="nb a"    onclick="sp('all',this,'')">Overview</button>
+    <button class="nb"      onclick="sp('ig',this,'ig')">Instagram</button>
+    <button class="nb"      onclick="sp('fb',this,'fb')">Facebook</button>
+    <button class="nb"      onclick="sp('ga',this,'ga')">Analytics</button>
+  </nav>
+
+  <!-- OVERVIEW -->
+  <div id="panel-all" class="panel active">
+    <div class="sl">Last week vs previous week</div>
+    <div class="kg" id="k-all"></div>
+    <div id="insight-all"></div>
+    <div class="crow">
+      <div class="card">
+        <div class="ct">Instagram reach &amp; views</div>
+        <div class="leg"><div class="li"><div class="dot" style="background:var(--ig)"></div>Reach</div><div class="li"><div class="dot" style="background:var(--ig);opacity:.35;outline:1px dashed var(--ig)"></div>Views</div></div>
+        <div style="position:relative;height:200px"><canvas id="c1"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="ct">Engagement rate %</div>
+        <div id="eng-context" style="font-size:11px;font-style:italic;color:var(--t3);margin-bottom:10px"></div>
+        <div style="position:relative;height:185px"><canvas id="c2"></canvas></div>
+      </div>
+    </div>
+    <div class="crow">
+      <div class="card">
+        <div class="ct">Follows growth — IG vs FB</div>
+        <div class="leg"><div class="li"><div class="dot" style="background:var(--ig)"></div>Instagram</div><div class="li"><div class="dot" style="background:var(--fb)"></div>Facebook</div></div>
+        <div style="position:relative;height:200px"><canvas id="c3"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="ct">GA traffic sources</div>
+        <div style="position:relative;height:200px"><canvas id="c4"></canvas></div>
+      </div>
+    </div>
+    <div class="card wide">
+      <div class="ct">Weekly summary</div>
+      <table><thead><tr><th>Week</th><th>IG Views</th><th>IG Reach</th><th>Eng. Rate</th><th>IG Follows</th><th>FB Follows</th><th>FB Visits</th><th>Link Clicks</th><th>vs Prev</th></tr></thead><tbody id="tb"></tbody></table>
+    </div>
+  </div>
+
+  <!-- INSTAGRAM -->
+  <div id="panel-ig" class="panel">
+    <div class="sl">Instagram</div>
+    <div class="kg" id="k-ig"></div>
+    <div id="insight-ig"></div>
+    <div class="crow">
+      <div class="card">
+        <div class="ct">Daily views &amp; reach</div>
+        <div class="leg"><div class="li"><div class="dot" style="background:var(--ig)"></div>Views</div><div class="li"><div class="dot" style="background:var(--ig);opacity:.4;outline:1px dashed var(--ig)"></div>Reach</div></div>
+        <div style="position:relative;height:220px"><canvas id="c5"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="ct">Daily follows &amp; interactions</div>
+        <div class="leg"><div class="li"><div class="dot" style="background:var(--golden)"></div>Follows</div><div class="li"><div class="dot" style="background:var(--pink)"></div>Interactions</div></div>
+        <div style="position:relative;height:220px"><canvas id="c6"></canvas></div>
+      </div>
+    </div>
+    <div class="card wide">
+      <div class="ct">Week performance ranking — reach</div>
+      <div id="pb"></div>
+    </div>
+  </div>
+
+  <!-- FACEBOOK -->
+  <div id="panel-fb" class="panel">
+    <div class="sl">Facebook</div>
+    <div class="kg" id="k-fb"></div>
+    <div id="insight-fb"></div>
+    <div class="card wide" style="margin-bottom:14px">
+      <div class="ct">Daily visits / follows / viewers</div>
+      <div class="leg"><div class="li"><div class="dot" style="background:var(--fb)"></div>Visits</div><div class="li"><div class="dot" style="background:var(--aurora)"></div>Follows</div><div class="li"><div class="dot" style="background:var(--t3)"></div>Viewers</div></div>
+      <div style="position:relative;height:240px"><canvas id="c7"></canvas></div>
+    </div>
+    <div class="note">Facebook data starts Apr 20. Two weeks of history available.<br>TikTok launches July 1 — its tab will appear once CSVs are uploaded.</div>
+  </div>
+
+  <!-- ANALYTICS -->
+  <div id="panel-ga" class="panel">
+    <div class="sl">Google Analytics — Apr 1–28, 2026</div>
+    <div class="kg" id="k-ga"></div>
+    <div id="insight-ga"></div>
+    <div class="crow">
+      <div class="card"><div class="ct">Sessions by source</div><div style="position:relative;height:280px"><canvas id="c8"></canvas></div></div>
+      <div class="card"><div class="ct">Revenue by source</div><div style="position:relative;height:280px"><canvas id="c9"></canvas></div></div>
+    </div>
+    <div class="card wide">
+      <div class="ct">Social traffic gap to goal</div>
+      <p style="font-size:12px;font-style:italic;color:var(--t3);margin-bottom:18px">North star: 30% of sessions from social by Dec 31, 2026.</p>
+      <div id="gw"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const CONFIG={SHEET_ID:"YOUR_SHEET_ID_HERE",WEEKLY_GID:"0",LIVE_DATA:false};
+
+const FULL={
+  weeks:["Mar 30","Apr 06","Apr 13","Apr 20","Apr 27"],
+  wl:["Mar 30-Apr 05","Apr 06-12","Apr 13-19","Apr 20-26","Apr 27-May 03"],
+  igV:[2025,262,117,335,202],igR:[1458,90,52,224,123],
+  igF:[11,12,12,8,4],igVs:[38,32,25,41,13],
+  igI:[41,12,6,2,1],igL:[0,0,0,2,1],
+  igE:[2.81,13.33,11.54,0.89,0.81],
+  fbF:[0,0,0,39,6],fbV:[0,0,0,60,16],fbVw:[0,0,0,19,8],fbI:[0,0,0,3,1],
+  dd:["4/1","4/2","4/3","4/4","4/5","4/6","4/7","4/8","4/9","4/10","4/11","4/12","4/13","4/14","4/15","4/16","4/17","4/18","4/19","4/20","4/21","4/22","4/23","4/24","4/25","4/26","4/27","4/28"],
+  dV:[17,8,19,1812,169,34,9,145,34,22,14,4,27,37,24,4,3,0,0,117,0,86,47,71,71,30,100,102],
+  dR:[7,6,8,1288,149,18,9,24,15,9,7,8,14,7,7,7,3,0,0,76,0,57,36,63,49,24,69,54],
+  dF:[0,1,0,8,2,1,0,4,2,2,3,0,1,3,1,4,0,1,2,0,1,2,1,0,2,1,0,4],
+  dI:[0,0,0,41,0,3,1,2,2,4,0,0,0,1,0,1,1,0,0,0,0,1,0,0,0,1,0,1],
+  fd:["Apr 20","Apr 21","Apr 22","Apr 23","Apr 24","Apr 25","Apr 26","Apr 27","Apr 28"],
+  fV:[0,0,18,14,18,0,10,6,10],fF:[0,0,3,8,3,12,13,3,3],fVw:[0,0,5,6,1,1,6,4,4],
+  gs:["(direct)","google","alaskawildlights.com","alaska-org","explorefairbanks.com","bing","chatgpt.com","m.facebook.com"],
+  gn:[2018,1485,207,129,52,32,18,18],
+  rs:["google","alaskawildlights.com","(direct)","alaska-org","firebirdtours"],
+  rv:[5806,860,500,250,660],
+  tot:4118,igS:43,fbS:34,rev:9076
+};
+
+let D=FULL, charts={};
+const B={dark:"#003B4A",aurora:"#00C08B",icy:"#AFE2E3",glacial:"#00ABC8",golden:"#F5A623",pink:"#E8748A",ig:"#833AB4",fb:"#1877F2",muted:"#7A9EA6"};
+const G="rgba(0,59,73,0.06)";
+Chart.defaults.font.family="Georgia,serif";Chart.defaults.font.size=11;Chart.defaults.color=B.muted;
+
+function bo(x){return Object.assign({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:G},ticks:{color:B.muted,maxRotation:0}},y:{grid:{color:G},ticks:{color:B.muted}}}},x||{})}
+
+function applyRange(){
+  const n=parseInt(document.getElementById("range-sel").value)||0;
+  const slice=n>0?FULL.weeks.slice(-n):FULL.weeks.slice();
+  const i=FULL.weeks.length-slice.length;
+  D={...FULL,weeks:slice,wl:FULL.wl.slice(i),
+    igV:FULL.igV.slice(i),igR:FULL.igR.slice(i),igF:FULL.igF.slice(i),
+    igVs:FULL.igVs.slice(i),igI:FULL.igI.slice(i),igL:FULL.igL.slice(i),
+    igE:FULL.igE.slice(i),fbF:FULL.fbF.slice(i),fbV:FULL.fbV.slice(i),
+    fbVw:FULL.fbVw.slice(i),fbI:FULL.fbI.slice(i)};
+  destroyCharts();render(D);
+}
+
+function destroyCharts(){Object.values(charts).forEach(c=>{if(c)c.destroy()});charts={}}
+
+function insight(id,type,html){
+  const el=document.getElementById(id);
+  if(el)el.innerHTML=`<div class="insight ${type||''}">${html}</div>`;
+}
+
+function generateInsights(D){
+  const lw=D.igV.length-1;
+  const prevR=D.igR[lw-1]||0,currR=D.igR[lw];
+  const prevE=D.igE[lw-1]||0,currE=D.igE[lw];
+  const rDelta=prevR>0?Math.round((currR-prevR)/prevR*100):0;
+  const peakIdx=D.igR.indexOf(Math.max(...D.igR));
+
+  // Overview insight
+  let oType="",oMsg="";
+  if(rDelta<-20){
+    oType="warn";
+    oMsg=`<strong>Reach dropped ${Math.abs(rDelta)}% this week</strong> (${currR} vs ${prevR} prev). This is the key metric to watch — lower reach means fewer people seeing content. Check if any posts were published this week; the Apr 4 spike (1,288 reach) shows a single strong post can move the needle significantly.`;
+  } else if(rDelta>20){
+    oType="";
+    oMsg=`<strong>Reach up ${rDelta}% this week</strong> — good momentum. The engagement rate of ${currE}% reflects how well the audience responded. A rate above 2% is solid for an account at this stage.`;
+  } else {
+    oType="warn";
+    oMsg=`<strong>Reach is flat week-over-week</strong> at ${currR}. With only ${sm(D.igL)} link clicks total this month, the priority is converting reach into profile visits and then to booking page clicks. Caitlin's UTM links in bio are the right move — check GA to see if those sessions are landing.`;
+  }
+  insight("insight-all",oType,oMsg);
+
+  // Engagement context
+  const ec=document.getElementById("eng-context");
+  if(ec){
+    const avg=Math.round(D.igE.reduce((a,b)=>a+b,0)/D.igE.length*100)/100;
+    ec.textContent=`Avg ${avg}% this period. Above 2% = strong for this account size.`;
+  }
+
+  // IG insight
+  let igMsg=`<strong>Best week: ${D.wl[peakIdx]}</strong> with ${D.igR[peakIdx].toLocaleString()} reach. `;
+  if(peakIdx===0||peakIdx===1){igMsg+=`That spike came from a high-performing post early in the period. Replicating that content type is the fastest path to consistent reach.`;}
+  else{igMsg+=`Reach has been trending down since that peak. Posting frequency and content type are the two levers to test.`;}
+  if(sm(D.igL)===0){igMsg+=` <strong>Zero link clicks recorded</strong> — confirm the UTM bio link is live and pointing to the booking page.`;}
+  insight("insight-ig","",igMsg);
+
+  // FB insight
+  const fbTotal=sm(D.fbF)+sm(D.fbV);
+  let fbMsg=`<strong>Facebook launched Apr 20</strong> — only 2 weeks of data. ${sm(D.fbF)} follows and ${sm(D.fbV)} visits in the first two weeks is a baseline, not a verdict. Expect numbers to grow as posting cadence increases.`;
+  insight("insight-fb","",fbMsg);
+
+  // GA insight
+  const socialSess=FULL.igS+FULL.fbS;
+  const socialPct=Math.round(socialSess/FULL.tot*100*10)/10;
+  const needed=Math.round(FULL.tot*0.30)-socialSess;
+  let gaMsg=`Social accounts for <strong>${socialPct}% of sessions</strong> (${socialSess} of ${FULL.tot.toLocaleString()}). To hit the 30% goal, AKWL needs roughly <strong>${needed.toLocaleString()} more social sessions per month</strong>. `;
+  if(FULL.rev>0){gaMsg+=`Google is driving $${(FULL.rv[0]||0).toLocaleString()} of the $${FULL.rev.toLocaleString()} in tracked revenue — social revenue shows $0 because UTMs haven't attributed bookings yet. That changes once Caitlin's UTM links are confirmed in FareHarbor.`;}
+  insight("insight-ga","warn",gaMsg);
+}
+
+function render(D){
+  generateInsights(D);
+  const lw=D.igV.length-1;
+
+  ki("k-all",[
+    {l:"IG Views",v:D.igV[lw].toLocaleString(),c:"ig",d:pd(D.igV[lw],D.igV[lw-1])},
+    {l:"IG Reach",v:D.igR[lw].toLocaleString(),c:"ig",d:pd(D.igR[lw],D.igR[lw-1])},
+    {l:"IG Follows",v:D.igF[lw],c:"ig",d:pd(D.igF[lw],D.igF[lw-1])},
+    {l:"Eng. Rate",v:D.igE[lw]+"%",c:"ig",d:pp(D.igE[lw],D.igE[lw-1])},
+    {l:"FB Visits",v:D.fbV[lw],c:"fb",d:pd(D.fbV[lw],D.fbV[lw-1])},
+    {l:"FB Follows",v:D.fbF[lw],c:"fb",d:pd(D.fbF[lw],D.fbF[lw-1])},
+    {l:"Link Clicks",v:D.igL[lw],c:"aurora",d:pd(D.igL[lw],D.igL[lw-1])},
+    {l:"GA Revenue",v:"$"+FULL.rev.toLocaleString(),c:"ga",d:""}
+  ]);
+  ki("k-ig",[
+    {l:"Total Views",v:sm(D.igV).toLocaleString(),c:"ig"},
+    {l:"Total Reach",v:sm(D.igR).toLocaleString(),c:"ig"},
+    {l:"Total Follows",v:sm(D.igF),c:"ig"},
+    {l:"Profile Visits",v:sm(D.igVs),c:"ig"},
+    {l:"Link Clicks",v:sm(D.igL),c:"ig"},
+    {l:"Peak Reach",v:Math.max(...D.igR).toLocaleString(),c:"ig",d:"wk of "+D.weeks[D.igR.indexOf(Math.max(...D.igR))]}
+  ]);
+  ki("k-fb",[
+    {l:"Total Visits",v:sm(D.fbV),c:"fb"},
+    {l:"Total Viewers",v:sm(D.fbVw),c:"fb"},
+    {l:"Total Follows",v:sm(D.fbF),c:"fb"},
+    {l:"Interactions",v:sm(D.fbI),c:"fb"},
+    {l:"Weeks of data",v:"2",c:"fb",d:"started Apr 20"}
+  ]);
+  ki("k-ga",[
+    {l:"Total Sessions",v:FULL.tot.toLocaleString(),c:"ga"},
+    {l:"Total Revenue",v:"$"+FULL.rev.toLocaleString(),c:"ga"},
+    {l:"IG Sessions",v:FULL.igS,c:"ig",d:pc(FULL.igS,FULL.tot)+"% of total"},
+    {l:"FB Sessions",v:FULL.fbS,c:"fb",d:pc(FULL.fbS,FULL.tot)+"% of total"},
+    {l:"Social % traffic",v:pc(FULL.igS+FULL.fbS,FULL.tot)+"%",c:"ga",d:"goal: 30%"},
+    {l:"Social Revenue",v:"$0",c:"ga",d:"UTMs pending"}
+  ]);
+
+  const mk=(id,cfg)=>{const el=document.getElementById(id);if(!el)return;if(charts[id])charts[id].destroy();charts[id]=new Chart(el,cfg)};
+
+  mk("c1",{type:"line",data:{labels:D.weeks,datasets:[
+    {data:D.igR,borderColor:B.ig,backgroundColor:"rgba(131,58,180,0.07)",tension:0.35,fill:true,pointRadius:4,borderWidth:2},
+    {data:D.igV,borderColor:"rgba(131,58,180,0.32)",borderDash:[5,4],tension:0.35,pointRadius:4,borderWidth:1.5}
+  ]},options:bo()});
+
+  mk("c2",{type:"bar",data:{labels:D.weeks,datasets:[
+    {data:D.igE,backgroundColor:D.igE.map(v=>v>5?B.aurora:v>2?B.golden:B.pink),borderRadius:6,borderSkipped:false}
+  ]},options:bo({scales:{x:{grid:{color:G},ticks:{color:B.muted,maxRotation:0}},y:{grid:{color:G},ticks:{color:B.muted,callback:v=>v+"%"}}}})});
+
+  mk("c3",{type:"bar",data:{labels:D.weeks,datasets:[
+    {data:D.igF,backgroundColor:B.ig,borderRadius:4},
+    {data:D.fbF,backgroundColor:B.fb,borderRadius:4}
+  ]},options:bo()});
+
+  mk("c4",{type:"doughnut",data:{labels:["Direct","Google","Instagram","Facebook","Other"],
+    datasets:[{data:[FULL.tot-FULL.igS-FULL.fbS-1485,1485,FULL.igS,FULL.fbS,239],
+      backgroundColor:[B.muted,B.glacial,B.ig,B.fb,B.icy],borderWidth:0,hoverOffset:6}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"62%",
+      plugins:{legend:{display:true,position:"bottom",labels:{color:B.dark,font:{size:11,family:"Georgia,serif"},boxWidth:8,padding:12}}}}
+  });
+
+  mk("c5",{type:"line",data:{labels:FULL.dd,datasets:[
+    {data:FULL.dV,borderColor:B.ig,backgroundColor:"rgba(131,58,180,0.06)",tension:0.3,fill:true,pointRadius:2,borderWidth:2},
+    {data:FULL.dR,borderColor:"rgba(131,58,180,0.35)",borderDash:[4,3],tension:0.3,pointRadius:2,borderWidth:1.5}
+  ]},options:bo({scales:{x:{grid:{color:G},ticks:{color:B.muted,maxTicksLimit:10,maxRotation:0}},y:{grid:{color:G},ticks:{color:B.muted}}}})});
+
+  mk("c6",{type:"bar",data:{labels:FULL.dd,datasets:[
+    {data:FULL.dF,backgroundColor:B.golden,borderRadius:3},
+    {data:FULL.dI,backgroundColor:B.pink,borderRadius:3}
+  ]},options:bo({scales:{x:{grid:{color:G},ticks:{color:B.muted,maxTicksLimit:10,maxRotation:0}},y:{grid:{color:G},ticks:{color:B.muted}}}})});
+
+  mk("c7",{type:"bar",data:{labels:FULL.fd,datasets:[
+    {data:FULL.fV,backgroundColor:B.fb,borderRadius:4},
+    {data:FULL.fF,backgroundColor:B.aurora,borderRadius:4},
+    {data:FULL.fVw,backgroundColor:B.muted,borderRadius:4}
+  ]},options:bo()});
+
+  mk("c8",{type:"bar",data:{labels:FULL.gs,datasets:[{data:FULL.gn,backgroundColor:B.glacial,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:G},ticks:{color:B.muted}},y:{grid:{display:false},ticks:{color:B.dark,font:{size:11}}}}}});
+
+  mk("c9",{type:"bar",data:{labels:FULL.rs,datasets:[{data:FULL.rv,backgroundColor:B.aurora,borderRadius:4}]},
+    options:bo({scales:{x:{grid:{color:G},ticks:{color:B.muted,font:{size:11}}},y:{grid:{color:G},ticks:{color:B.muted,callback:v=>"$"+v.toLocaleString()}}}})});
+
+  const tb=document.getElementById("tb");tb.innerHTML="";
+  D.wl.forEach((l,i)=>{
+    const last=i===D.wl.length-1;
+    const rDelta=i>0&&D.igR[i-1]>0?Math.round((D.igR[i]-D.igR[i-1])/D.igR[i-1]*100):null;
+    const rTag=rDelta!==null?(rDelta>=0?`<span class="up">+${rDelta}%</span>`:`<span class="down">${rDelta}%</span>`):"—";
+    tb.innerHTML+=`<tr class="${last?"hl":""}">
+      <td>${l}${last?' <span class="bdg b-new">latest</span>':''}</td>
+      <td>${D.igV[i].toLocaleString()}</td><td>${D.igR[i].toLocaleString()}</td>
+      <td>${D.igE[i]}%</td><td>${D.igF[i]}</td><td>${D.fbF[i]}</td>
+      <td>${D.fbV[i]}</td><td>${D.igL[i]}</td><td>${rTag}</td></tr>`;
+  });
+
+  const mx=Math.max(...D.igR),pb=document.getElementById("pb");pb.innerHTML="";
+  D.wl.forEach((l,i)=>{
+    const w=Math.round(D.igR[i]/mx*100),col=w>50?B.aurora:w>20?B.golden:B.pink;
+    pb.innerHTML+=`<div class="pr"><div class="ph"><span class="pl">${l}</span><span class="pv">${D.igR[i].toLocaleString()} reach &middot; ${D.igE[i]}% eng</span></div><div class="pt"><div class="pf" style="width:${w}%;background:${col}"></div></div></div>`;
+  });
+
+  const ss=FULL.igS+FULL.fbS,ssp=Math.round(ss/FULL.tot*100*10)/10,gw=document.getElementById("gw");gw.innerHTML="";
+  [{l:"Social traffic today",s:`${ss} sessions`,p:ssp,c:B.aurora},
+   {l:"Target — Dec 31, 2026",s:"30% of sessions",p:30,c:B.icy},
+   {l:"Instagram",s:`${FULL.igS} sessions`,p:Math.round(FULL.igS/FULL.tot*100*10)/10,c:B.ig},
+   {l:"Facebook",s:`${FULL.fbS} sessions`,p:Math.round(FULL.fbS/FULL.tot*100*10)/10,c:B.fb}
+  ].forEach(g=>{gw.innerHTML+=`<div class="gr"><div class="gl"><span style="color:var(--t2)">${g.l}</span><span style="color:var(--dark);font-weight:bold">${g.s} (${g.p}%)</span></div><div class="gtr"><div class="gf" style="width:${g.p}%;background:${g.c}"></div></div></div>`;});
+
+  document.getElementById("loading").style.display="none";
+  document.getElementById("panels").style.display="block";
+  document.getElementById("ts").textContent=CONFIG.LIVE_DATA?"Live - updates every Monday 9am AK":"Sample data - Apr 2026";
+}
+
+function sp(id,btn,cls){
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  document.getElementById("panel-"+id).classList.add("active");
+  document.querySelectorAll(".nb").forEach(b=>b.className="nb");
+  btn.className="nb a"+(cls?" a-"+cls:"");
+}
+function sm(a){return a.reduce((x,y)=>x+y,0)}
+function pc(a,b){return b>0?Math.round(a/b*100*10)/10:0}
+function pd(c,p){if(!p||p===0)return"";const d=Math.round((c-p)/p*100);return d>=0?`<span class="up">+${d}%</span>`:`<span class="down">${d}%</span>`}
+function pp(c,p){const d=Math.round((c-p)*100)/100;return d>=0?`<span class="up">+${d}pp</span>`:`<span class="down">${d}pp</span>`}
+function ki(id,items){document.getElementById(id).innerHTML=items.map(it=>`<div class="kpi ${it.c||''}"><div class="kb"></div><div class="kl">${it.l}</div><div class="kv">${it.v}</div>${it.d!==undefined?`<div class="kd neu">${it.d||''}</div>`:''}</div>`).join("")}
+
+async function loadData(){
+  if(!CONFIG.LIVE_DATA||CONFIG.SHEET_ID==="YOUR_SHEET_ID_HERE"){render(FULL);return;}
+  try{
+    const r=await fetch(`https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/export?format=csv&gid=${CONFIG.WEEKLY_GID}`);
+    render(parseCSV(await r.text()));
+  }catch(e){render(FULL);}
+}
+
+function parseCSV(csv){
+  const rows=csv.trim().split("\n").map(r=>r.split(",").map(c=>c.replace(/^"|"$/g,"")));
+  const h=rows[0];const data=rows.slice(1).filter(r=>r[0]);
+  function col(n){return h.findIndex(x=>x.toLowerCase().includes(n.toLowerCase()))}
+  const FD=Object.assign({},FULL);
+  FD.weeks=data.map(r=>{const d=new Date(r[0]);return(d.getMonth()+1)+"/"+d.getDate()});
+  FD.wl=data.map(r=>r[1]||r[0]);
+  const m={igR:col("Instagram | Reach"),igV:col("Instagram | Views"),igF:col("Instagram | Follows"),
+    igVs:col("Instagram | Profile"),igL:col("Instagram | Link"),igI:col("Instagram | Interactions"),
+    fbF:col("Facebook | Follows"),fbV:col("Facebook | Visits"),fbVw:col("Facebook | Viewers"),igE:col("Engagement Rate")};
+  Object.keys(m).forEach(k=>{if(m[k]>-1)FD[k]=data.map(r=>k==="igE"?parseFloat(r[m[k]])||0:parseInt(r[m[k]])||0);});
+  return FD;
+}
+loadData();
+</script>
+</body>
+</html>

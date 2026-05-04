@@ -215,7 +215,7 @@ tr.hl td{background:rgba(0,192,139,0.05)}
 </div>
 
 <script>
-const CONFIG={SHEET_ID:"YOUR_SHEET_ID_HERE",WEEKLY_GID:"0",LIVE_DATA:false};
+const CONFIG={SHEET_ID:"e/2PACX-1vTLw61EXsTiDRtlUxEzoWkQxYSw11f3k8pW2u4GyabBbwhOv-WsfqFjtWCQiHVaU89pykLfvCZE4ooF",WEEKLY_GID:"76171221",LIVE_DATA:false};
 
 const FULL={
   weeks:["Mar 30","Apr 06","Apr 13","Apr 20","Apr 27"],

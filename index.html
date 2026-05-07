@@ -243,9 +243,8 @@ tr.hl td{background:rgba(0,192,139,0.05)}
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const CONFIG = {
-  SHEET_ID:   "YOUR_SHEET_ID_HERE",
-  WEEKLY_GID: "0",
-  LIVE_DATA:  false
+  CSV_URL:   "https://docs.google.com/spreadsheets/d/e/2PACX-1vTLw61EXsTiDRtlUxEzoWkQxYSw11f3k8pW2u4GyabBbwhOv-WsfqFjtWCQiHVaU89pykLfvCZE4ooF/pub?gid=1489899994&single=true&output=csv",
+  LIVE_DATA: true
 };
 
 // ── SAMPLE DATA (all metrics: IG + FB fully populated) ────────────────────────
@@ -482,7 +481,7 @@ function render(D){
 
   document.getElementById("loading").style.display="none";
   document.getElementById("panels").style.display="block";
-  document.getElementById("ts").textContent = CONFIG.LIVE_DATA ? "Live — updates every Monday 11am AK" : "Sample data — connect your Sheet in CONFIG";
+  document.getElementById("ts").textContent = "Live — updates every Monday 11am AK";
 }
 
 // ── TAB NAV ───────────────────────────────────────────────────────────────────
@@ -504,17 +503,23 @@ function ki(id,items){
 
 // ── LOAD & PARSE ──────────────────────────────────────────────────────────────
 async function loadData(){
-  if(!CONFIG.LIVE_DATA || CONFIG.SHEET_ID==="YOUR_SHEET_ID_HERE"){
+  if(!CONFIG.LIVE_DATA){
     render(FULL); return;
   }
+  // Use direct CSV_URL if provided, otherwise build from SHEET_ID
+  const url = CONFIG.CSV_URL
+    || `https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/export?format=csv&gid=${CONFIG.WEEKLY_GID}`;
   try{
-    const r   = await fetch(`https://docs.google.com/spreadsheets/d/${CONFIG.SHEET_ID}/export?format=csv&gid=${CONFIG.WEEKLY_GID}`);
+    const r   = await fetch(url);
+    if(!r.ok) throw new Error("HTTP " + r.status);
     const csv = await r.text();
+    if(!csv || csv.trim().length < 10) throw new Error("Empty response");
     FULL = parseSheet(csv);
     D    = {...FULL};
     render(D);
   }catch(e){
     console.warn("Live data failed, using sample:", e);
+    document.getElementById("ts").textContent = "Could not load live data — showing sample";
     render(FULL);
   }
 }

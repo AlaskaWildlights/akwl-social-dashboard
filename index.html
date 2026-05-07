@@ -82,15 +82,18 @@ tr.hl td{background:rgba(0,192,139,0.05)}
 <div class="shell">
 
 <header>
-  <div class="hd-left">
-    <h1>Alaska Wild Lights</h1>
-    <div class="sub">Social Media Performance Dashboard</div>
-  </div>
   <div class="hd-right">
+    <div id="custom-dates" style="display:none; align-items:center; gap:6px;">
+      <input type="date" id="d-start" style="font-family:Georgia,serif; font-size:11px; padding:4px 8px; border-radius:6px; border:1px solid var(--b1); outline:none;">
+      <span style="font-size:11px; color:var(--t3)">to</span>
+      <input type="date" id="d-end" style="font-family:Georgia,serif; font-size:11px; padding:4px 8px; border-radius:6px; border:1px solid var(--b1); outline:none;">
+      <button onclick="applyCustom()" style="background:var(--aurora); color:#fff; border:none; border-radius:6px; padding:5px 12px; cursor:pointer; font-size:11px; font-weight:bold;">GO</button>
+    </div>
     <select id="range-sel" onchange="applyRange()">
       <option value="4">Last 4 weeks</option>
       <option value="8">Last 8 weeks</option>
       <option value="0">All data</option>
+      <option value="custom">Custom Range...</option>
     </select>
     <div id="ts">Loading...</div>
   </div>
@@ -253,6 +256,7 @@ const CONFIG = {
 const SAMPLE = {
   weeks: ["Mar 30","Apr 6","Apr 13","Apr 20","Apr 27","May 4"],
   wl:    ["Mar 30 – Apr 5","Apr 6 – 12","Apr 13 – 19","Apr 20 – 26","Apr 27 – May 3","May 4 – 10"],
+  rawD:  [0, 0, 0, 0, 0, 0],
   // Instagram
   igV:   [2025, 262, 117, 335, 202, 180],
   igR:   [1458,  90,  52, 224, 123, 110],
@@ -281,18 +285,56 @@ let D    = {...SAMPLE};
 const charts = {};
 
 function applyRange(){
-  const n = parseInt(document.getElementById("range-sel").value);
+  const val = document.getElementById("range-sel").value;
+  const cd = document.getElementById("custom-dates");
+
+  if (val === "custom") {
+    cd.style.display = "flex";
+    return; // Espera a que el usuario presione el botón GO
+  } else {
+    cd.style.display = "none";
+  }
+
+  const n = parseInt(val);
   if(n === 0){ D = {...FULL}; }
   else {
-    const sl = n => a => a.slice(-n);
+    const sl = n => a => (a && a.length) ? a.slice(-n) : [];
     D = {...FULL,
-      weeks: sl(n)(FULL.weeks), wl: sl(n)(FULL.wl),
+      weeks: sl(n)(FULL.weeks), wl: sl(n)(FULL.wl), rawD: sl(n)(FULL.rawD),
       igV:sl(n)(FULL.igV), igR:sl(n)(FULL.igR), igF:sl(n)(FULL.igF),
       igVs:sl(n)(FULL.igVs), igL:sl(n)(FULL.igL), igI:sl(n)(FULL.igI), igE:sl(n)(FULL.igE),
       fbF:sl(n)(FULL.fbF), fbV:sl(n)(FULL.fbV), fbVw:sl(n)(FULL.fbVw),
-      fbVi:sl(n)(FULL.fbVi), fbL:sl(n)(FULL.fbL), fbI:sl(n)(FULL.fbI),
+      fbVi:sl(n)(FULL.fbVi), fbL:sl(n)(FULL.fbL), fbI:sl(n)(FULL.fbI)
     };
   }
+  render(D);
+}
+
+function applyCustom(){
+  const sTime = new Date(document.getElementById("d-start").value + "T12:00:00Z").getTime();
+  const eTime = new Date(document.getElementById("d-end").value + "T12:00:00Z").getTime();
+
+  if(isNaN(sTime) || isNaN(eTime)) return alert("Please select both start and end dates.");
+
+  let sIdx = -1, eIdx = -1;
+  for(let i=0; i<FULL.rawD.length; i++) {
+     if(sIdx === -1 && FULL.rawD[i] >= sTime) sIdx = i;
+     if(FULL.rawD[i] <= eTime) eIdx = i;
+  }
+
+  if(sIdx === -1 || eIdx === -1 || sIdx > eIdx) {
+    alert("No data found for this specific date range.");
+    return;
+  }
+
+  const sl = a => (a && a.length) ? a.slice(sIdx, eIdx + 1) : [];
+  D = {...FULL,
+      weeks: sl(FULL.weeks), wl: sl(FULL.wl), rawD: sl(FULL.rawD),
+      igV:sl(FULL.igV), igR:sl(FULL.igR), igF:sl(FULL.igF),
+      igVs:sl(FULL.igVs), igL:sl(FULL.igL), igI:sl(FULL.igI), igE:sl(FULL.igE),
+      fbF:sl(FULL.fbF), fbV:sl(FULL.fbV), fbVw:sl(FULL.fbVw),
+      fbVi:sl(FULL.fbVi), fbL:sl(FULL.fbL), fbI:sl(FULL.fbI)
+  };
   render(D);
 }
 
@@ -537,10 +579,11 @@ function parseSheet(csv){
   const col  = n => h.findIndex(x=>x.toLowerCase().includes(n.toLowerCase()));
 
   const FD = {...SAMPLE};
-  FD.weeks = data.map(r=>{const d=new Date(r[0]);return(d.getMonth()+1)+"/"+d.getDate();});
-  FD.wl    = data.map(r=>r[1]||r[0]);
+  FD.weeks = data.map(r=>{const d=new Date(r[0]);return(d.getMonth()+1)+"/"+d.getDate();});
+  FD.wl    = data.map(r=>r[1]||r[0]);
+  FD.rawD  = data.map(r => new Date(r[0] + "T12:00:00Z").getTime());
 
-  const m = {
+  const m = {
     igV:  col("Instagram | Views"),
     igR:  col("Instagram | Reach"),
     igF:  col("Instagram | Follows"),

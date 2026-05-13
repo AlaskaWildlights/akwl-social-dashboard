@@ -3,61 +3,231 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Alaska Wild Lights — Social Dashboard 2026</title>
+<title>Alaska Wild Lights — Social Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-:root{
-  --dark:#003B4A;--aurora:#00C08B;--icy:#AFE2E3;--glacial:#00ABC8;
-  --golden:#F5A623;--pink:#E8748A;--paper:#FAFAF8;--surface:#FFFFFF;
-  --b0:rgba(0,59,73,0.08);--b1:rgba(0,59,73,0.14);
-  --t1:#003B4A;--t2:#3A6470;--t3:#7A9EA6;
-  --ig:#833AB4;--ig-bg:#F3E8FF;--fb:#1877F2;--fb-bg:#E8F1FF;
-  --tt:#000000;--tt-bg:#F0F0F0;--ga:#F5A623;--gbg:#E0F9F3;
-  --sh:0 1px 2px rgba(0,59,73,0.06),0 4px 16px rgba(0,59,73,0.07);
-  --rc:18px;--rl:22px;--rm:14px;
+:root {
+  --bg: #0D1B2A;
+  --surface: #152238;
+  --surface2: #1B2D45;
+  --border: rgba(175,226,227,0.08);
+  --border-h: rgba(175,226,227,0.15);
+  --t1: #E8F0F2;
+  --t2: #7AB8B0;
+  --t3: #4A7A80;
+  --aurora: #00C08B;
+  --aurora-dim: rgba(0,192,139,0.15);
+  --ig: #C13584;
+  --ig-dim: rgba(193,53,132,0.15);
+  --fb: #4599FF;
+  --fb-dim: rgba(69,153,255,0.15);
+  --tt: #EEEEEE;
+  --tt-dim: rgba(238,238,238,0.1);
+  --up: #00C08B;
+  --down: #FF6B7A;
+  --golden: #F5A623;
+  --rc: 14px;
+  --sh: 0 2px 12px rgba(0,0,0,0.3);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--paper);color:var(--t1);font-family:Georgia,serif;font-size:15px;line-height:1.6}
-.shell{max-width:1280px;margin:0 auto;padding:0 24px 80px}
-header{padding:28px 0 22px;border-bottom:1px solid var(--b1);margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.hd-left h1{font-size:20px;font-weight:bold;color:var(--dark);letter-spacing:-0.01em}
-.hd-left .sub{font-size:12px;color:var(--t3);margin-top:2px;font-style:italic}
-.hd-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-#ts{font-size:12px;color:var(--t3);font-style:italic}
-.badge{background:var(--aurora);color:#fff;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:bold}
-.nav{display:flex;gap:2px;margin-bottom:24px;background:var(--surface);border:1px solid var(--b1);border-radius:var(--rl);padding:4px;box-shadow:var(--sh);width:fit-content;flex-wrap:wrap}
-.nb{font-family:Georgia,serif;font-size:12px;font-style:italic;padding:7px 18px;border:none;background:none;color:var(--t3);cursor:pointer;border-radius:calc(var(--rl) - 4px);transition:all 180ms ease}
-.nb:hover{color:var(--dark);background:rgba(0,59,73,0.05)}
-.nb.a{background:var(--dark);color:var(--icy);box-shadow:0 2px 8px rgba(0,59,73,0.22)}
-.nb.a-ig{background:var(--ig);color:#fff}
-.nb.a-fb{background:var(--fb);color:#fff}
-.nb.a-tt{background:var(--tt);color:#fff}
-.nb.a-ga{background:var(--ga);color:#fff}
-.sl{font-size:11px;font-weight:bold;letter-spacing:0.10em;text-transform:uppercase;color:var(--t3);margin-bottom:12px;margin-top:24px}
-.kg{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:20px}
-.kpi{background:var(--surface);border:1px solid var(--b0);border-radius:var(--rc);padding:16px 18px;box-shadow:var(--sh);position:relative;overflow:hidden;transition:transform 180ms ease}
-.kpi:hover{transform:translateY(-2px)}
-.kb{position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--rc) var(--rc) 0 0}
-.kpi.ig .kb{background:var(--ig)}.kpi.fb .kb{background:var(--fb)}.kpi.tt .kb{background:var(--tt)}.kpi.ga .kb{background:var(--ga)}.kpi.aurora .kb{background:var(--aurora)}
-.kl{font-size:10px;font-weight:bold;letter-spacing:0.08em;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
-.kv{font-size:26px;font-weight:bold;color:var(--dark);line-height:1;font-family:Georgia,serif}
-.kd{font-size:11px;margin-top:4px;font-style:italic}
-.up{color:var(--aurora)}.down{color:var(--pink)}.neu{color:var(--t3)}
-.crow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
-@media(max-width:720px){.crow{grid-template-columns:1fr}}
-.card{background:var(--surface);border:1px solid var(--b0);border-radius:var(--rc);padding:20px 22px;box-shadow:var(--sh)}
-.ct{font-size:11px;font-weight:bold;letter-spacing:0.07em;text-transform:uppercase;color:var(--t3);margin-bottom:14px}
-.ch{height:280px;position:relative;margin-bottom:14px}
-#loading{display:flex;align-items:center;justify-content:center;min-height:300px;font-size:14px;color:var(--t3);gap:10px;font-style:italic}
-.spin{width:16px;height:16px;border:2px solid var(--b1);border-top-color:var(--aurora);border-radius:50%;animation:spin .8s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-#panels{display:block}.panel{display:none}.panel.active{display:block}
-.insight{background:var(--gbg);border-left:3px solid var(--aurora);border-radius:0 var(--rm) var(--rm) 0;padding:12px 16px;margin-bottom:20px;font-size:13px;color:var(--dark);line-height:1.6}
-.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--b0)}
-.stat-cell{text-align:center}
-.stat-label{font-size:11px;font-weight:bold;text-transform:uppercase;color:var(--t3);margin-bottom:4px;letter-spacing:0.05em}
-.stat-val{font-size:20px;font-weight:bold;color:var(--dark)}
-.stat-delta{font-size:11px;margin-top:4px;font-style:italic}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--t1);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.shell { max-width: 1320px; margin: 0 auto; padding: 0 24px 80px; }
+
+/* ── HEADER ─────────────────────────────── */
+header {
+  padding: 32px 0 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 28px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.hd-left h1 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--t1);
+  letter-spacing: -0.01em;
+}
+.hd-left .sub { font-size: 13px; color: var(--t3); margin-top: 4px; }
+.hd-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+#ts { font-size: 12px; color: var(--t3); }
+.badge {
+  background: var(--aurora);
+  color: var(--bg);
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+#status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--aurora);
+  display: inline-block;
+  margin-right: 6px;
+  animation: pulse 2s ease infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── TABS ───────────────────────────────── */
+.nav {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+  box-shadow: var(--sh);
+  width: fit-content;
+  flex-wrap: wrap;
+}
+.nb {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 20px;
+  border: none;
+  background: none;
+  color: var(--t3);
+  cursor: pointer;
+  border-radius: 9px;
+  transition: all 160ms ease;
+}
+.nb:hover { color: var(--t2); background: rgba(175,226,227,0.05); }
+.nb.active { background: var(--aurora); color: var(--bg); font-weight: 700; }
+.nb.active-ig { background: var(--ig); color: #fff; }
+.nb.active-fb { background: var(--fb); color: #fff; }
+.nb.active-tt { background: var(--tt); color: var(--bg); }
+.nb.active-ga { background: var(--golden); color: var(--bg); }
+
+/* ── KPI CARDS ──────────────────────────── */
+.sl {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--t3);
+  margin-bottom: 14px;
+  margin-top: 28px;
+}
+.kg {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rc);
+  padding: 18px 20px;
+  box-shadow: var(--sh);
+  position: relative;
+  overflow: hidden;
+  transition: border-color 160ms;
+}
+.kpi:hover { border-color: var(--border-h); }
+.kb { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.kpi.ig .kb { background: var(--ig); }
+.kpi.fb .kb { background: var(--fb); }
+.kpi.tt .kb { background: var(--tt); }
+.kpi.ga .kb { background: var(--golden); }
+.kpi.aurora .kb { background: var(--aurora); }
+.kl { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); margin-bottom: 8px; }
+.kv { font-size: 28px; font-weight: 700; color: var(--t1); line-height: 1; font-family: 'DM Sans', sans-serif; }
+.kd { font-size: 11px; margin-top: 6px; }
+.up { color: var(--up); }
+.down { color: var(--down); }
+.neu { color: var(--t3); }
+
+/* ── CHART CARDS ────────────────────────── */
+.crow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+@media (max-width: 720px) { .crow { grid-template-columns: 1fr; } }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rc);
+  padding: 22px 24px;
+  box-shadow: var(--sh);
+}
+.ct {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--t3);
+  margin-bottom: 16px;
+}
+.ch { height: 260px; position: relative; }
+
+/* ── LOADING ────────────────────────────── */
+#loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 16px;
+}
+.spin {
+  width: 24px; height: 24px;
+  border: 2px solid var(--border);
+  border-top-color: var(--aurora);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+#load-text { font-size: 13px; color: var(--t3); }
+#error-text { font-size: 13px; color: var(--down); display: none; max-width: 500px; text-align: center; line-height: 1.6; }
+
+/* ── PANELS ─────────────────────────────── */
+#panels { display: none; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ── STAT ROW ───────────────────────────── */
+.stat-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.stat-cell { text-align: center; }
+.stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--t3); margin-bottom: 6px; letter-spacing: 0.06em; }
+.stat-val { font-size: 22px; font-weight: 700; color: var(--t1); }
+.stat-delta { font-size: 11px; margin-top: 4px; }
+
+/* ── INSIGHT ────────────────────────────── */
+.insight {
+  background: var(--aurora-dim);
+  border-left: 3px solid var(--aurora);
+  border-radius: 0 var(--rc) var(--rc) 0;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  color: var(--t2);
+  line-height: 1.6;
+}
 </style>
 </head>
 <body>
@@ -66,169 +236,83 @@ header{padding:28px 0 22px;border-bottom:1px solid var(--b1);margin-bottom:28px;
 <header>
   <div class="hd-left">
     <h1>Alaska Wild Lights</h1>
-    <div class="sub">Weekly Social Report — Week of <span id="wl">May 12, 2026</span></div>
+    <div class="sub">Social Performance Dashboard · <span id="wl">Loading...</span></div>
   </div>
   <div class="hd-right">
-    <div id="ts">Q2 Goal: +1500 followers, ≥6% engagement</div>
+    <span id="ts"><span id="status-dot"></span>Live from Google Sheets</span>
   </div>
 </header>
 
-<div id="loading"><div class="spin"></div> Loading...</div>
+<div id="loading">
+  <div class="spin"></div>
+  <div id="load-text">Fetching data from Google Sheets...</div>
+  <div id="error-text"></div>
+</div>
 
-<div id="panels" style="display:none">
+<div id="panels">
   <nav class="nav">
-    <button class="nb a" onclick="sp('all',this)">Overview</button>
-    <button class="nb" onclick="sp('ig',this)">Instagram</button>
-    <button class="nb" onclick="sp('fb',this)">Facebook</button>
-    <button class="nb" onclick="sp('tt',this)">TikTok</button>
-    <button class="nb" onclick="sp('ga',this)">Analytics</button>
+    <button class="nb active" data-tab="all">Overview</button>
+    <button class="nb" data-tab="ig">Instagram</button>
+    <button class="nb" data-tab="fb">Facebook</button>
+    <button class="nb" data-tab="tt">TikTok</button>
+    <button class="nb" data-tab="ga">Analytics</button>
   </nav>
 
   <!-- OVERVIEW -->
   <div id="panel-all" class="panel active">
-    <div class="sl">Weekly Performance Summary</div>
+    <div class="sl">This Week</div>
     <div class="kg" id="k-all"></div>
     <div class="insight" id="insight-all"></div>
     <div class="crow">
-      <div class="card">
-        <div class="ct">Instagram Reach — Week Over Week</div>
-        <div class="ch"><canvas id="c-ig-reach"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="ct">Engagement Rate by Platform</div>
-        <div class="ch"><canvas id="c-eng"></canvas></div>
-      </div>
+      <div class="card"><div class="ct">Instagram Reach Trend</div><div class="ch"><canvas id="c-ig-reach"></canvas></div></div>
+      <div class="card"><div class="ct">Engagement Rate by Platform</div><div class="ch"><canvas id="c-eng"></canvas></div></div>
     </div>
     <div class="crow">
-      <div class="card">
-        <div class="ct">Weekly Follows — All Platforms</div>
-        <div class="ch"><canvas id="c-follows"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="ct">TikTok Growth Trend</div>
-        <div class="ch"><canvas id="c-tt-trend"></canvas></div>
-      </div>
+      <div class="card"><div class="ct">Weekly Follows — All Platforms</div><div class="ch"><canvas id="c-follows"></canvas></div></div>
+      <div class="card"><div class="ct">TikTok Video Views</div><div class="ch"><canvas id="c-tt-trend"></canvas></div></div>
     </div>
   </div>
 
   <!-- INSTAGRAM -->
   <div id="panel-ig" class="panel">
-    <div class="sl">Instagram Performance</div>
+    <div class="sl">Instagram</div>
     <div class="kg" id="k-ig"></div>
     <div class="insight" id="insight-ig"></div>
     <div class="crow">
-      <div class="card">
-        <div class="ct">Reach & Views — 6 Week Trend</div>
-        <div class="ch"><canvas id="c-ig-all"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="ct">Engagement Rate Trend</div>
-        <div class="ch"><canvas id="c-ig-eng"></canvas></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="ct">This Week Breakdown</div>
-      <div class="stat-row">
-        <div class="stat-cell">
-          <div class="stat-label">Reach</div>
-          <div class="stat-val" id="ig-reach-val">—</div>
-          <div class="stat-delta" id="ig-reach-delta"></div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-label">Views</div>
-          <div class="stat-val" id="ig-views-val">—</div>
-          <div class="stat-delta" id="ig-views-delta"></div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-label">Eng Rate</div>
-          <div class="stat-val" id="ig-eng-val">—</div>
-          <div class="stat-delta" id="ig-eng-delta"></div>
-        </div>
-      </div>
+      <div class="card"><div class="ct">Reach and Views</div><div class="ch"><canvas id="c-ig-all"></canvas></div></div>
+      <div class="card"><div class="ct">Engagement Rate with Target</div><div class="ch"><canvas id="c-ig-eng"></canvas></div></div>
     </div>
   </div>
 
   <!-- FACEBOOK -->
   <div id="panel-fb" class="panel">
-    <div class="sl">Facebook Performance</div>
+    <div class="sl">Facebook</div>
     <div class="kg" id="k-fb"></div>
     <div class="insight" id="insight-fb"></div>
     <div class="crow">
-      <div class="card">
-        <div class="ct">Views & Visits — 6 Week Trend</div>
-        <div class="ch"><canvas id="c-fb-all"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="ct">Follows & Interactions</div>
-        <div class="ch"><canvas id="c-fb-eng"></canvas></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="ct">This Week Breakdown</div>
-      <div class="stat-row">
-        <div class="stat-cell">
-          <div class="stat-label">Views</div>
-          <div class="stat-val" id="fb-views-val">—</div>
-          <div class="stat-delta" id="fb-views-delta"></div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-label">Visits</div>
-          <div class="stat-val" id="fb-visits-val">—</div>
-          <div class="stat-delta" id="fb-visits-delta"></div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-label">Follows</div>
-          <div class="stat-val" id="fb-follows-val">—</div>
-          <div class="stat-delta" id="fb-follows-delta"></div>
-        </div>
-      </div>
+      <div class="card"><div class="ct">Views and Visits</div><div class="ch"><canvas id="c-fb-all"></canvas></div></div>
+      <div class="card"><div class="ct">Follows and Interactions</div><div class="ch"><canvas id="c-fb-eng"></canvas></div></div>
     </div>
   </div>
 
   <!-- TIKTOK -->
   <div id="panel-tt" class="panel">
-    <div class="sl">TikTok Performance</div>
+    <div class="sl">TikTok</div>
     <div class="kg" id="k-tt"></div>
     <div class="insight" id="insight-tt"></div>
     <div class="crow">
-      <div class="card">
-        <div class="ct">Video Views & Engagement — 6 Weeks</div>
-        <div class="ch"><canvas id="c-tt-all"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="ct">Followers Growth</div>
-        <div class="ch"><canvas id="c-tt-follows"></canvas></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="ct">This Week Breakdown</div>
-      <div class="stat-row">
-        <div class="stat-cell">
-          <div class="stat-label">Views</div>
-          <div class="stat-val" id="tt-views-val">—</div>
-          <div class="stat-delta" id="tt-views-delta"></div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-label">New Follows</div>
-          <div class="stat-val" id="tt-follows-val">—</div>
-          <div class="stat-delta" id="tt-follows-delta"></div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-label">Reach</div>
-          <div class="stat-val" id="tt-reach-val">—</div>
-          <div class="stat-delta" id="tt-reach-delta"></div>
-        </div>
-      </div>
+      <div class="card"><div class="ct">Video Views and Reached Audience</div><div class="ch"><canvas id="c-tt-all"></canvas></div></div>
+      <div class="card"><div class="ct">Follower Growth</div><div class="ch"><canvas id="c-tt-follows"></canvas></div></div>
     </div>
   </div>
 
-  <!-- GOOGLE ANALYTICS -->
+  <!-- GA -->
   <div id="panel-ga" class="panel">
     <div class="sl">Google Analytics</div>
     <div class="kg" id="k-ga"></div>
-    <div class="card">
-      <div class="ct">Traffic by Source</div>
-      <div class="ch"><canvas id="c-ga"></canvas></div>
+    <div class="crow">
+      <div class="card"><div class="ct">Traffic by Source</div><div class="ch"><canvas id="c-ga"></canvas></div></div>
+      <div class="card"><div class="ct">Sessions by Source</div><div class="ch"><canvas id="c-ga-bar"></canvas></div></div>
     </div>
   </div>
 </div>
@@ -236,283 +320,515 @@ header{padding:28px 0 22px;border-bottom:1px solid var(--b1);margin-bottom:28px;
 </div>
 
 <script>
-const B = {
-  ig:"#833AB4", fb:"#1877F2", tt:"#000000",
-  aurora:"#00C08B", golden:"#F5A623", pink:"#E8748A", muted:"#7A9EA6"
+// ══════════════════════════════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════════════════════════════
+const SHEET_ID = "1MnIzcNINJSkvnm8DvH0mJuy71a_rv2txu6tEohnq8SY";
+const GVIZ_BASE = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`;
+
+const C = {
+  ig: "#C13584", igDim: "rgba(193,53,132,0.12)",
+  fb: "#4599FF", fbDim: "rgba(69,153,255,0.12)",
+  tt: "#EEEEEE", ttDim: "rgba(238,238,238,0.08)",
+  aurora: "#00C08B", auroraDim: "rgba(0,192,139,0.12)",
+  golden: "#F5A623", goldenDim: "rgba(245,166,35,0.12)",
+  pink: "#FF6B7A",
+  grid: "rgba(175,226,227,0.06)",
+  t3: "#4A7A80",
 };
-const G = "rgba(0,59,73,0.06)";
-const bo = (extra={}) => Object.assign({
-  responsive:true, maintainAspectRatio:false,
-  plugins:{legend:{display:false}},
-  scales:{
-    x:{grid:{color:G}, ticks:{color:B.muted, font:{family:"Georgia,serif", size:11}}},
-    y:{grid:{color:G}, ticks:{color:B.muted, font:{family:"Georgia,serif", size:11}}}
-  }
-}, extra);
 
-const charts = {};
+// ══════════════════════════════════════════════════════════════════════════════
+// DATA FETCH
+// ══════════════════════════════════════════════════════════════════════════════
+async function fetchSheet(sheetName) {
+  const url = `${GVIZ_BASE}?sheet=${encodeURIComponent(sheetName)}&tqx=out:json`;
+  const resp = await fetch(url);
+  const text = await resp.text();
+  // gviz response is wrapped in google.visualization.Query.setResponse({...})
+  const jsonStr = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]+)\);?/);
+  if (!jsonStr) throw new Error("Could not parse gviz response for " + sheetName);
+  const data = JSON.parse(jsonStr[1]);
+  if (data.status === "error") throw new Error(data.errors[0].detailed_message);
 
-function mk(id,cfg){
-  const el=document.getElementById(id);
-  if(!el) return null;
-  return charts[id] = new Chart(el,cfg);
+  const cols = data.table.cols.map(c => c.label || c.id);
+  const rows = data.table.rows.map(r => {
+    const obj = {};
+    r.c.forEach((cell, i) => {
+      if (!cell) { obj[cols[i]] = null; return; }
+      if (cell.v !== null && cell.v !== undefined) {
+        // gviz returns dates as "Date(2026,4,3)" strings
+        if (typeof cell.v === "string" && cell.v.startsWith("Date(")) {
+          const parts = cell.v.replace("Date(", "").replace(")", "").split(",").map(Number);
+          obj[cols[i]] = new Date(parts[0], parts[1], parts[2]);
+        } else {
+          obj[cols[i]] = cell.v;
+        }
+      } else {
+        obj[cols[i]] = cell.f || null;
+      }
+    });
+    return obj;
+  });
+  return { cols, rows };
 }
 
-function sp(id,btn){
-  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
-  document.getElementById("panel-"+id).classList.add("active");
-  document.querySelectorAll(".nb").forEach(b=>b.className="nb");
-  btn.className="nb a";
-  if(id==="ig") btn.classList.add("a-ig");
-  if(id==="fb") btn.classList.add("a-fb");
-  if(id==="tt") btn.classList.add("a-tt");
-  if(id==="ga") btn.classList.add("a-ga");
+// ══════════════════════════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════════════════════════
+function colVal(row, partialName) {
+  const key = Object.keys(row).find(k => k.toLowerCase().includes(partialName.toLowerCase()));
+  return key ? (parseFloat(row[key]) || 0) : 0;
 }
 
-function ki(id,items){
+function fmtN(n) { return Math.round(n).toLocaleString(); }
+
+function pctChg(cur, prev) {
+  if (!prev || prev === 0) return null;
+  return Math.round((cur - prev) / prev * 100);
+}
+
+function deltaHtml(cur, prev) {
+  const d = pctChg(cur, prev);
+  if (d === null) return "";
+  const cls = d > 5 ? "up" : d < -5 ? "down" : "neu";
+  return `<span class="${cls}">${d >= 0 ? "+" : ""}${d}%</span>`;
+}
+
+function dateLabel(d) {
+  if (!d || !(d instanceof Date)) return "";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function ki(id, items) {
   const el = document.getElementById(id);
-  if(!el) return;
-  el.innerHTML=items.map(it=>
-    `<div class="kpi ${it.c||''}"><div class="kb"></div>
+  if (!el) return;
+  el.innerHTML = items.map(it =>
+    `<div class="kpi ${it.c || ''}"><div class="kb"></div>
     <div class="kl">${it.l}</div>
     <div class="kv">${it.v}</div>
-    ${it.d!==undefined?`<div class="kd">${it.d||''}</div>`:""}</div>`
+    ${it.d !== undefined ? `<div class="kd">${it.d || ''}</div>` : ""}</div>`
   ).join("");
 }
 
-function fmt(n){return parseInt(n||0).toLocaleString()}
-function pct(c,p){if(!p||p===0)return"";const d=Math.round((c-p)/p*100);return(d>=0?"+":"")+d+"%"}
-function delta(c,p,kind="pct"){
-  if(!p||p===0)return"—";
-  if(kind==="pct"){const d=Math.round((c-p)/p*100);return'<span class="'+(d>5?"up":d<-5?"down":"neu")+'">'+(d>=0?"+":"")+d+'%</span>';}
-  const d=c-p;
-  return'<span class="'+(d>0?"up":d<0?"down":"neu")+'">'+(d>=0?"+":"")+d+'</span>';
+// ── CHART DEFAULTS ──────────────────────────────────────────────────────────
+const chartDefaults = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: "#152238",
+      titleColor: "#E8F0F2",
+      bodyColor: "#7AB8B0",
+      borderColor: "rgba(175,226,227,0.15)",
+      borderWidth: 1,
+      cornerRadius: 8,
+      padding: 10,
+    }
+  },
+  scales: {
+    x: {
+      grid: { color: C.grid },
+      ticks: { color: C.t3, font: { family: "'DM Sans', sans-serif", size: 11 } },
+    },
+    y: {
+      grid: { color: C.grid },
+      ticks: { color: C.t3, font: { family: "'DM Sans', sans-serif", size: 11 } },
+    }
+  }
+};
+
+function bo(extra = {}) {
+  return JSON.parse(JSON.stringify({ ...chartDefaults, ...extra }));
 }
 
-function render(){
-  // Sample 6-week data (W1-W6)
-  const weeks = ["W1","W2","W3","W4","W5","W6"];
-  const igReach = [1458,90,52,224,123,622];
-  const igViews = [2025,262,117,335,202,1006];
-  const igFollows = [11,12,12,8,4,8];
-  const igEng = [2.81,13.33,11.54,0.89,0.81,7.07];
-  
-  const fbViews = [1250,340,180,520,290,1450];
-  const fbVisits = [405,110,60,135,75,405];
-  const fbFollows = [0,0,0,39,6,21];
-  const fbInter = [45,15,8,28,18,52];
-  
-  const ttViews = [0,0,0,680,450,1006];
-  const ttFollows = [0,0,0,15,22,31];
-  const ttReach = [0,0,0,310,520,1852];
-  
-  const gaTop = [{l:"Google",v:1456},{l:"Direct",v:1755},{l:"Facebook",v:36},{l:"Instagram",v:24}];
-
-  // Populate Overview KPIs
-  const last = 5; // W6
-  const prev = 4; // W5
-  ki("k-all",[
-    {l:"IG Reach", v:fmt(igReach[last]), c:"ig", d:delta(igReach[last],igReach[prev])},
-    {l:"IG Views", v:fmt(igViews[last]), c:"ig", d:delta(igViews[last],igViews[prev])},
-    {l:"IG Eng%", v:(igEng[last]).toFixed(2)+"%", c:"ig", d:delta(igEng[last],igEng[prev])},
-    {l:"FB Views", v:fmt(fbViews[last]), c:"fb", d:delta(fbViews[last],fbViews[prev])},
-    {l:"FB Follows", v:fmt(fbFollows[last]), c:"fb", d:delta(fbFollows[last],fbFollows[prev])},
-    {l:"TT Views", v:fmt(ttViews[last]), c:"tt", d:delta(ttViews[last],ttViews[prev])},
-    {l:"TT Follows", v:fmt(ttFollows[last]), c:"tt", d:delta(ttFollows[last],ttFollows[prev])},
-    {l:"TT Reach", v:fmt(ttReach[last]), c:"tt", d:delta(ttReach[last],ttReach[prev])},
-  ]);
-
-  // Instagram
-  ki("k-ig",[
-    {l:"Week Reach", v:fmt(igReach[last]), c:"ig"},
-    {l:"Week Views", v:fmt(igViews[last]), c:"ig"},
-    {l:"Week Follows", v:fmt(igFollows[last]), c:"ig"},
-    {l:"Eng Rate", v:(igEng[last]).toFixed(2)+"%", c:"ig"},
-  ]);
-  document.getElementById("ig-reach-val").textContent=fmt(igReach[last]);
-  document.getElementById("ig-reach-delta").innerHTML=delta(igReach[last],igReach[prev]);
-  document.getElementById("ig-views-val").textContent=fmt(igViews[last]);
-  document.getElementById("ig-views-delta").innerHTML=delta(igViews[last],igViews[prev]);
-  document.getElementById("ig-eng-val").textContent=(igEng[last]).toFixed(2)+"%";
-  document.getElementById("ig-eng-delta").innerHTML=delta(igEng[last],igEng[prev]);
-
-  // Facebook
-  ki("k-fb",[
-    {l:"Week Views", v:fmt(fbViews[last]), c:"fb"},
-    {l:"Week Visits", v:fmt(fbVisits[last]), c:"fb"},
-    {l:"Week Follows", v:fmt(fbFollows[last]), c:"fb"},
-    {l:"Interactions", v:fmt(fbInter[last]), c:"fb"},
-  ]);
-  document.getElementById("fb-views-val").textContent=fmt(fbViews[last]);
-  document.getElementById("fb-views-delta").innerHTML=delta(fbViews[last],fbViews[prev]);
-  document.getElementById("fb-visits-val").textContent=fmt(fbVisits[last]);
-  document.getElementById("fb-visits-delta").innerHTML=delta(fbVisits[last],fbVisits[prev]);
-  document.getElementById("fb-follows-val").textContent=fmt(fbFollows[last]);
-  document.getElementById("fb-follows-delta").innerHTML=delta(fbFollows[last],fbFollows[prev]);
-
-  // TikTok
-  ki("k-tt",[
-    {l:"Week Views", v:fmt(ttViews[last]), c:"tt"},
-    {l:"New Follows", v:fmt(ttFollows[last]), c:"tt"},
-    {l:"Reach", v:fmt(ttReach[last]), c:"tt"},
-    {l:"Audience Growth", v:"6 wks", c:"tt"},
-  ]);
-  document.getElementById("tt-views-val").textContent=fmt(ttViews[last]);
-  document.getElementById("tt-views-delta").innerHTML=delta(ttViews[last],ttViews[prev]);
-  document.getElementById("tt-follows-val").textContent=fmt(ttFollows[last]);
-  document.getElementById("tt-follows-delta").innerHTML=delta(ttFollows[last],ttFollows[prev]);
-  document.getElementById("tt-reach-val").textContent=fmt(ttReach[last]);
-  document.getElementById("tt-reach-delta").innerHTML=delta(ttReach[last],ttReach[prev]);
-
-  // GA
-  ki("k-ga",[
-    {l:"Top Source", v:"Google", c:"ga"},
-    {l:"Total Sessions", v:"3,741", c:"ga"},
-    {l:"Engagement Rate", v:"40.2%", c:"ga"},
-    {l:"Revenue", v:"$8,923.50", c:"ga"},
-  ]);
-
-  // Insights
-  document.getElementById("insight-all").innerHTML=
-    `<strong>✓ Engagement on track:</strong> IG at 7.07% — target is ≥6% for Q2. <strong>⚠ TT growth:</strong> New 31 followers this week, keep momentum.`;
-  document.getElementById("insight-ig").innerHTML=
-    `<strong>Performance:</strong> Reach at 622 (↑ up). Views stable. <strong>Target:</strong> Maintain ≥6% engagement rate for Q2.`;
-  document.getElementById("insight-fb").innerHTML=
-    `<strong>Views:</strong> 1,450 (↑ up). <strong>Visits:</strong> 405 (steady). Keep posting consistent content.`;
-  document.getElementById("insight-tt").innerHTML=
-    `<strong>Growth trend:</strong> Video views 1,006 (↑ up). New followers 31 (↑ strong). <strong>Next:</strong> More TT content = more reach.`;
-
-  // Charts
-  // IG Reach
-  mk("c-ig-reach",{
-    type:"line",
-    data:{
-      labels:weeks,
-      datasets:[
-        {data:igReach,borderColor:B.ig,backgroundColor:"rgba(131,58,180,0.1)",tension:0.35,fill:true,pointRadius:5,borderWidth:2.5,pointBackgroundColor:B.ig}
-      ]
-    },
-    options:bo()
-  });
-
-  // Engagement comparison
-  mk("c-eng",{
-    type:"bar",
-    data:{
-      labels:["IG","FB","TT"],
-      datasets:[{data:[7.07,2.1,4.5],backgroundColor:[B.ig,B.fb,B.tt],borderRadius:6}]
-    },
-    options:bo({scales:{y:{ticks:{callback:v=>v+"%"}}}})
-  });
-
-  // All Follows
-  mk("c-follows",{
-    type:"bar",
-    data:{
-      labels:weeks,
-      datasets:[
-        {label:"IG",data:igFollows,backgroundColor:B.ig,borderRadius:4},
-        {label:"FB",data:fbFollows,backgroundColor:B.fb,borderRadius:4},
-        {label:"TT",data:ttFollows,backgroundColor:B.tt,borderRadius:4}
-      ]
-    },
-    options:bo()
-  });
-
-  // TT Trend
-  mk("c-tt-trend",{
-    type:"line",
-    data:{
-      labels:weeks,
-      datasets:[{data:ttViews,borderColor:B.tt,backgroundColor:"rgba(0,0,0,0.08)",tension:0.35,fill:true,borderWidth:2.5,pointRadius:4,pointBackgroundColor:B.tt}]
-    },
-    options:bo()
-  });
-
-  // IG All
-  mk("c-ig-all",{
-    type:"line",
-    data:{
-      labels:weeks,
-      datasets:[
-        {data:igReach,borderColor:B.ig,backgroundColor:"rgba(131,58,180,0.1)",tension:0.35,fill:true,borderWidth:2,label:"Reach"},
-        {data:igViews,borderColor:"rgba(131,58,180,0.5)",borderDash:[5,4],tension:0.35,borderWidth:1.5,label:"Views"}
-      ]
-    },
-    options:bo()
-  });
-
-  mk("c-ig-eng",{
-    type:"bar",
-    data:{
-      labels:weeks,
-      datasets:[{data:igEng,backgroundColor:B.aurora,borderRadius:4}]
-    },
-    options:bo({scales:{y:{ticks:{callback:v=>v+"%"}}}})
-  });
-
-  // FB All
-  mk("c-fb-all",{
-    type:"line",
-    data:{
-      labels:weeks,
-      datasets:[
-        {data:fbViews,borderColor:B.fb,backgroundColor:"rgba(24,119,242,0.1)",tension:0.35,fill:true,borderWidth:2},
-        {data:fbVisits,borderColor:"rgba(24,119,242,0.5)",borderDash:[5,4],tension:0.35,borderWidth:1.5}
-      ]
-    },
-    options:bo()
-  });
-
-  mk("c-fb-eng",{
-    type:"bar",
-    data:{
-      labels:weeks,
-      datasets:[
-        {data:fbFollows,backgroundColor:B.fb,borderRadius:4,label:"Follows"},
-        {data:fbInter,backgroundColor:"rgba(24,119,242,0.5)",borderRadius:4,label:"Interactions"}
-      ]
-    },
-    options:bo()
-  });
-
-  // TT All
-  mk("c-tt-all",{
-    type:"line",
-    data:{
-      labels:weeks,
-      datasets:[
-        {data:ttViews,borderColor:B.tt,backgroundColor:"rgba(0,0,0,0.1)",tension:0.35,fill:true,borderWidth:2},
-        {data:ttReach,borderColor:"rgba(0,0,0,0.5)",borderDash:[5,4],tension:0.35,borderWidth:1.5}
-      ]
-    },
-    options:bo()
-  });
-
-  mk("c-tt-follows",{
-    type:"bar",
-    data:{
-      labels:weeks,
-      datasets:[{data:ttFollows,backgroundColor:B.aurora,borderRadius:4}]
-    },
-    options:bo()
-  });
-
-  // GA
-  mk("c-ga",{
-    type:"doughnut",
-    data:{
-      labels:gaTop.map(g=>g.l),
-      datasets:[{data:gaTop.map(g=>g.v),backgroundColor:[B.ga,B.pink,B.fb,B.ig]}]
-    },
-    options:Object.assign({responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:"bottom"}}},{})
-  });
-
-  document.getElementById("loading").style.display="none";
-  document.getElementById("panels").style.display="block";
+function mk(id, cfg) {
+  const el = document.getElementById(id);
+  if (!el) return null;
+  return new Chart(el, cfg);
 }
 
-render();
+// ══════════════════════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ══════════════════════════════════════════════════════════════════════════════
+document.querySelectorAll(".nb").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".nb").forEach(b => { b.className = "nb"; });
+    const tab = btn.dataset.tab;
+    document.getElementById("panel-" + tab).classList.add("active");
+    btn.classList.add("active");
+    const tabClasses = { ig: "active-ig", fb: "active-fb", tt: "active-tt", ga: "active-ga" };
+    if (tabClasses[tab]) btn.classList.add(tabClasses[tab]);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MAIN RENDER
+// ══════════════════════════════════════════════════════════════════════════════
+async function init() {
+  try {
+    document.getElementById("load-text").textContent = "Fetching Weekly data...";
+    const weekly = await fetchSheet("Weekly");
+
+    let ga = null;
+    try {
+      document.getElementById("load-text").textContent = "Fetching Analytics...";
+      ga = await fetchSheet("Google Analytics");
+    } catch (e) {
+      console.warn("GA sheet not available:", e);
+    }
+
+    render(weekly, ga);
+  } catch (err) {
+    console.error(err);
+    document.getElementById("load-text").style.display = "none";
+    const errEl = document.getElementById("error-text");
+    errEl.style.display = "block";
+    errEl.innerHTML = `Could not fetch live data.<br><br>The Google Sheet must be published: File → Share → Publish to web.<br><br>Sheet ID: <code style="font-size:11px;color:var(--t2)">${SHEET_ID}</code><br><br><span style="color:var(--t3);font-size:11px">${err.message}</span>`;
+  }
+}
+
+function render(weekly, ga) {
+  const rows = weekly.rows;
+  if (!rows.length) return;
+
+  // Find the last row that has actual metric data (not just a manual follower update row).
+  // A "real" week has at least one of reach, views, or fb views > 0.
+  function hasMetrics(r) {
+    return colVal(r, "instagram|reach") > 0
+        || colVal(r, "instagram|views") > 0
+        || colVal(r, "facebook|views") > 0
+        || colVal(r, "facebook|visits") > 0
+        || colVal(r, "tiktok|video") > 0;
+  }
+  // Chart uses all rows for trend lines; KPIs use last real-data row.
+  const lastRealIdx = (() => {
+    for (let i = rows.length - 1; i >= 0; i--) {
+      if (hasMetrics(rows[i])) return i;
+    }
+    return rows.length - 1;
+  })();
+
+  const last = rows[lastRealIdx];
+  const prev = lastRealIdx > 0 ? rows[lastRealIdx - 1] : null;
+  // For chart labels and series, show all rows that have a date
+  const chartRows = rows.filter(r => r["Date"] || r["Week"]);
+  const weekLabel = last["Week"] || "";
+
+  document.getElementById("wl").textContent = weekLabel;
+
+  // Extract weekly arrays (full history for charts)
+  const labels = chartRows.map(r => dateLabel(r["Date"]));
+
+  function col(name) { return chartRows.map(r => colVal(r, name)); }
+
+  // Exact column key helpers to avoid ambiguity (colVal uses .includes())
+  function exactCol(exactKey) {
+    return chartRows.map(r => {
+      const k = Object.keys(r).find(k => k.toLowerCase() === exactKey.toLowerCase());
+      return k ? (parseFloat(r[k]) || 0) : 0;
+    });
+  }
+
+  const igReach   = col("instagram|reach");
+  const igViews   = col("instagram|views");
+  const igFollows = col("instagram|follows");
+  const igInter   = col("instagram|interactions");
+  const igTF      = exactCol("Instagram|Total Followers");
+  const igEng     = col("ig eng rate");
+
+  const fbViews   = col("facebook|views");
+  const fbVisits  = col("facebook|visits");
+  const fbFollows = col("facebook|follows");
+  const fbInter   = col("facebook|interactions");
+
+  const ttViews   = col("tiktok|video");
+  const ttFollows = exactCol("TikTok|New Followers");
+  const ttTF      = exactCol("TikTok|Total Followers");
+  const ttReach   = col("tiktok|reached");
+
+  // KPI indices: use last real data row mapped into chartRows
+  const L = chartRows.indexOf(last) > -1 ? chartRows.indexOf(last) : chartRows.length - 1;
+  const P = L > 0 ? L - 1 : 0;
+
+  // Latest total followers — scan ALL rows for last non-zero value
+  function latestNonZero(arr) {
+    for (let i = arr.length - 1; i >= 0; i--) {
+      if (arr[i] > 0) return arr[i];
+    }
+    return 0;
+  }
+  const allIgTF = rows.map(r => { const k = Object.keys(r).find(k => k.toLowerCase() === "instagram|total followers"); return k ? (parseFloat(r[k]) || 0) : 0; });
+  const allTtTF = rows.map(r => { const k = Object.keys(r).find(k => k.toLowerCase() === "tiktok|total followers"); return k ? (parseFloat(r[k]) || 0) : 0; });
+  const latestIgTF = latestNonZero(allIgTF) || igTF[L];
+  const latestTtTF = latestNonZero(allTtTF) || ttTF[L];
+
+  const curIgEng = igEng[L] || 0;
+  const prevIgEng = igEng[P] || 0;
+
+  // ── OVERVIEW KPIs ──────────────────────────────────────────────────────
+  ki("k-all", [
+    { l: "IG Reach",      v: fmtN(igReach[L]),   c: "ig", d: deltaHtml(igReach[L], igReach[P]) },
+    { l: "IG Eng Rate",   v: curIgEng.toFixed(2) + "%", c: "ig", d: deltaHtml(curIgEng, prevIgEng) },
+    { l: "IG Followers",  v: fmtN(latestIgTF),   c: "ig", d: deltaHtml(latestIgTF, igTF[P]) },
+    { l: "FB Views",      v: fmtN(fbViews[L]),   c: "fb", d: deltaHtml(fbViews[L], fbViews[P]) },
+    { l: "TT Views",      v: fmtN(ttViews[L]),   c: "tt", d: deltaHtml(ttViews[L], ttViews[P]) },
+    { l: "TT Followers",  v: fmtN(latestTtTF),   c: "tt", d: deltaHtml(latestTtTF, ttTF[P]) },
+  ]);
+
+  const engStatus = curIgEng >= 6
+    ? `IG engagement at ${curIgEng.toFixed(2)}% — on track for Q2 target (≥6%).`
+    : `IG engagement at ${curIgEng.toFixed(2)}% — below Q2 target (≥6%).`;
+  document.getElementById("insight-all").innerHTML = engStatus
+    + ` Total followers: IG ${fmtN(latestIgTF)}, TT ${fmtN(latestTtTF)}.`;
+
+  // ── INSTAGRAM KPIs ────────────────────────────────────────────────────
+  ki("k-ig", [
+    { l: "Reach",     v: fmtN(igReach[L]),   c: "ig", d: deltaHtml(igReach[L], igReach[P]) },
+    { l: "Views",     v: fmtN(igViews[L]),   c: "ig", d: deltaHtml(igViews[L], igViews[P]) },
+    { l: "Follows",   v: fmtN(igFollows[L]), c: "ig", d: deltaHtml(igFollows[L], igFollows[P]) },
+    { l: "Eng Rate",  v: curIgEng.toFixed(2) + "%", c: "ig", d: deltaHtml(curIgEng, prevIgEng) },
+  ]);
+  document.getElementById("insight-ig").innerHTML =
+    `Reach ${fmtN(igReach[L])}, Views ${fmtN(igViews[L])}. Engagement rate ${curIgEng.toFixed(2)}%.`;
+
+  // ── FACEBOOK KPIs ─────────────────────────────────────────────────────
+  ki("k-fb", [
+    { l: "Views",        v: fmtN(fbViews[L]),   c: "fb", d: deltaHtml(fbViews[L], fbViews[P]) },
+    { l: "Visits",       v: fmtN(fbVisits[L]),  c: "fb", d: deltaHtml(fbVisits[L], fbVisits[P]) },
+    { l: "Follows",      v: fmtN(fbFollows[L]), c: "fb", d: deltaHtml(fbFollows[L], fbFollows[P]) },
+    { l: "Interactions", v: fmtN(fbInter[L]),   c: "fb", d: deltaHtml(fbInter[L], fbInter[P]) },
+  ]);
+  document.getElementById("insight-fb").innerHTML =
+    `Views ${fmtN(fbViews[L])}, Visits ${fmtN(fbVisits[L])}. Follows ${fmtN(fbFollows[L])} this week.`;
+
+  // ── TIKTOK KPIs ───────────────────────────────────────────────────────
+  ki("k-tt", [
+    { l: "Video Views",   v: fmtN(ttViews[L]),   c: "tt", d: deltaHtml(ttViews[L], ttViews[P]) },
+    { l: "New Follows",   v: fmtN(ttFollows[L]), c: "tt", d: deltaHtml(ttFollows[L], ttFollows[P]) },
+    { l: "Total Follows", v: fmtN(latestTtTF),   c: "tt", d: deltaHtml(latestTtTF, ttTF[P]) },
+    { l: "Reached",       v: fmtN(ttReach[L]),   c: "tt", d: deltaHtml(ttReach[L], ttReach[P]) },
+  ]);
+  document.getElementById("insight-tt").innerHTML =
+    `Video views ${fmtN(ttViews[L])}, new followers ${fmtN(ttFollows[L])}.`;
+
+  // ── GA KPIs ───────────────────────────────────────────────────────────
+  let gaRows = [];
+  if (ga && ga.rows.length) {
+    // Find the date range with the most recent start date
+    const rangeKey = Object.keys(ga.rows[0]).find(k => k.toLowerCase().includes("date range")) || "Date Range";
+    const startKey = Object.keys(ga.rows[0]).find(k => k.toLowerCase().includes("start date")) || "Start Date";
+    // Get the range with the latest start date
+    let latestStart = "";
+    ga.rows.forEach(r => {
+      const s = r[startKey] || "";
+      if (String(s) > String(latestStart)) latestStart = String(s);
+    });
+    const latestRange = ga.rows.find(r => String(r[startKey]) === latestStart)?.[rangeKey];
+    gaRows = latestRange ? ga.rows.filter(r => r[rangeKey] === latestRange) : ga.rows.slice(0, 20);
+  }
+
+  const gaSessions = gaRows.reduce((s, r) => s + (parseFloat(r["Sessions"]) || 0), 0);
+  const gaEngRate = gaRows.length ? (gaRows.reduce((s, r) => s + (parseFloat(r["Engagement Rate (%)"]) || 0), 0) / gaRows.length) : 0;
+  const gaRevenue = gaRows.reduce((s, r) => s + (parseFloat(r["Total Revenue"]) || 0), 0);
+
+  ki("k-ga", [
+    { l: "Sessions",        v: fmtN(gaSessions), c: "ga" },
+    { l: "Avg Eng Rate",    v: gaEngRate.toFixed(1) + "%", c: "ga" },
+    { l: "Revenue",         v: "$" + gaRevenue.toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2}), c: "ga" },
+    { l: "Sources",         v: gaRows.length, c: "ga" },
+  ]);
+
+  // ══════════════════════════════════════════════════════════════════════
+  // CHARTS
+  // ══════════════════════════════════════════════════════════════════════
+
+  // Overview: IG Reach
+  mk("c-ig-reach", {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        data: igReach,
+        borderColor: C.ig,
+        backgroundColor: C.igDim,
+        tension: 0.35,
+        fill: true,
+        pointRadius: 4,
+        borderWidth: 2.5,
+        pointBackgroundColor: C.ig,
+      }]
+    },
+    options: bo()
+  });
+
+  // Overview: Engagement comparison
+  const fbEngRate = fbVisits[L] > 0 ? Math.round(fbInter[L] / fbVisits[L] * 10000) / 100 : 0;
+  const ttEngRate = ttReach[L] > 0 ? Math.round((ttFollows[L]) / ttReach[L] * 10000) / 100 : 0;
+
+  mk("c-eng", {
+    type: "bar",
+    data: {
+      labels: ["Instagram", "Facebook", "TikTok"],
+      datasets: [{
+        data: [curIgEng, fbEngRate, ttEngRate],
+        backgroundColor: [C.ig, C.fb, C.tt],
+        borderRadius: 6,
+      }]
+    },
+    options: bo({ scales: { y: { ticks: { callback: v => v + "%" }, grid: { color: C.grid } } } })
+  });
+
+  // Overview: All Follows
+  mk("c-follows", {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "IG", data: igFollows, backgroundColor: C.ig, borderRadius: 4 },
+        { label: "FB", data: fbFollows, backgroundColor: C.fb, borderRadius: 4 },
+        { label: "TT", data: ttFollows, backgroundColor: C.tt, borderRadius: 4 },
+      ]
+    },
+    options: bo({ plugins: { legend: { display: true, position: "bottom", labels: { color: C.t3, boxWidth: 12 } } } })
+  });
+
+  // Overview: TT Trend
+  mk("c-tt-trend", {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        data: ttViews,
+        borderColor: C.tt,
+        backgroundColor: C.ttDim,
+        tension: 0.35,
+        fill: true,
+        borderWidth: 2.5,
+        pointRadius: 3,
+        pointBackgroundColor: C.tt,
+      }]
+    },
+    options: bo()
+  });
+
+  // IG: Reach + Views
+  mk("c-ig-all", {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        { data: igReach, borderColor: C.ig, backgroundColor: C.igDim, tension: 0.35, fill: true, borderWidth: 2, label: "Reach" },
+        { data: igViews, borderColor: "rgba(193,53,132,0.5)", borderDash: [5, 4], tension: 0.35, borderWidth: 1.5, label: "Views" },
+      ]
+    },
+    options: bo({ plugins: { legend: { display: true, position: "bottom", labels: { color: C.t3, boxWidth: 12 } } } })
+  });
+
+  // IG: Engagement Rate with target line
+  mk("c-ig-eng", {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { data: igEng, backgroundColor: C.aurora, borderRadius: 4, label: "Eng Rate %" },
+        { data: igEng.map(() => 6), type: "line", borderColor: C.pink, borderDash: [6, 3], borderWidth: 2, pointRadius: 0, label: "Q2 Target (6%)" },
+      ]
+    },
+    options: bo({
+      scales: { y: { ticks: { callback: v => v + "%" }, grid: { color: C.grid } } },
+      plugins: { legend: { display: true, position: "bottom", labels: { color: C.t3, boxWidth: 12 } } }
+    })
+  });
+
+  // FB: Views + Visits
+  mk("c-fb-all", {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        { data: fbViews, borderColor: C.fb, backgroundColor: C.fbDim, tension: 0.35, fill: true, borderWidth: 2, label: "Views" },
+        { data: fbVisits, borderColor: "rgba(69,153,255,0.5)", borderDash: [5, 4], tension: 0.35, borderWidth: 1.5, label: "Visits" },
+      ]
+    },
+    options: bo({ plugins: { legend: { display: true, position: "bottom", labels: { color: C.t3, boxWidth: 12 } } } })
+  });
+
+  // FB: Follows + Interactions stacked
+  mk("c-fb-eng", {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { data: fbFollows, backgroundColor: C.fb, borderRadius: 4, label: "Follows" },
+        { data: fbInter, backgroundColor: "rgba(69,153,255,0.45)", borderRadius: 4, label: "Interactions" },
+      ]
+    },
+    options: bo({ plugins: { legend: { display: true, position: "bottom", labels: { color: C.t3, boxWidth: 12 } } } })
+  });
+
+  // TT: Views + Reached
+  mk("c-tt-all", {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        { data: ttViews, borderColor: C.tt, backgroundColor: C.ttDim, tension: 0.35, fill: true, borderWidth: 2, label: "Video Views" },
+        { data: ttReach, borderColor: "rgba(238,238,238,0.45)", borderDash: [5, 4], tension: 0.35, borderWidth: 1.5, label: "Reached" },
+      ]
+    },
+    options: bo({ plugins: { legend: { display: true, position: "bottom", labels: { color: C.t3, boxWidth: 12 } } } })
+  });
+
+  // TT: Follower Growth
+  mk("c-tt-follows", {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{ data: ttFollows, backgroundColor: C.aurora, borderRadius: 4 }]
+    },
+    options: bo()
+  });
+
+  // GA: Doughnut
+  if (gaRows.length) {
+    const gaLabels = gaRows.map(r => r["Session Source"] || r["Session source"] || "Unknown");
+    const gaVals = gaRows.map(r => parseFloat(r["Sessions"]) || 0);
+    const gaColors = [C.golden, C.pink, C.fb, C.ig, C.aurora, C.tt, "#8B5CF6", "#D97706"];
+
+    mk("c-ga", {
+      type: "doughnut",
+      data: {
+        labels: gaLabels,
+        datasets: [{ data: gaVals, backgroundColor: gaColors.slice(0, gaLabels.length) }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: "bottom", labels: { color: C.t3, boxWidth: 12 } },
+          tooltip: chartDefaults.plugins.tooltip,
+        }
+      }
+    });
+
+    mk("c-ga-bar", {
+      type: "bar",
+      data: {
+        labels: gaLabels,
+        datasets: [{ data: gaVals, backgroundColor: gaColors.slice(0, gaLabels.length), borderRadius: 6 }]
+      },
+      options: bo({ indexAxis: "y" })
+    });
+  }
+
+  // Done — show panels
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("panels").style.display = "block";
+}
+
+init();
 </script>
 </body>
 </html>

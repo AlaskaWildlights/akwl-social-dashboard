@@ -5,830 +5,331 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alaska Wild Lights — Social Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-:root {
-  --bg: #0D1B2A;
-  --surface: #152238;
-  --surface2: #1B2D45;
-  --border: rgba(175,226,227,0.08);
-  --border-h: rgba(175,226,227,0.15);
-  --t1: #E8F0F2;
-  --t2: #7AB8B0;
-  --t3: #4A7A80;
-  --aurora: #00C08B;
-  --aurora-dim: rgba(0,192,139,0.15);
-  --ig: #C13584;
-  --ig-dim: rgba(193,53,132,0.15);
-  --fb: #4599FF;
-  --fb-dim: rgba(69,153,255,0.15);
-  --tt: #EEEEEE;
-  --tt-dim: rgba(238,238,238,0.1);
-  --up: #00C08B;
-  --down: #FF6B7A;
-  --golden: #F5A623;
-  --rc: 14px;
-  --sh: 0 2px 12px rgba(0,0,0,0.3);
-}
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  background: var(--bg);
-  color: var(--t1);
-  font-family: 'DM Sans', system-ui, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
-
-.shell { max-width: 1320px; margin: 0 auto; padding: 0 24px 80px; }
-
-/* ── HEADER ─────────────────────────────── */
-header {
-  padding: 32px 0 24px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 28px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.hd-left h1 {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--t1);
-  letter-spacing: -0.01em;
-}
-.hd-left .sub { font-size: 13px; color: var(--t3); margin-top: 4px; }
-.hd-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-#ts { font-size: 12px; color: var(--t3); }
-.badge {
-  background: var(--aurora);
-  color: var(--bg);
-  padding: 4px 14px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-#status-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--aurora);
-  display: inline-block;
-  margin-right: 6px;
-  animation: pulse 2s ease infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-/* ── TABS ───────────────────────────────── */
-.nav {
-  display: flex;
-  gap: 2px;
-  margin-bottom: 28px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 4px;
-  box-shadow: var(--sh);
-  width: fit-content;
-  flex-wrap: wrap;
-}
-.nb {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 8px 20px;
-  border: none;
-  background: none;
-  color: var(--t3);
-  cursor: pointer;
-  border-radius: 9px;
-  transition: all 160ms ease;
-}
-.nb:hover { color: var(--t2); background: rgba(175,226,227,0.05); }
-.nb.active { background: var(--aurora); color: var(--bg); font-weight: 700; }
-.nb.active-ig { background: var(--ig); color: #fff; }
-.nb.active-fb { background: var(--fb); color: #fff; }
-.nb.active-tt { background: var(--tt); color: var(--bg); }
-.nb.active-ga { background: var(--golden); color: var(--bg); }
-
-/* ── KPI CARDS ──────────────────────────── */
-.sl {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--t3);
-  margin-bottom: 14px;
-  margin-top: 28px;
-}
-.kg {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 12px;
-  margin-bottom: 24px;
-}
-.kpi {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--rc);
-  padding: 18px 20px;
-  box-shadow: var(--sh);
-  position: relative;
-  overflow: hidden;
-  transition: border-color 160ms;
-}
-.kpi:hover { border-color: var(--border-h); }
-.kb { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
-.kpi.ig .kb { background: var(--ig); }
-.kpi.fb .kb { background: var(--fb); }
-.kpi.tt .kb { background: var(--tt); }
-.kpi.ga .kb { background: var(--golden); }
-.kpi.aurora .kb { background: var(--aurora); }
-.kl { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--t3); margin-bottom: 8px; }
-.kv { font-size: 28px; font-weight: 700; color: var(--t1); line-height: 1; font-family: 'DM Sans', sans-serif; }
-.kd { font-size: 11px; margin-top: 6px; }
-.up { color: var(--up); }
-.down { color: var(--down); }
-.neu { color: var(--t3); }
-
-/* ── CHART CARDS ────────────────────────── */
-.crow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 14px;
-}
-@media (max-width: 720px) { .crow { grid-template-columns: 1fr; } }
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--rc);
-  padding: 22px 24px;
-  box-shadow: var(--sh);
-}
-.ct {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--t3);
-  margin-bottom: 16px;
-}
-.ch { height: 260px; position: relative; }
-
-/* ── LOADING ────────────────────────────── */
-#loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  gap: 16px;
-}
-.spin {
-  width: 24px; height: 24px;
-  border: 2px solid var(--border);
-  border-top-color: var(--aurora);
-  border-radius: 50%;
-  animation: spin .7s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-#load-text { font-size: 13px; color: var(--t3); }
-#error-text { font-size: 13px; color: var(--down); display: none; max-width: 500px; text-align: center; line-height: 1.6; }
-
-/* ── PANELS ─────────────────────────────── */
-#panels { display: none; }
-.panel { display: none; }
-.panel.active { display: block; }
-
-/* ── STAT ROW ───────────────────────────── */
-.stat-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
-.stat-cell { text-align: center; }
-.stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--t3); margin-bottom: 6px; letter-spacing: 0.06em; }
-.stat-val { font-size: 22px; font-weight: 700; color: var(--t1); }
-.stat-delta { font-size: 11px; margin-top: 4px; }
-
-/* ── INSIGHT ────────────────────────────── */
-.insight {
-  background: var(--aurora-dim);
-  border-left: 3px solid var(--aurora);
-  border-radius: 0 var(--rc) var(--rc) 0;
-  padding: 14px 18px;
-  margin-bottom: 24px;
-  font-size: 13px;
-  color: var(--t2);
-  line-height: 1.6;
-}
+:root{--bg:#080F1A;--s1:#0E1C2F;--s2:#132540;--s3:#1A2F50;--border:rgba(0,192,139,0.12);--border-h:rgba(0,192,139,0.25);--t1:#E8F2F0;--t2:#7BBDB4;--t3:#3D6E78;--aurora:#00C08B;--aurora2:#00E5A6;--ig:#E1306C;--ig2:#F77737;--fb:#4080FF;--tt:#69C9D0;--ga:#FFAD1F;--up:#00C08B;--down:#FF5A6E;--rc:10px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--t1);font-family:'DM Sans',system-ui,sans-serif;font-size:13px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 80% 60% at 15% 10%,rgba(0,192,139,.07) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 85% 80%,rgba(64,128,255,.05) 0%,transparent 55%)}
+.shell{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:0 28px 80px}
+/* HEADER */
+header{padding:28px 0 24px;border-bottom:1px solid var(--border);margin-bottom:24px}
+.header-top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:16px}
+.brand img{height:52px;width:auto;display:block}
+.brand-divider{width:1px;height:36px;background:var(--border)}
+.brand-text p{font-size:11px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase}
+.brand-text small{font-size:10px;color:var(--t3);opacity:.6}
+.header-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.week-badge{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:5px 12px;font-size:11px;font-family:'DM Mono',monospace;color:var(--t2)}
+.goal-pill{background:rgba(0,192,139,.1);border:1px solid rgba(0,192,139,.25);border-radius:6px;padding:5px 12px;font-size:11px;color:var(--aurora);font-family:'DM Mono',monospace}
+/* TABS */
+.tabs{display:flex;gap:4px;padding:12px 0 18px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:7px 18px;border-radius:7px;border:1px solid transparent;cursor:pointer;font-size:12px;font-weight:500;white-space:nowrap;transition:all .18s;color:var(--t3);background:transparent}
+.tab:hover{color:var(--t2);border-color:var(--border)}
+.tab.active{color:var(--t1);background:var(--s2);border-color:var(--border-h)}
+.tab[data-tab="ig"].active{border-color:rgba(225,48,108,.4);color:var(--ig)}
+.tab[data-tab="fb"].active{border-color:rgba(64,128,255,.4);color:var(--fb)}
+.tab[data-tab="tt"].active{border-color:rgba(105,201,208,.4);color:var(--tt)}
+.tab[data-tab="ga"].active{border-color:rgba(255,173,31,.4);color:var(--ga)}
+/* PANELS */
+.panel{display:none}.panel.active{display:block}
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:22px}
+.kpi{background:var(--s1);border:1px solid var(--border);border-radius:var(--rc);padding:14px 16px;transition:border-color .18s;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi.ig::before{background:linear-gradient(90deg,var(--ig),var(--ig2))}.kpi.fb::before{background:var(--fb)}.kpi.tt::before{background:var(--tt)}.kpi.ga::before{background:var(--ga)}.kpi.au::before{background:var(--aurora)}
+.kpi:hover{border-color:var(--border-h)}
+.kl{font-size:10px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px}
+.kv{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--t1);line-height:1.1}
+.kd{margin-top:5px;font-size:10px;font-family:'DM Mono',monospace}
+.kd.up{color:var(--up)}.kd.dn{color:var(--down)}.kd.na{color:var(--t3)}
+/* CHARTS */
+.chart-grid{display:grid;gap:14px}.chart-grid.cols2{grid-template-columns:1fr 1fr}.chart-grid.cols3{grid-template-columns:1fr 1fr 1fr}.chart-grid.cols12{grid-template-columns:1.6fr 1fr}
+@media(max-width:860px){.chart-grid.cols2,.chart-grid.cols3,.chart-grid.cols12{grid-template-columns:1fr}}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--rc);padding:18px 20px}
+.card+.card-grid,.chart-grid+.chart-grid,.chart-grid+.card,.card+.chart-grid{margin-top:14px}
+.card-title{font-size:11px;font-weight:600;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.card-title span{font-family:'DM Mono',monospace;font-size:10px;color:var(--t3);font-weight:400;text-transform:none;letter-spacing:0}
+.chart-wrap{position:relative;height:200px}.chart-wrap.tall{height:240px}.chart-wrap.short{height:150px}
+/* INSIGHT */
+.insight{background:rgba(0,192,139,.06);border:1px solid rgba(0,192,139,.15);border-radius:8px;padding:12px 16px;margin-bottom:18px;font-size:12px;color:var(--t2);line-height:1.6}
+.insight strong{color:var(--aurora)}
+/* TABLE */
+.trend-table{width:100%;border-collapse:collapse;font-size:11px}
+.trend-table th{text-align:left;color:var(--t3);font-weight:500;padding:5px 8px;letter-spacing:.05em;text-transform:uppercase;font-size:10px;border-bottom:1px solid var(--border)}
+.trend-table td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--t2);font-family:'DM Mono',monospace;font-size:11px}
+.trend-table tr:last-child td{border-bottom:none}
+.trend-table td:first-child{color:var(--t1);font-family:'DM Sans',sans-serif}
+.bar-cell{display:flex;align-items:center;gap:8px}.bar-bg{flex:1;height:5px;background:var(--s3);border-radius:3px;overflow:hidden}.bar-fill{height:100%;border-radius:3px}
+/* GOAL TRACKER */
+.goal-track{display:flex;align-items:center;gap:12px;margin-top:10px}
+.goal-label{font-size:11px;color:var(--t3);min-width:140px}
+.goal-bar-bg{flex:1;height:8px;background:var(--s3);border-radius:4px;overflow:hidden}
+.goal-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--aurora),var(--aurora2))}
+.goal-pct{font-family:'DM Mono',monospace;font-size:11px;color:var(--aurora);min-width:60px;text-align:right}
+.goal-warn{color:var(--down)}
 </style>
 </head>
 <body>
 <div class="shell">
-
 <header>
-  <div class="hd-left">
-    <h1>Alaska Wild Lights</h1>
-    <div class="sub">Social Performance Dashboard · <span id="wl">Loading...</span></div>
-  </div>
-  <div class="hd-right">
-    <span id="ts"><span id="status-dot"></span>Live from Google Sheets</span>
+  <div class="header-top">
+    <div class="brand">
+      <img src="data:image/png;base64,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" alt="Alaska Wild Lights">
+      <div class="brand-divider"></div>
+      <div class="brand-text">
+        <p>Social Media Dashboard</p>
+        <small>Internal · @alaskawildlights</small>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="week-badge">Latest: May 3 – 9, 2026</div>
+      <div class="goal-pill">Q2 Goal: 1,500 followers · ≥6% eng rate</div>
+    </div>
   </div>
 </header>
 
-<div id="loading">
-  <div class="spin"></div>
-  <div id="load-text">Fetching data from Google Sheets...</div>
-  <div id="error-text"></div>
+<div class="tabs">
+  <div class="tab active" data-tab="overview">Overview</div>
+  <div class="tab" data-tab="ig">Instagram</div>
+  <div class="tab" data-tab="fb">Facebook</div>
+  <div class="tab" data-tab="tt">TikTok</div>
+  <div class="tab" data-tab="ga">Analytics</div>
 </div>
 
-<div id="panels">
-  <nav class="nav">
-    <button class="nb active" data-tab="all">Overview</button>
-    <button class="nb" data-tab="ig">Instagram</button>
-    <button class="nb" data-tab="fb">Facebook</button>
-    <button class="nb" data-tab="tt">TikTok</button>
-    <button class="nb" data-tab="ga">Analytics</button>
-  </nav>
+<!-- ═══ OVERVIEW ══════════════════════════════════════════════════════════ -->
+<div class="panel active" id="panel-overview">
+  <div class="insight"><strong>Week of May 3–9:</strong> IG reach +83% WoW to 1,266. Views hit 5,488 (+362%). TikTok launched — 1,367 video views, 19 total followers. IG eng rate <strong>6.24%</strong> — on Q2 target. IG followers at 663, 837 away from Q2 goal of 1,500.</div>
 
-  <!-- OVERVIEW -->
-  <div id="panel-all" class="panel active">
-    <div class="sl">This Week</div>
-    <div class="kg" id="k-all"></div>
-    <div class="insight" id="insight-all"></div>
-    <div class="crow">
-      <div class="card"><div class="ct">Instagram Reach Trend</div><div class="ch"><canvas id="c-ig-reach"></canvas></div></div>
-      <div class="card"><div class="ct">Engagement Rate by Platform</div><div class="ch"><canvas id="c-eng"></canvas></div></div>
+  <div class="kpi-grid">
+    <div class="kpi ig"><div class="kl">IG Reach</div><div class="kv">1,266</div><div class="kd up">▲ +83% WoW</div></div>
+    <div class="kpi ig"><div class="kl">IG Views</div><div class="kv">5,488</div><div class="kd up">▲ +362%</div></div>
+    <div class="kpi ig"><div class="kl">IG Followers</div><div class="kv">663</div><div class="kd up">▲ +2.0%</div></div>
+    <div class="kpi ig"><div class="kl">IG Eng Rate</div><div class="kv">6.24%</div><div class="kd up">✓ On target</div></div>
+    <div class="kpi fb"><div class="kl">FB Views</div><div class="kv">2,706</div><div class="kd na">May 3–9</div></div>
+    <div class="kpi fb"><div class="kl">FB Interactions</div><div class="kv">71</div><div class="kd up">▲ +69%</div></div>
+    <div class="kpi tt"><div class="kl">TT Video Views</div><div class="kv">1,367</div><div class="kd na">🆕 First week</div></div>
+    <div class="kpi tt"><div class="kl">TT Followers</div><div class="kv">19</div><div class="kd up">▲ Growing</div></div>
+  </div>
+
+  <!-- Q2 GOALS — real values from Quarterly Goals sheet -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-title">Q2 2026 Progress Tracker <span>Goal: June 30, 2026 · Source: Quarterly Goals sheet</span></div>
+    <div class="goal-track">
+      <div class="goal-label">IG Followers (1,500)</div>
+      <div class="goal-bar-bg"><div class="goal-bar-fill" style="width:44.2%"></div></div>
+      <div class="goal-pct goal-warn">663 / 1,500</div>
     </div>
-    <div class="crow">
-      <div class="card"><div class="ct">Weekly Follows — All Platforms</div><div class="ch"><canvas id="c-follows"></canvas></div></div>
-      <div class="card"><div class="ct">TikTok Video Views</div><div class="ch"><canvas id="c-tt-trend"></canvas></div></div>
+    <div class="goal-track" style="margin-top:8px">
+      <div class="goal-label">IG Eng Rate (≥6%)</div>
+      <div class="goal-bar-bg"><div class="goal-bar-fill" style="width:100%"></div></div>
+      <div class="goal-pct">6.24% ✓</div>
+    </div>
+    <div class="goal-track" style="margin-top:8px">
+      <div class="goal-label">TT Followers (Q2 start)</div>
+      <div class="goal-bar-bg"><div class="goal-bar-fill" style="width:19%;background:linear-gradient(90deg,var(--tt),#A0E8EE)"></div></div>
+      <div class="goal-pct" style="color:var(--tt)">19 total</div>
     </div>
   </div>
 
-  <!-- INSTAGRAM -->
-  <div id="panel-ig" class="panel">
-    <div class="sl">Instagram</div>
-    <div class="kg" id="k-ig"></div>
-    <div class="insight" id="insight-ig"></div>
-    <div class="crow">
-      <div class="card"><div class="ct">Reach and Views</div><div class="ch"><canvas id="c-ig-all"></canvas></div></div>
-      <div class="card"><div class="ct">Engagement Rate with Target</div><div class="ch"><canvas id="c-ig-eng"></canvas></div></div>
-    </div>
+  <div class="chart-grid cols2">
+    <div class="card"><div class="card-title">IG Reach — 3 Week Trend</div><div class="chart-wrap"><canvas id="c-reach"></canvas></div></div>
+    <div class="card"><div class="card-title">Follower Growth — IG + TikTok</div><div class="chart-wrap"><canvas id="c-followers"></canvas></div></div>
   </div>
-
-  <!-- FACEBOOK -->
-  <div id="panel-fb" class="panel">
-    <div class="sl">Facebook</div>
-    <div class="kg" id="k-fb"></div>
-    <div class="insight" id="insight-fb"></div>
-    <div class="crow">
-      <div class="card"><div class="ct">Views and Visits</div><div class="ch"><canvas id="c-fb-all"></canvas></div></div>
-      <div class="card"><div class="ct">Follows and Interactions</div><div class="ch"><canvas id="c-fb-eng"></canvas></div></div>
-    </div>
-  </div>
-
-  <!-- TIKTOK -->
-  <div id="panel-tt" class="panel">
-    <div class="sl">TikTok</div>
-    <div class="kg" id="k-tt"></div>
-    <div class="insight" id="insight-tt"></div>
-    <div class="crow">
-      <div class="card"><div class="ct">Video Views and Reached Audience</div><div class="ch"><canvas id="c-tt-all"></canvas></div></div>
-      <div class="card"><div class="ct">Follower Growth</div><div class="ch"><canvas id="c-tt-follows"></canvas></div></div>
-    </div>
-  </div>
-
-  <!-- GA -->
-  <div id="panel-ga" class="panel">
-    <div class="sl">Google Analytics</div>
-    <div class="kg" id="k-ga"></div>
-    <div class="crow">
-      <div class="card"><div class="ct">Traffic by Source</div><div class="ch"><canvas id="c-ga"></canvas></div></div>
-      <div class="card"><div class="ct">Sessions by Source</div><div class="ch"><canvas id="c-ga-bar"></canvas></div></div>
-    </div>
+  <div class="chart-grid cols2" style="margin-top:14px">
+    <div class="card"><div class="card-title">Weekly Views — IG + FB + TikTok <span>Stacked by platform</span></div><div class="chart-wrap"><canvas id="c-views-all"></canvas></div></div>
+    <div class="card"><div class="card-title">IG Eng Rate vs 6% Target</div><div class="chart-wrap"><canvas id="c-eng-overview"></canvas></div></div>
   </div>
 </div>
 
+<!-- ═══ INSTAGRAM ═════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-ig">
+  <div class="kpi-grid">
+    <div class="kpi ig"><div class="kl">Reach</div><div class="kv">1,266</div><div class="kd up">▲ +83%</div></div>
+    <div class="kpi ig"><div class="kl">Views</div><div class="kv">5,488</div><div class="kd up">▲ +362%</div></div>
+    <div class="kpi ig"><div class="kl">Follows</div><div class="kv">30</div><div class="kd up">▲ +131%</div></div>
+    <div class="kpi ig"><div class="kl">Profile Visits</div><div class="kv">152</div><div class="kd na">W3 data</div></div>
+    <div class="kpi ig"><div class="kl">Interactions</div><div class="kv">79</div><div class="kd up">▲ +139%</div></div>
+    <div class="kpi ig"><div class="kl">Link Clicks</div><div class="kv">8</div><div class="kd up">▲ +167%</div></div>
+    <div class="kpi ig"><div class="kl">Total Followers</div><div class="kv">663</div><div class="kd up">▲ +2.0%</div></div>
+    <div class="kpi ig"><div class="kl">Eng Rate</div><div class="kv">6.24%</div><div class="kd up">✓ On target</div></div>
+  </div>
+  <div class="chart-grid cols2">
+    <div class="card"><div class="card-title">Reach & Views — 3 Weeks</div><div class="chart-wrap tall"><canvas id="c-ig-reach-views"></canvas></div></div>
+    <div class="card"><div class="card-title">Engagement Rate % <span>Target: 6.0%</span></div><div class="chart-wrap tall"><canvas id="c-ig-engrate"></canvas></div></div>
+  </div>
+  <div class="chart-grid cols2" style="margin-top:14px">
+    <div class="card"><div class="card-title">Follows & Interactions</div><div class="chart-wrap"><canvas id="c-ig-follows"></canvas></div></div>
+    <div class="card"><div class="card-title">Total Followers vs Q2 Goal (1,500)</div><div class="chart-wrap"><canvas id="c-ig-tf"></canvas></div></div>
+  </div>
+  <p class="insight" style="margin-top:14px">Audience: <strong>25–44 bracket = 60.8%</strong> of IG followers · United States 81% · Top cities: College AK 8.9%, Anchorage AK 7.1%</p>
+</div>
+
+<!-- ═══ FACEBOOK ══════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-fb">
+  <div class="kpi-grid">
+    <div class="kpi fb"><div class="kl">Views (W3)</div><div class="kv">2,706</div><div class="kd na">May 3–9</div></div>
+    <div class="kpi fb"><div class="kl">Visits (W3)</div><div class="kv">166</div><div class="kd dn">▼ -16% WoW</div></div>
+    <div class="kpi fb"><div class="kl">Viewers (W2)</div><div class="kv">1,346</div><div class="kd na">Spike Apr 26–May 2</div></div>
+    <div class="kpi fb"><div class="kl">Follows (W2)</div><div class="kv">65</div><div class="kd up">▲ +103%</div></div>
+    <div class="kpi fb"><div class="kl">Interactions (W3)</div><div class="kv">71</div><div class="kd up">▲ +69%</div></div>
+    <div class="kpi fb"><div class="kl">Link Clicks (W3)</div><div class="kv">4</div><div class="kd up">▲ +100%</div></div>
+  </div>
+  <div class="chart-grid cols2">
+    <div class="card"><div class="card-title">Views & Visits — 3 Weeks</div><div class="chart-wrap tall"><canvas id="c-fb-views"></canvas></div></div>
+    <div class="card"><div class="card-title">Follows & Interactions</div><div class="chart-wrap tall"><canvas id="c-fb-engage"></canvas></div></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="card-title">Weekly Summary Table</div>
+    <table class="trend-table">
+      <thead><tr><th>Week</th><th>Views</th><th>Visits</th><th>Viewers</th><th>Follows</th><th>Interactions</th><th>Link Clicks</th></tr></thead>
+      <tbody>
+        <tr><td>Apr 19–25</td><td>164</td><td>67</td><td>22</td><td>32</td><td>2</td><td>1</td></tr>
+        <tr><td>Apr 26–May 2</td><td>—</td><td>197</td><td>1,346</td><td>65</td><td>42</td><td>2</td></tr>
+        <tr><td>May 3–9</td><td>2,706</td><td>166</td><td>—</td><td>—</td><td>71</td><td>4</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="insight" style="margin-top:14px">FB Audience: <strong>25–44 bracket = 37.7%</strong> · United States 63.2% · Viewers spike Apr 26–May 2 likely from viral post</p>
+</div>
+
+<!-- ═══ TIKTOK ════════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-tt">
+  <div class="insight"><strong>TikTok launched May 2026.</strong> First full week of data: May 3–9. Apr 19–May 2 values are 0 (account not yet active). Growing fast — 19 total followers after first week.</div>
+  <div class="kpi-grid">
+    <div class="kpi tt"><div class="kl">Video Views</div><div class="kv">1,367</div><div class="kd na">🆕 Week 1</div></div>
+    <div class="kpi tt"><div class="kl">Reached Audience</div><div class="kv">1,313</div><div class="kd na">First data</div></div>
+    <div class="kpi tt"><div class="kl">New Followers</div><div class="kv">18</div><div class="kd na">May 3–9</div></div>
+    <div class="kpi tt"><div class="kl">Total Followers</div><div class="kv">19</div><div class="kd up">▲ Growing</div></div>
+    <div class="kpi tt"><div class="kl">Likes</div><div class="kv">74</div><div class="kd na">First data</div></div>
+    <div class="kpi tt"><div class="kl">Website Clicks</div><div class="kv">2</div><div class="kd na">First data</div></div>
+  </div>
+  <div class="chart-grid cols2">
+    <div class="card"><div class="card-title">Daily Video Views <span>May 3–9, 2026</span></div><div class="chart-wrap tall"><canvas id="c-tt-views"></canvas></div></div>
+    <div class="card"><div class="card-title">Daily Follower Growth <span>Cumulative total</span></div><div class="chart-wrap tall"><canvas id="c-tt-followers"></canvas></div></div>
+  </div>
+  <div class="chart-grid cols2" style="margin-top:14px">
+    <div class="card"><div class="card-title">Daily Likes & Reached <span>May 3–9</span></div><div class="chart-wrap"><canvas id="c-tt-likes"></canvas></div></div>
+    <div class="card"><div class="card-title">Weekly Views — All 3 Weeks <span>0 = pre-launch</span></div><div class="chart-wrap"><canvas id="c-tt-weekly"></canvas></div></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="card-title">Daily Breakdown — May 3–9 <span>First week of TikTok data</span></div>
+    <table class="trend-table">
+      <thead><tr><th>Date</th><th>Video Views</th><th>Reached</th><th>New Followers</th><th>Total Followers</th><th>Likes</th><th>Website Clicks</th></tr></thead>
+      <tbody id="tt-daily-table"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ ANALYTICS ═════════════════════════════════════════════════════════ -->
+<div class="panel" id="panel-ga">
+  <div class="kpi-grid">
+    <div class="kpi ga"><div class="kl">Sessions (W1)</div><div class="kv">927</div><div class="kd na">Apr 19–25</div></div>
+    <div class="kpi ga"><div class="kl">Engaged (W1)</div><div class="kv">479</div><div class="kd na">51.7% rate</div></div>
+    <div class="kpi ga"><div class="kl">Revenue (W1)</div><div class="kv">$1,596</div><div class="kd na">Apr 19–25</div></div>
+    <div class="kpi ga"><div class="kl">Sessions (cumul.)</div><div class="kv">3,905</div><div class="kd na">Apr 13–May 10</div></div>
+    <div class="kpi ga"><div class="kl">Revenue (cumul.)</div><div class="kv">$8,924</div><div class="kd na">Apr 13–May 10</div></div>
+    <div class="kpi ga"><div class="kl">Eng Rate (cumul.)</div><div class="kv">51.4%</div><div class="kd na">Engaged/sessions</div></div>
+  </div>
+  <div class="chart-grid cols12">
+    <div class="card"><div class="card-title">Top Traffic Sources <span>Apr 19–25 · sessions by source</span></div><div class="chart-wrap tall"><canvas id="c-ga-sources"></canvas></div></div>
+    <div class="card"><div class="card-title">Session Mix <span>Apr 19–25</span></div><div class="chart-wrap tall"><canvas id="c-ga-donut"></canvas></div></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="card-title">Source Details — Apr 19–25 <span>Sessions · engagement rate · revenue</span></div>
+    <table class="trend-table">
+      <thead><tr><th>Source</th><th>Sessions</th><th>Eng Rate</th><th>Revenue</th><th>Bar</th></tr></thead>
+      <tbody>
+        <tr><td>(direct)</td><td>408</td><td>39.7%</td><td>—</td><td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:100%;background:var(--t3)"></div></div></div></td></tr>
+        <tr><td>google</td><td>346</td><td>63.6%</td><td>$1,596</td><td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:84%;background:var(--ga)"></div></div></div></td></tr>
+        <tr><td>alaskawildlights.com</td><td>41</td><td>80.5%</td><td>—</td><td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:10%;background:var(--aurora)"></div></div></div></td></tr>
+        <tr><td>alaska-org</td><td>34</td><td>55.9%</td><td>—</td><td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:8%;background:var(--aurora)"></div></div></div></td></tr>
+        <tr><td>facebook (all)</td><td>22</td><td>40.9%</td><td>—</td><td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:5%;background:var(--fb)"></div></div></div></td></tr>
+        <tr><td>explorefairbanks.com</td><td>15</td><td>73.3%</td><td>—</td><td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:4%;background:var(--aurora)"></div></div></div></td></tr>
+        <tr><td>chatgpt.com</td><td>8</td><td>62.5%</td><td>—</td><td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:2%;background:var(--tt)"></div></div></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 </div>
 
 <script>
-// ══════════════════════════════════════════════════════════════════════════════
-// CONFIG
-// ══════════════════════════════════════════════════════════════════════════════
-const SHEET_ID = "1MnIzcNINJSkvnm8DvH0mJuy71a_rv2txu6tEohnq8SY";
-const GVIZ_BASE = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`;
-
-const C = {
-  ig: "#C13584", igDim: "rgba(193,53,132,0.12)",
-  fb: "#4599FF", fbDim: "rgba(69,153,255,0.12)",
-  tt: "#EEEEEE", ttDim: "rgba(238,238,238,0.08)",
-  aurora: "#00C08B", auroraDim: "rgba(0,192,139,0.12)",
-  golden: "#F5A623", goldenDim: "rgba(245,166,35,0.12)",
-  pink: "#FF6B7A",
-  grid: "rgba(175,226,227,0.06)",
-  t3: "#4A7A80",
+const W=['Apr 19–25','Apr 26–May 2','May 3–9'];
+const D={
+  ig:{reach:[229,693,1266],views:[354,1189,5488],follows:[7,13,30],interactions:[0,33,79],totalF:[643,650,663],engRate:[0,4.77,6.24]},
+  fb:{views:[164,0,2706],visits:[67,197,166],viewers:[22,1346,0],follows:[32,65,0],interactions:[2,42,71],linkClicks:[1,2,4]},
+  tt:{views:[0,0,1367],reached:[0,0,1313],newF:[0,0,18],totalF:[0,1,19],likes:[0,0,74],webClicks:[0,0,2]},
+};
+const ttD={
+  dates:['May 3','May 4','May 5','May 6','May 7','May 8','May 9'],
+  views:[218,597,170,179,47,104,52],
+  reached:[218,597,166,167,38,75,52],
+  newF:[4,7,1,3,1,2,0],
+  totalF:[5,12,13,16,17,19,19],
+  likes:[13,27,6,13,4,7,4],
+  webClicks:[1,1,0,0,0,0,0],
 };
 
-// ══════════════════════════════════════════════════════════════════════════════
-// DATA FETCH
-// ══════════════════════════════════════════════════════════════════════════════
-async function fetchSheet(sheetName) {
-  const url = `${GVIZ_BASE}?sheet=${encodeURIComponent(sheetName)}&tqx=out:json`;
-  const resp = await fetch(url);
-  const text = await resp.text();
-  // gviz response is wrapped in google.visualization.Query.setResponse({...})
-  const jsonStr = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]+)\);?/);
-  if (!jsonStr) throw new Error("Could not parse gviz response for " + sheetName);
-  const data = JSON.parse(jsonStr[1]);
-  if (data.status === "error") throw new Error(data.errors[0].detailed_message);
+Chart.defaults.font.family="'DM Sans',sans-serif";
+Chart.defaults.font.size=11;
+Chart.defaults.color='#3D6E78';
 
-  const cols = data.table.cols.map(c => c.label || c.id);
-  const rows = data.table.rows.map(r => {
-    const obj = {};
-    r.c.forEach((cell, i) => {
-      if (!cell) { obj[cols[i]] = null; return; }
-      if (cell.v !== null && cell.v !== undefined) {
-        // gviz returns dates as "Date(2026,4,3)" strings
-        if (typeof cell.v === "string" && cell.v.startsWith("Date(")) {
-          const parts = cell.v.replace("Date(", "").replace(")", "").split(",").map(Number);
-          obj[cols[i]] = new Date(parts[0], parts[1], parts[2]);
-        } else {
-          obj[cols[i]] = cell.v;
-        }
-      } else {
-        obj[cols[i]] = cell.f || null;
-      }
-    });
-    return obj;
-  });
-  return { cols, rows };
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════════════════════════════════════════
-function colVal(row, partialName) {
-  const key = Object.keys(row).find(k => k.toLowerCase().includes(partialName.toLowerCase()));
-  return key ? (parseFloat(row[key]) || 0) : 0;
-}
-
-function fmtN(n) { return Math.round(n).toLocaleString(); }
-
-function pctChg(cur, prev) {
-  if (!prev || prev === 0) return null;
-  return Math.round((cur - prev) / prev * 100);
-}
-
-function deltaHtml(cur, prev) {
-  const d = pctChg(cur, prev);
-  if (d === null) return "";
-  const cls = d > 5 ? "up" : d < -5 ? "down" : "neu";
-  return `<span class="${cls}">${d >= 0 ? "+" : ""}${d}%</span>`;
-}
-
-function dateLabel(d) {
-  if (!d || !(d instanceof Date)) return "";
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function ki(id, items) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.innerHTML = items.map(it =>
-    `<div class="kpi ${it.c || ''}"><div class="kb"></div>
-    <div class="kl">${it.l}</div>
-    <div class="kv">${it.v}</div>
-    ${it.d !== undefined ? `<div class="kd">${it.d || ''}</div>` : ""}</div>`
-  ).join("");
-}
-
-// ── CHART DEFAULTS ──────────────────────────────────────────────────────────
-const chartDefaults = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: {
-    legend: { display: false },
-    tooltip: {
-      backgroundColor: "#152238",
-      titleColor: "#E8F0F2",
-      bodyColor: "#7AB8B0",
-      borderColor: "rgba(175,226,227,0.15)",
-      borderWidth: 1,
-      cornerRadius: 8,
-      padding: 10,
-    }
-  },
-  scales: {
-    x: {
-      grid: { color: C.grid },
-      ticks: { color: C.t3, font: { family: "'DM Sans', sans-serif", size: 11 } },
-    },
-    y: {
-      grid: { color: C.grid },
-      ticks: { color: C.t3, font: { family: "'DM Sans', sans-serif", size: 11 } },
-    }
-  }
+const TT={
+  backgroundColor:'#0E1C2F',titleColor:'#E8F2F0',bodyColor:'#7BBDB4',
+  borderColor:'rgba(0,192,139,0.2)',borderWidth:1,cornerRadius:8,padding:10
+};
+const SC={
+  x:{grid:{color:'rgba(0,192,139,0.05)',drawBorder:false},ticks:{color:'#3D6E78'}},
+  y:{grid:{color:'rgba(0,192,139,0.05)',drawBorder:false},ticks:{color:'#3D6E78'}}
 };
 
-function bo(extra = {}) {
-  return JSON.parse(JSON.stringify({ ...chartDefaults, ...extra }));
-}
+function mk(id,cfg){const el=document.getElementById(id);if(!el)return null;return new Chart(el,cfg)}
+function lds(label,data,color,fill=false){return{label,data,borderColor:color,backgroundColor:fill?color+'1F':'transparent',tension:.4,pointRadius:4,pointHoverRadius:7,pointBackgroundColor:color,fill,borderWidth:2}}
+function bds(label,data,color){return{label,data,backgroundColor:color+'BB',hoverBackgroundColor:color,borderRadius:5,borderSkipped:false}}
 
-function mk(id, cfg) {
-  const el = document.getElementById(id);
-  if (!el) return null;
-  return new Chart(el, cfg);
-}
+// OVERVIEW
+mk('c-reach',{type:'line',data:{labels:W,datasets:[lds('IG Reach',D.ig.reach,'#E1306C',true)]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TT},scales:SC}});
+mk('c-followers',{type:'line',data:{labels:W,datasets:[lds('IG',D.ig.totalF,'#E1306C'),lds('TikTok',D.tt.totalF,'#69C9D0')]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#7BBDB4',boxWidth:10}},tooltip:TT},scales:SC}});
+mk('c-views-all',{type:'bar',data:{labels:W,datasets:[bds('IG',D.ig.views,'#E1306C'),bds('FB',D.fb.views,'#4080FF'),bds('TT',D.tt.views,'#69C9D0')]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#7BBDB4',boxWidth:10}},tooltip:TT},scales:SC}});
+mk('c-eng-overview',{type:'bar',data:{labels:W,datasets:[{...bds('Eng Rate',D.ig.engRate,'#E1306C'),backgroundColor:D.ig.engRate.map(v=>v>=6?'#00C08BAA':'#E1306CAA')},{type:'line',label:'Target 6%',data:[6,6,6],borderColor:'#FFD700',borderDash:[5,4],borderWidth:1.5,pointRadius:0,tension:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TT},scales:SC}});
 
-// ══════════════════════════════════════════════════════════════════════════════
-// TAB SWITCHING
-// ══════════════════════════════════════════════════════════════════════════════
-document.querySelectorAll(".nb").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
-    document.querySelectorAll(".nb").forEach(b => { b.className = "nb"; });
-    const tab = btn.dataset.tab;
-    document.getElementById("panel-" + tab).classList.add("active");
-    btn.classList.add("active");
-    const tabClasses = { ig: "active-ig", fb: "active-fb", tt: "active-tt", ga: "active-ga" };
-    if (tabClasses[tab]) btn.classList.add(tabClasses[tab]);
+// INSTAGRAM
+mk('c-ig-reach-views',{type:'line',data:{labels:W,datasets:[lds('Reach',D.ig.reach,'#E1306C',true),lds('Views',D.ig.views,'#F77737')]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#7BBDB4',boxWidth:10}},tooltip:TT},scales:SC}});
+mk('c-ig-engrate',{type:'bar',data:{labels:W,datasets:[{...bds('Eng Rate',D.ig.engRate,'#E1306C'),backgroundColor:D.ig.engRate.map(v=>v>=6?'#00C08BCC':'#E1306CAA')},{type:'line',label:'Target 6%',data:[6,6,6],borderColor:'#FFD700AA',borderDash:[5,4],borderWidth:1.5,pointRadius:0,tension:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TT},scales:SC}});
+mk('c-ig-follows',{type:'bar',data:{labels:W,datasets:[bds('Follows',D.ig.follows,'#E1306C'),bds('Interactions',D.ig.interactions,'#F77737')]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#7BBDB4',boxWidth:10}},tooltip:TT},scales:SC}});
+mk('c-ig-tf',{type:'line',data:{labels:W,datasets:[lds('Followers',D.ig.totalF,'#E1306C',true),{type:'line',label:'Q2 Goal 1,500',data:[1500,1500,1500],borderColor:'#FFD700AA',borderDash:[5,4],borderWidth:1.5,pointRadius:0,tension:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TT},scales:SC}});
+
+// FACEBOOK
+mk('c-fb-views',{type:'bar',data:{labels:W,datasets:[bds('Views',D.fb.views,'#4080FF'),bds('Visits',D.fb.visits,'#69C9D0')]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#7BBDB4',boxWidth:10}},tooltip:TT},scales:SC}});
+mk('c-fb-engage',{type:'bar',data:{labels:W,datasets:[bds('Follows',D.fb.follows,'#4080FF'),bds('Interactions',D.fb.interactions,'#69C9D0')]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#7BBDB4',boxWidth:10}},tooltip:TT},scales:SC}});
+
+// TIKTOK
+mk('c-tt-views',{type:'bar',data:{labels:ttD.dates,datasets:[bds('Video Views',ttD.views,'#69C9D0')]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TT},scales:SC}});
+mk('c-tt-followers',{type:'line',data:{labels:ttD.dates,datasets:[lds('Total Followers',ttD.totalF,'#69C9D0',true)]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TT},scales:SC}});
+mk('c-tt-likes',{type:'bar',data:{labels:ttD.dates,datasets:[bds('Likes',ttD.likes,'#69C9D0'),bds('Reached',ttD.reached.map(v=>Math.round(v/10)),'#A0E8EE')]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#7BBDB4',boxWidth:10}},tooltip:{...TT,callbacks:{label:ctx=>{const v=ctx.raw;const label=ctx.dataset.label;return label==='Reached'?` Reached: ${v*10}`:` ${label}: ${v}`}}}},scales:SC}});
+mk('c-tt-weekly',{type:'bar',data:{labels:W,datasets:[bds('TT Video Views',D.tt.views,'#69C9D0')]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TT},scales:SC}});
+
+// TikTok daily table
+const ttTb=document.getElementById('tt-daily-table');
+ttD.dates.forEach((d,i)=>{ttTb.innerHTML+=`<tr><td>${d}</td><td>${ttD.views[i].toLocaleString()}</td><td>${ttD.reached[i].toLocaleString()}</td><td>${ttD.newF[i]}</td><td>${ttD.totalF[i]}</td><td>${ttD.likes[i]}</td><td>${ttD.webClicks[i]}</td></tr>`});
+
+// GA
+mk('c-ga-sources',{type:'bar',data:{labels:['(direct)','google','awl.com','alaska-org','facebook','explorefairbanks','other'],datasets:[bds('Sessions',[408,346,41,34,22,15,61],'#FFAD1F')]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TT},scales:{x:{grid:{color:'rgba(0,192,139,0.05)'},ticks:{color:'#3D6E78'}},y:{grid:{display:false},ticks:{color:'#7BBDB4'}}}}});
+mk('c-ga-donut',{type:'doughnut',data:{labels:['Direct','Google','AWL.com','alaska-org','Facebook','Other'],datasets:[{data:[408,346,41,34,22,76],backgroundColor:['#3D6E78CC','#FFAD1FCC','#00C08BCC','#4080FFCC','#69C9D0CC','#555555CC'],borderColor:'#0E1C2F',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#7BBDB4',boxWidth:10,padding:10,font:{size:10}}},tooltip:TT}}});
+
+// TABS
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-'+t.dataset.tab).classList.add('active');
+    setTimeout(()=>Chart.instances.forEach(c=>c.resize()),50);
   });
 });
-
-// ══════════════════════════════════════════════════════════════════════════════
-// MAIN RENDER
-// ══════════════════════════════════════════════════════════════════════════════
-async function init() {
-  try {
-    document.getElementById("load-text").textContent = "Fetching Weekly data...";
-    const weekly = await fetchSheet("Weekly");
-
-    let ga = null;
-    try {
-      document.getElementById("load-text").textContent = "Fetching Analytics...";
-      ga = await fetchSheet("Google Analytics");
-    } catch (e) {
-      console.warn("GA sheet not available:", e);
-    }
-
-    render(weekly, ga);
-  } catch (err) {
-    console.error(err);
-    document.getElementById("load-text").style.display = "none";
-    const errEl = document.getElementById("error-text");
-    errEl.style.display = "block";
-    errEl.innerHTML = `Could not fetch live data.<br><br>The Google Sheet must be published: File → Share → Publish to web.<br><br>Sheet ID: <code style="font-size:11px;color:var(--t2)">${SHEET_ID}</code><br><br><span style="color:var(--t3);font-size:11px">${err.message}</span>`;
-  }
-}
-
-function render(weekly, ga) {
-  const rows = weekly.rows;
-  if (!rows.length) return;
-
-  // Find the last row that has actual metric data (not just a manual follower update row).
-  // A "real" week has at least one of reach, views, or fb views > 0.
-  function hasMetrics(r) {
-    return colVal(r, "instagram|reach") > 0
-        || colVal(r, "instagram|views") > 0
-        || colVal(r, "facebook|views") > 0
-        || colVal(r, "facebook|visits") > 0
-        || colVal(r, "tiktok|video") > 0;
-  }
-  // Chart uses all rows for trend lines; KPIs use last real-data row.
-  const lastRealIdx = (() => {
-    for (let i = rows.length - 1; i >= 0; i--) {
-      if (hasMetrics(rows[i])) return i;
-    }
-    return rows.length - 1;
-  })();
-
-  const last = rows[lastRealIdx];
-  const prev = lastRealIdx > 0 ? rows[lastRealIdx - 1] : null;
-  // For chart labels and series, show all rows that have a date
-  const chartRows = rows.filter(r => r["Date"] || r["Week"]);
-  const weekLabel = last["Week"] || "";
-
-  document.getElementById("wl").textContent = weekLabel;
-
-  // Extract weekly arrays (full history for charts)
-  const labels = chartRows.map(r => dateLabel(r["Date"]));
-
-  function col(name) { return chartRows.map(r => colVal(r, name)); }
-
-  // Exact column key helpers to avoid ambiguity (colVal uses .includes())
-  function exactCol(exactKey) {
-    return chartRows.map(r => {
-      const k = Object.keys(r).find(k => k.toLowerCase() === exactKey.toLowerCase());
-      return k ? (parseFloat(r[k]) || 0) : 0;
-    });
-  }
-
-  const igReach   = col("instagram|reach");
-  const igViews   = col("instagram|views");
-  const igFollows = col("instagram|follows");
-  const igInter   = col("instagram|interactions");
-  const igTF      = exactCol("Instagram|Total Followers");
-  const igEng     = col("ig eng rate");
-
-  const fbViews   = col("facebook|views");
-  const fbVisits  = col("facebook|visits");
-  const fbFollows = col("facebook|follows");
-  const fbInter   = col("facebook|interactions");
-
-  const ttViews   = col("tiktok|video");
-  const ttFollows = exactCol("TikTok|New Followers");
-  const ttTF      = exactCol("TikTok|Total Followers");
-  const ttReach   = col("tiktok|reached");
-
-  // KPI indices: use last real data row mapped into chartRows
-  const L = chartRows.indexOf(last) > -1 ? chartRows.indexOf(last) : chartRows.length - 1;
-  const P = L > 0 ? L - 1 : 0;
-
-  // Latest total followers — scan ALL rows for last non-zero value
-  function latestNonZero(arr) {
-    for (let i = arr.length - 1; i >= 0; i--) {
-      if (arr[i] > 0) return arr[i];
-    }
-    return 0;
-  }
-  const allIgTF = rows.map(r => { const k = Object.keys(r).find(k => k.toLowerCase() === "instagram|total followers"); return k ? (parseFloat(r[k]) || 0) : 0; });
-  const allTtTF = rows.map(r => { const k = Object.keys(r).find(k => k.toLowerCase() === "tiktok|total followers"); return k ? (parseFloat(r[k]) || 0) : 0; });
-  const latestIgTF = latestNonZero(allIgTF) || igTF[L];
-  const latestTtTF = latestNonZero(allTtTF) || ttTF[L];
-
-  const curIgEng = igEng[L] || 0;
-  const prevIgEng = igEng[P] || 0;
-
-  // ── OVERVIEW KPIs ──────────────────────────────────────────────────────
-  ki("k-all", [
-    { l: "IG Reach",      v: fmtN(igReach[L]),   c: "ig", d: deltaHtml(igReach[L], igReach[P]) },
-    { l: "IG Eng Rate",   v: curIgEng.toFixed(2) + "%", c: "ig", d: deltaHtml(curIgEng, prevIgEng) },
-    { l: "IG Followers",  v: fmtN(latestIgTF),   c: "ig", d: deltaHtml(latestIgTF, igTF[P]) },
-    { l: "FB Views",      v: fmtN(fbViews[L]),   c: "fb", d: deltaHtml(fbViews[L], fbViews[P]) },
-    { l: "TT Views",      v: fmtN(ttViews[L]),   c: "tt", d: deltaHtml(ttViews[L], ttViews[P]) },
-    { l: "TT Followers",  v: fmtN(latestTtTF),   c: "tt", d: deltaHtml(latestTtTF, ttTF[P]) },
-  ]);
-
-  const engStatus = curIgEng >= 6
-    ? `IG engagement at ${curIgEng.toFixed(2)}% — on track for Q2 target (≥6%).`
-    : `IG engagement at ${curIgEng.toFixed(2)}% — below Q2 target (≥6%).`;
-  document.getElementById("insight-all").innerHTML = engStatus
-    + ` Total followers: IG ${fmtN(latestIgTF)}, TT ${fmtN(latestTtTF)}.`;
-
-  // ── INSTAGRAM KPIs ────────────────────────────────────────────────────
-  ki("k-ig", [
-    { l: "Reach",     v: fmtN(igReach[L]),   c: "ig", d: deltaHtml(igReach[L], igReach[P]) },
-    { l: "Views",     v: fmtN(igViews[L]),   c: "ig", d: deltaHtml(igViews[L], igViews[P]) },
-    { l: "Follows",   v: fmtN(igFollows[L]), c: "ig", d: deltaHtml(igFollows[L], igFollows[P]) },
-    { l: "Eng Rate",  v: curIgEng.toFixed(2) + "%", c: "ig", d: deltaHtml(curIgEng, prevIgEng) },
-  ]);
-  document.getElementById("insight-ig").innerHTML =
-    `Reach ${fmtN(igReach[L])}, Views ${fmtN(igViews[L])}. Engagement rate ${curIgEng.toFixed(2)}%.`;
-
-  // ── FACEBOOK KPIs ─────────────────────────────────────────────────────
-  ki("k-fb", [
-    { l: "Views",        v: fmtN(fbViews[L]),   c: "fb", d: deltaHtml(fbViews[L], fbViews[P]) },
-    { l: "Visits",       v: fmtN(fbVisits[L]),  c: "fb", d: deltaHtml(fbVisits[L], fbVisits[P]) },
-    { l: "Follows",      v: fmtN(fbFollows[L]), c: "fb", d: deltaHtml(fbFollows[L], fbFollows[P]) },
-    { l: "Interactions", v: fmtN(fbInter[L]),   c: "fb", d: deltaHtml(fbInter[L], fbInter[P]) },
-  ]);
-  document.getElementById("insight-fb").innerHTML =
-    `Views ${fmtN(fbViews[L])}, Visits ${fmtN(fbVisits[L])}. Follows ${fmtN(fbFollows[L])} this week.`;
-
-  // ── TIKTOK KPIs ───────────────────────────────────────────────────────
-  ki("k-tt", [
-    { l: "Video Views",   v: fmtN(ttViews[L]),   c: "tt", d: deltaHtml(ttViews[L], ttViews[P]) },
-    { l: "New Follows",   v: fmtN(ttFollows[L]), c: "tt", d: deltaHtml(ttFollows[L], ttFollows[P]) },
-    { l: "Total Follows", v: fmtN(latestTtTF),   c: "tt", d: deltaHtml(latestTtTF, ttTF[P]) },
-    { l: "Reached",       v: fmtN(ttReach[L]),   c: "tt", d: deltaHtml(ttReach[L], ttReach[P]) },
-  ]);
-  document.getElementById("insight-tt").innerHTML =
-    `Video views ${fmtN(ttViews[L])}, new followers ${fmtN(ttFollows[L])}.`;
-
-  // ── GA KPIs ───────────────────────────────────────────────────────────
-  let gaRows = [];
-  if (ga && ga.rows.length) {
-    // Find the date range with the most recent start date
-    const rangeKey = Object.keys(ga.rows[0]).find(k => k.toLowerCase().includes("date range")) || "Date Range";
-    const startKey = Object.keys(ga.rows[0]).find(k => k.toLowerCase().includes("start date")) || "Start Date";
-    // Get the range with the latest start date
-    let latestStart = "";
-    ga.rows.forEach(r => {
-      const s = r[startKey] || "";
-      if (String(s) > String(latestStart)) latestStart = String(s);
-    });
-    const latestRange = ga.rows.find(r => String(r[startKey]) === latestStart)?.[rangeKey];
-    gaRows = latestRange ? ga.rows.filter(r => r[rangeKey] === latestRange) : ga.rows.slice(0, 20);
-  }
-
-  const gaSessions = gaRows.reduce((s, r) => s + (parseFloat(r["Sessions"]) || 0), 0);
-  const gaEngRate = gaRows.length ? (gaRows.reduce((s, r) => s + (parseFloat(r["Engagement Rate (%)"]) || 0), 0) / gaRows.length) : 0;
-  const gaRevenue = gaRows.reduce((s, r) => s + (parseFloat(r["Total Revenue"]) || 0), 0);
-
-  ki("k-ga", [
-    { l: "Sessions",        v: fmtN(gaSessions), c: "ga" },
-    { l: "Avg Eng Rate",    v: gaEngRate.toFixed(1) + "%", c: "ga" },
-    { l: "Revenue",         v: "$" + gaRevenue.toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2}), c: "ga" },
-    { l: "Sources",         v: gaRows.length, c: "ga" },
-  ]);
-
-  // ══════════════════════════════════════════════════════════════════════
-  // CHARTS
-  // ══════════════════════════════════════════════════════════════════════
-
-  // Overview: IG Reach
-  mk("c-ig-reach", {
-    type: "line",
-    data: {
-      labels,
-      datasets: [{
-        data: igReach,
-        borderColor: C.ig,
-        backgroundColor: C.igDim,
-        tension: 0.35,
-        fill: true,
-        pointRadius: 4,
-        borderWidth: 2.5,
-        pointBackgroundColor: C.ig,
-      }]
-    },
-    options: bo()
-  });
-
-  // Overview: Engagement comparison
-  const fbEngRate = fbVisits[L] > 0 ? Math.round(fbInter[L] / fbVisits[L] * 10000) / 100 : 0;
-  const ttEngRate = ttReach[L] > 0 ? Math.round((ttFollows[L]) / ttReach[L] * 10000) / 100 : 0;
-
-  mk("c-eng", {
-    type: "bar",
-    data: {
-      labels: ["Instagram", "Facebook", "TikTok"],
-      datasets: [{
-        data: [curIgEng, fbEngRate, ttEngRate],
-        backgroundColor: [C.ig, C.fb, C.tt],
-        borderRadius: 6,
-      }]
-    },
-    options: bo({ scales: { y: { ticks: { callback: v => v + "%" }, grid: { color: C.grid } } } })
-  });
-
-  // Overview: All Follows
-  mk("c-follows", {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [
-        { label: "IG", data: igFollows, backgroundColor: C.ig, borderRadius: 4 },
-        { label: "FB", data: fbFollows, backgroundColor: C.fb, borderRadius: 4 },
-        { label: "TT", data: ttFollows, backgroundColor: C.tt, borderRadius: 4 },
-      ]
-    },
-    options: bo({ plugins: { legend: { display: true, position: "bottom", labels: { color: C.t3, boxWidth: 12 } } } })
-  });
-
-  // Overview: TT Trend
-  mk("c-tt-trend", {
-    type: "line",
-    data: {
-      labels,
-      datasets: [{
-        data: ttViews,
-        borderColor: C.tt,
-        backgroundColor: C.ttDim,
-        tension: 0.35,
-        fill: true,
-        borderWidth: 2.5,
-        pointRadius: 3,
-        pointBackgroundColor: C.tt,
-      }]
-    },
-    options: bo()
-  });
-
-  // IG: Reach + Views
-  mk("c-ig-all", {
-    type: "line",
-    data: {
-      labels,
-      datasets: [
-        { data: igReach, borderColor: C.ig, backgroundColor: C.igDim, tension: 0.35, fill: true, borderWidth: 2, label: "Reach" },
-        { data: igViews, borderColor: "rgba(193,53,132,0.5)", borderDash: [5, 4], tension: 0.35, borderWidth: 1.5, label: "Views" },
-      ]
-    },
-    options: bo({ plugins: { legend: { display: true, position: "bottom", labels: { color: C.t3, boxWidth: 12 } } } })
-  });
-
-  // IG: Engagement Rate with target line
-  mk("c-ig-eng", {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [
-        { data: igEng, backgroundColor: C.aurora, borderRadius: 4, label: "Eng Rate %" },
-        { data: igEng.map(() => 6), type: "line", borderColor: C.pink, borderDash: [6, 3], borderWidth: 2, pointRadius: 0, label: "Q2 Target (6%)" },
-      ]
-    },
-    options: bo({
-      scales: { y: { ticks: { callback: v => v + "%" }, grid: { color: C.grid } } },
-      plugins: { legend: { display: true, position: "bottom", labels: { color: C.t3, boxWidth: 12 } } }
-    })
-  });
-
-  // FB: Views + Visits
-  mk("c-fb-all", {
-    type: "line",
-    data: {
-      labels,
-      datasets: [
-        { data: fbViews, borderColor: C.fb, backgroundColor: C.fbDim, tension: 0.35, fill: true, borderWidth: 2, label: "Views" },
-        { data: fbVisits, borderColor: "rgba(69,153,255,0.5)", borderDash: [5, 4], tension: 0.35, borderWidth: 1.5, label: "Visits" },
-      ]
-    },
-    options: bo({ plugins: { legend: { display: true, position: "bottom", labels: { color: C.t3, boxWidth: 12 } } } })
-  });
-
-  // FB: Follows + Interactions stacked
-  mk("c-fb-eng", {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [
-        { data: fbFollows, backgroundColor: C.fb, borderRadius: 4, label: "Follows" },
-        { data: fbInter, backgroundColor: "rgba(69,153,255,0.45)", borderRadius: 4, label: "Interactions" },
-      ]
-    },
-    options: bo({ plugins: { legend: { display: true, position: "bottom", labels: { color: C.t3, boxWidth: 12 } } } })
-  });
-
-  // TT: Views + Reached
-  mk("c-tt-all", {
-    type: "line",
-    data: {
-      labels,
-      datasets: [
-        { data: ttViews, borderColor: C.tt, backgroundColor: C.ttDim, tension: 0.35, fill: true, borderWidth: 2, label: "Video Views" },
-        { data: ttReach, borderColor: "rgba(238,238,238,0.45)", borderDash: [5, 4], tension: 0.35, borderWidth: 1.5, label: "Reached" },
-      ]
-    },
-    options: bo({ plugins: { legend: { display: true, position: "bottom", labels: { color: C.t3, boxWidth: 12 } } } })
-  });
-
-  // TT: Follower Growth
-  mk("c-tt-follows", {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [{ data: ttFollows, backgroundColor: C.aurora, borderRadius: 4 }]
-    },
-    options: bo()
-  });
-
-  // GA: Doughnut
-  if (gaRows.length) {
-    const gaLabels = gaRows.map(r => r["Session Source"] || r["Session source"] || "Unknown");
-    const gaVals = gaRows.map(r => parseFloat(r["Sessions"]) || 0);
-    const gaColors = [C.golden, C.pink, C.fb, C.ig, C.aurora, C.tt, "#8B5CF6", "#D97706"];
-
-    mk("c-ga", {
-      type: "doughnut",
-      data: {
-        labels: gaLabels,
-        datasets: [{ data: gaVals, backgroundColor: gaColors.slice(0, gaLabels.length) }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: true, position: "bottom", labels: { color: C.t3, boxWidth: 12 } },
-          tooltip: chartDefaults.plugins.tooltip,
-        }
-      }
-    });
-
-    mk("c-ga-bar", {
-      type: "bar",
-      data: {
-        labels: gaLabels,
-        datasets: [{ data: gaVals, backgroundColor: gaColors.slice(0, gaLabels.length), borderRadius: 6 }]
-      },
-      options: bo({ indexAxis: "y" })
-    });
-  }
-
-  // Done — show panels
-  document.getElementById("loading").style.display = "none";
-  document.getElementById("panels").style.display = "block";
-}
-
-init();
 </script>
 </body>
 </html>

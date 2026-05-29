@@ -8,30 +8,50 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
-:root{--bg:#080F1A;--s1:#0E1C2F;--s2:#132540;--s3:#1A2F50;--border:rgba(0,192,139,0.12);--border-h:rgba(0,192,139,0.3);--t1:#E8F2F0;--t2:#7BBDB4;--t3:#3D6E78;--aurora:#00C08B;--aurora2:#00E5A6;--ig:#E1306C;--ig2:#F77737;--fb:#4080FF;--tt:#69C9D0;--ga:#FFAD1F;--up:#00C08B;--down:#FF5A6E;--rc:10px}
+:root{
+  --bg:#080F1A;--s1:#0E1C2F;--s2:#132540;--s3:#1A2F50;
+  --border:rgba(0,192,139,0.12);--border-h:rgba(0,192,139,0.3);
+  --t1:#E8F2F0;--t2:#7BBDB4;--t3:#3D6E78;
+  --aurora:#00C08B;--aurora2:#00E5A6;
+  --ig:#E1306C;--ig2:#F77737;--fb:#4080FF;--tt:#69C9D0;--ga:#FFAD1F;
+  --up:#00C08B;--down:#FF5A6E;--rc:10px
+}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--t1);font-family:'DM Sans',system-ui,sans-serif;font-size:13px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 80% 60% at 15% 10%,rgba(0,192,139,.07) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 85% 80%,rgba(64,128,255,.05) 0%,transparent 55%)}
 .shell{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:0 28px 80px}
+
+/* ── HEADER ── */
 header{padding:24px 0 20px;border-bottom:1px solid var(--border);margin-bottom:20px}
 .header-top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:14px}
 .brand img{height:48px;width:auto}
 .brand-divider{width:1px;height:32px;background:var(--border)}
-.brand-text p{font-size:11px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase}
-.brand-text small{font-size:10px;color:var(--t3);opacity:.5}
+.brand-text p{font-size:11px;color:var(--t3);letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.brand-text small{font-size:10px;color:var(--t3);opacity:.6}
 .header-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .badge{border-radius:6px;padding:5px 12px;font-size:11px;font-family:'DM Mono',monospace}
 .badge-week{background:var(--s2);border:1px solid var(--border);color:var(--t2)}
 .badge-goal{background:rgba(0,192,139,.1);border:1px solid rgba(0,192,139,.25);color:var(--aurora)}
-.data-status{font-size:10px;color:var(--t3);margin-top:8px;font-family:'DM Mono',monospace}
-.week-nav{display:flex;align-items:center;gap:8px;padding:14px 0 18px;flex-wrap:wrap}
+.btn-compare{background:var(--s2);border:1px solid var(--border-h);color:var(--aurora);border-radius:6px;padding:5px 14px;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s}
+.btn-compare:hover{background:var(--s3);border-color:var(--aurora)}
+
+/* ── WEEK NAV ── */
+.week-nav{display:flex;align-items:center;gap:8px;padding:14px 0 10px;flex-wrap:wrap}
 .week-nav-label{font-size:11px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-right:4px;white-space:nowrap}
 .wk-btn{padding:5px 14px;border-radius:20px;border:1px solid var(--border);cursor:pointer;font-size:11px;font-family:'DM Mono',monospace;color:var(--t3);background:transparent;transition:all .15s;white-space:nowrap}
 .wk-btn:hover{color:var(--t2);border-color:var(--border-h)}
 .wk-btn.active{color:var(--t1);background:var(--s2);border-color:var(--aurora);box-shadow:0 0 0 1px rgba(0,192,139,.2)}
-.wk-btn.btn-all{border-color:rgba(0,192,139,.25);color:var(--aurora)}
-.wk-btn.btn-all.active{background:rgba(0,192,139,.12);color:var(--aurora2);border-color:var(--aurora)}
+
+/* ── DATE RANGE ── */
+.range-bar{display:flex;align-items:center;gap:10px;padding:0 0 16px;flex-wrap:wrap}
+.range-label{font-size:11px;color:var(--t3);letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+.range-select{background:var(--s2);border:1px solid var(--border);color:var(--t2);border-radius:6px;padding:4px 10px;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;outline:none}
+.range-select:focus{border-color:var(--border-h)}
+.btn-all-weeks{padding:4px 12px;border-radius:6px;border:1px solid rgba(0,192,139,.25);color:var(--aurora);background:transparent;font-size:11px;font-family:'DM Mono',monospace;cursor:pointer;transition:all .15s}
+.btn-all-weeks:hover,.btn-all-weeks.active{background:rgba(0,192,139,.12);color:var(--aurora2);border-color:var(--aurora)}
+
+/* ── TABS ── */
 .tabs{display:flex;gap:4px;padding:0 0 18px;overflow-x:auto;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{padding:7px 18px;border-radius:7px;border:1px solid transparent;cursor:pointer;font-size:12px;font-weight:500;white-space:nowrap;transition:all .18s;color:var(--t3);background:transparent}
@@ -42,78 +62,174 @@ header{padding:24px 0 20px;border-bottom:1px solid var(--border);margin-bottom:2
 .tab[data-tab="tt"].active{border-color:rgba(105,201,208,.4);color:var(--tt)}
 .tab[data-tab="ga"].active{border-color:rgba(255,173,31,.4);color:var(--ga)}
 .panel{display:none}.panel.active{display:block}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:20px}
+
+/* ── CARDS ── */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--rc);padding:18px 20px}
+.card-title{font-size:11px;font-weight:600;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.card-title span{font-family:'DM Mono',monospace;font-size:10px;color:var(--t3);font-weight:400;text-transform:none;letter-spacing:0}
+.chart-grid{display:grid;gap:14px}
+.chart-grid.cols2{grid-template-columns:1fr 1fr}
+.chart-grid.cols12{grid-template-columns:1.6fr 1fr}
+@media(max-width:900px){.chart-grid.cols2,.chart-grid.cols12{grid-template-columns:1fr}}
+.chart-grid+.chart-grid,.card+.chart-grid,.chart-grid+.card{margin-top:14px}
+.chart-wrap{position:relative;height:200px}
+.chart-wrap.tall{height:240px}
+
+/* ── KPI CARDS ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;margin-bottom:20px}
 .kpi{background:var(--s1);border:1px solid var(--border);border-radius:var(--rc);padding:14px 16px;position:relative;overflow:hidden;transition:border-color .18s,transform .15s}
 .kpi:hover{border-color:var(--border-h);transform:translateY(-1px)}
 .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.kpi.ig::before{background:linear-gradient(90deg,var(--ig),var(--ig2))}.kpi.fb::before{background:var(--fb)}.kpi.tt::before{background:var(--tt)}.kpi.ga::before{background:var(--ga)}.kpi.au::before{background:var(--aurora)}
+.kpi.ig::before{background:linear-gradient(90deg,var(--ig),var(--ig2))}
+.kpi.fb::before{background:var(--fb)}
+.kpi.tt::before{background:var(--tt)}
+.kpi.ga::before{background:var(--ga)}
+.kpi.au::before{background:var(--aurora)}
 .kl{font-size:10px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px}
 .kv{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--t1);line-height:1.1}
 .kd{margin-top:5px;font-size:10px;font-family:'DM Mono',monospace}
 .kd.up{color:var(--up)}.kd.dn{color:var(--down)}.kd.na{color:var(--t3)}
-.chart-grid{display:grid;gap:14px}.chart-grid.cols2{grid-template-columns:1fr 1fr}.chart-grid.cols12{grid-template-columns:1.6fr 1fr}
-@media(max-width:860px){.chart-grid.cols2,.chart-grid.cols12{grid-template-columns:1fr}}
-.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--rc);padding:18px 20px}
-.chart-grid+.chart-grid,.card+.chart-grid,.chart-grid+.card{margin-top:14px}
-.card-title{font-size:11px;font-weight:600;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
-.card-title span{font-family:'DM Mono',monospace;font-size:10px;color:var(--t3);font-weight:400;text-transform:none;letter-spacing:0}
-.chart-wrap{position:relative;height:200px}.chart-wrap.tall{height:240px}
-.insight{background:rgba(0,192,139,.06);border:1px solid rgba(0,192,139,.15);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--t2);line-height:1.6}
+
+/* ── BADGES (WoW) ── */
+.badge-up{color:var(--up);font-family:'DM Mono',monospace;font-size:10px}
+.badge-dn{color:var(--down);font-family:'DM Mono',monospace;font-size:10px}
+.badge-na{color:var(--t3);font-family:'DM Mono',monospace;font-size:10px}
+
+/* ── INSIGHT BAR ── */
+.insight{background:rgba(0,192,139,.06);border:1px solid rgba(0,192,139,.15);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--t2);line-height:1.7}
 .insight strong{color:var(--aurora)}
+.insight.warn{background:rgba(255,173,31,.06);border-color:rgba(255,173,31,.2);color:#FFAD1F}
+.insight.info{background:rgba(105,201,208,.06);border-color:rgba(105,201,208,.2);color:var(--tt)}
+
+/* ── GOALS ── */
+.goals-card{margin-bottom:14px}
+.goals-toggle{background:none;border:none;color:var(--aurora);cursor:pointer;font-size:11px;font-family:'DM Mono',monospace;padding:0}
+.goal-track{display:flex;align-items:center;gap:12px;margin-top:10px}
+.goal-label{font-size:11px;color:var(--t3);min-width:150px}
+.goal-bar-bg{flex:1;height:8px;background:var(--s3);border-radius:4px;overflow:hidden}
+.goal-bar-fill{height:100%;border-radius:4px;transition:width .6s}
+.goal-pct{font-family:'DM Mono',monospace;font-size:11px;min-width:80px;text-align:right}
+.goal-proj{font-size:10px;color:var(--t3);font-family:'DM Mono',monospace;margin-top:2px;margin-left:162px}
+
+/* ── TABLES ── */
+.wk-note{font-size:10px;color:var(--t3);margin-bottom:14px;font-family:'DM Mono',monospace}
 .trend-table{width:100%;border-collapse:collapse;font-size:11px}
 .trend-table th{text-align:left;color:var(--t3);font-weight:500;padding:5px 8px;letter-spacing:.05em;text-transform:uppercase;font-size:10px;border-bottom:1px solid var(--border)}
 .trend-table td{padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--t2);font-family:'DM Mono',monospace;font-size:11px}
 .trend-table tr:last-child td{border-bottom:none}
 .trend-table td:first-child{color:var(--t1);font-family:'DM Sans',sans-serif}
 .trend-table tr.active-week td{background:rgba(0,192,139,.06);color:var(--t1)}
-.bar-cell{display:flex;align-items:center;gap:8px}.bar-bg{flex:1;height:5px;background:var(--s3);border-radius:3px;overflow:hidden}.bar-fill{height:100%;border-radius:3px}
-.goal-track{display:flex;align-items:center;gap:12px;margin-top:10px}
-.goal-label{font-size:11px;color:var(--t3);min-width:140px}
-.goal-bar-bg{flex:1;height:8px;background:var(--s3);border-radius:4px;overflow:hidden}
-.goal-bar-fill{height:100%;border-radius:4px;transition:width .6s}
-.goal-pct{font-family:'DM Mono',monospace;font-size:11px;min-width:65px;text-align:right}
-.wk-note{font-size:10px;color:var(--t3);margin-bottom:14px;font-family:'DM Mono',monospace}
-/* Audience */
+.bar-cell{display:flex;align-items:center;gap:8px}
+.bar-bg{flex:1;height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px}
+
+/* ── AUDIENCE ── */
 .aud-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
-@media(max-width:860px){.aud-grid{grid-template-columns:1fr}}
+@media(max-width:900px){.aud-grid{grid-template-columns:1fr}}
 .aud-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04)}
 .aud-row:last-child{border-bottom:none}
 .aud-bracket{font-size:11px;color:var(--t2);min-width:44px;font-family:'DM Mono',monospace}
-.aud-bar-bg{flex:1;height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
-.aud-bar-fill{height:100%;border-radius:3px}
+.aud-bars{flex:1;display:flex;flex-direction:column;gap:3px}
+.aud-bar-row{display:flex;align-items:center;gap:4px}
+.aud-bar-lbl{font-size:9px;color:var(--t3);font-family:'DM Mono',monospace;min-width:26px}
+.aud-bar-bg{flex:1;height:4px;background:var(--s3);border-radius:2px;overflow:hidden}
+.aud-bar-fill{height:100%;border-radius:2px}
 .aud-pct{font-size:11px;color:var(--t3);min-width:42px;text-align:right;font-family:'DM Mono',monospace}
 .aud-target .aud-bracket,.aud-target .aud-pct{color:var(--aurora)}
 .aud-tag{display:inline-block;background:rgba(0,192,139,.15);border:1px solid rgba(0,192,139,.3);border-radius:3px;padding:0 5px;font-size:9px;color:var(--aurora);margin-left:4px;font-family:'DM Mono',monospace;vertical-align:middle}
-.geo-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:11px}
+.geo-section{margin-top:10px}
+.geo-section-title{font-size:10px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.geo-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:11px}
 .geo-row:last-child{border-bottom:none}
+.geo-name{color:var(--t2);flex:1}
+.geo-bar-bg{width:80px;height:4px;background:var(--s3);border-radius:2px;overflow:hidden}
+.geo-bar-fill{height:100%;border-radius:2px}
+.geo-pct{color:var(--t3);font-family:'DM Mono',monospace;min-width:38px;text-align:right}
+
+/* ── LOADING / ERROR ── */
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:16px}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--aurora);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-card{background:rgba(255,90,110,.08);border:1px solid rgba(255,90,110,.2);border-radius:var(--rc);padding:24px;text-align:center;max-width:480px;margin:60px auto}
+.error-card h3{color:var(--down);margin-bottom:8px;font-family:'Syne',sans-serif}
+.error-card p{color:var(--t3);font-size:12px}
+
+/* ── UPLOAD BUTTON ── */
+.btn-upload{padding:7px 16px;border-radius:7px;border:1px solid rgba(0,192,139,.35);background:rgba(0,192,139,.08);color:var(--aurora);font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;white-space:nowrap}
+.btn-upload:hover{background:rgba(0,192,139,.18);border-color:var(--aurora)}
+.upload-toast{position:fixed;bottom:24px;right:24px;z-index:200;background:var(--s2);border:1px solid var(--border-h);border-radius:8px;padding:12px 20px;font-size:12px;color:var(--t1);font-family:'DM Mono',monospace;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none}
+.upload-toast.show{transform:translateY(0);opacity:1}
+.upload-toast.ok{border-color:rgba(0,192,139,.4);color:var(--aurora)}
+.upload-toast.err{border-color:rgba(255,90,110,.4);color:var(--down)}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(8,15,26,.85);backdrop-filter:blur(4px);align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--border-h);border-radius:14px;width:min(900px,94vw);max-height:88vh;overflow-y:auto;padding:28px 32px;position:relative}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--t1)}
+.modal-close{background:none;border:none;color:var(--t3);font-size:22px;cursor:pointer;line-height:1;padding:4px;transition:color .15s}
+.modal-close:hover{color:var(--t1)}
+.modal-wk-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.modal-wk-check{display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;font-family:'DM Mono',monospace;color:var(--t2)}
+.modal-wk-check input{accent-color:var(--aurora)}
+.compare-table-wrap{overflow-x:auto;margin-bottom:20px}
+.compare-table{width:100%;border-collapse:collapse;font-size:11px}
+.compare-table th{text-align:left;color:var(--t3);padding:6px 10px;border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.compare-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.03);font-family:'DM Mono',monospace;color:var(--t2)}
+.compare-table td:first-child{color:var(--t1);font-family:'DM Sans',sans-serif}
+.compare-table tr.best-week td{color:var(--ga)}
+.compare-charts{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:700px){.compare-charts{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="shell">
 
+<!-- HEADER -->
 <header>
   <div class="header-top">
     <div class="brand">
-      <img id="logo-img" src="https://drive.google.com/uc?export=view&id=13_KiN2VS2Q1tbIZtoIGGgbGPIOtHyXTO" alt="Alaska Wild Lights" onerror="this.style.opacity='.2'">
+      <img src="https://drive.google.com/uc?export=view&id=13_KiN2VS2Q1tbIZtoIGGgbGPIOtHyXTO" alt="Alaska Wild Lights" onerror="this.style.opacity='.2'" height="48">
       <div class="brand-divider"></div>
       <div class="brand-text">
         <p>Social Media Dashboard</p>
-        <small>Internal · @alaskawildlights</small>
+        <small>Internal &middot; @alaskawildlights</small>
       </div>
     </div>
     <div class="header-meta">
-      <div class="badge badge-week" id="hdr-week">Loading…</div>
-      <div class="badge badge-goal">Q2 Goal: 1,500 followers &middot; &ge;6% eng rate</div>
+      <div class="badge badge-week" id="hdr-week">Loading&hellip;</div>
+      <div class="badge badge-goal" id="hdr-goal">Q2 Goal</div>
+      <button class="btn-compare" id="btn-compare">Compare Weeks</button>
+      <button class="btn-upload" id="btn-upload">&#8593; Upload JSON</button>
+      <input type="file" id="json-file-input" accept=".json" style="display:none">
     </div>
   </div>
-  <div class="data-status" id="data-status">Connecting to Google Sheets…</div>
 </header>
 
+<!-- UPLOAD TOAST -->
+<div class="upload-toast" id="upload-toast"></div>
+
+<!-- MAIN CONTENT -->
+<div id="main-content">
+
+<!-- WEEK SELECTOR -->
 <div class="week-nav">
   <span class="week-nav-label">Week</span>
   <div id="wk-buttons" style="display:flex;gap:6px;flex-wrap:wrap"></div>
 </div>
 
+<!-- DATE RANGE -->
+<div class="range-bar">
+  <span class="range-label">Range</span>
+  <span style="font-size:11px;color:var(--t3)">From</span>
+  <select id="range-from" class="range-select"></select>
+  <span style="font-size:11px;color:var(--t3)">To</span>
+  <select id="range-to" class="range-select"></select>
+  <button id="btn-all-weeks" class="btn-all-weeks active">All Weeks</button>
+</div>
+
+<!-- TABS -->
 <div class="tabs">
   <div class="tab active" data-tab="overview">Overview</div>
   <div class="tab" data-tab="ig">Instagram</div>
@@ -122,93 +238,128 @@ header{padding:24px 0 20px;border-bottom:1px solid var(--border);margin-bottom:2
   <div class="tab" data-tab="ga">Analytics</div>
 </div>
 
-<!-- OVERVIEW -->
+<!-- ══ OVERVIEW ══ -->
 <div class="panel active" id="panel-overview">
-  <div class="insight" id="ov-insight">Loading…</div>
+  <div class="insight" id="ov-insight">Loading&hellip;</div>
   <div class="kpi-grid" id="ov-kpis"></div>
-  <div class="card" style="margin-bottom:14px">
-    <div class="card-title">Q2 Progress Tracker <span>Goal: June 30, 2026 &middot; Quarterly Goals sheet</span></div>
-    <div class="goal-track"><div class="goal-label">IG Followers (1,500)</div><div class="goal-bar-bg"><div class="goal-bar-fill" id="g-ig-bar" style="background:var(--ig);width:0%"></div></div><div class="goal-pct" id="g-ig-txt">—</div></div>
-    <div class="goal-track" style="margin-top:8px"><div class="goal-label">IG Eng Rate (&ge;6%)</div><div class="goal-bar-bg"><div class="goal-bar-fill" id="g-eng-bar" style="background:var(--aurora);width:0%"></div></div><div class="goal-pct" id="g-eng-txt">—</div></div>
-    <div class="goal-track" style="margin-top:8px"><div class="goal-label">TT Followers (100)</div><div class="goal-bar-bg"><div class="goal-bar-fill" id="g-tt-bar" style="background:var(--tt);width:0%"></div></div><div class="goal-pct" id="g-tt-txt">—</div></div>
+
+  <!-- Goals panel -->
+  <div class="card goals-card" id="goals-card">
+    <div class="card-title">
+      Q2 Progress Tracker
+      <span style="display:flex;align-items:center;gap:10px">
+        <span>Goal: June 30, 2026</span>
+        <button class="goals-toggle" id="goals-toggle">&#9662; Collapse</button>
+      </span>
+    </div>
+    <div id="goals-body">
+      <div class="goal-track">
+        <div class="goal-label">IG Followers (1,500)</div>
+        <div class="goal-bar-bg"><div class="goal-bar-fill" id="g-ig-bar" style="background:var(--ig);width:0%"></div></div>
+        <div class="goal-pct" id="g-ig-txt">—</div>
+      </div>
+      <div class="goal-proj" id="g-ig-proj"></div>
+      <div class="goal-track" style="margin-top:10px">
+        <div class="goal-label">IG Eng Rate (&ge;6%)</div>
+        <div class="goal-bar-bg"><div class="goal-bar-fill" id="g-eng-bar" style="background:var(--aurora);width:0%"></div></div>
+        <div class="goal-pct" id="g-eng-txt">—</div>
+      </div>
+      <div class="goal-proj" id="g-eng-proj"></div>
+      <div class="goal-track" style="margin-top:10px">
+        <div class="goal-label">TT Followers (100)</div>
+        <div class="goal-bar-bg"><div class="goal-bar-fill" id="g-tt-bar" style="background:var(--tt);width:0%"></div></div>
+        <div class="goal-pct" id="g-tt-txt">—</div>
+      </div>
+      <div class="goal-proj" id="g-tt-proj"></div>
+    </div>
   </div>
+
+  <!-- Overview charts -->
   <div class="chart-grid cols2">
-    <div class="card"><div class="card-title">IG Reach &mdash; All Weeks</div><div class="chart-wrap"><canvas id="c-reach"></canvas></div></div>
+    <div class="card"><div class="card-title">IG Reach</div><div class="chart-wrap"><canvas id="c-reach"></canvas></div></div>
     <div class="card"><div class="card-title">Follower Growth &mdash; IG + TikTok</div><div class="chart-wrap"><canvas id="c-followers"></canvas></div></div>
   </div>
-  <div class="chart-grid cols2" style="margin-top:14px">
-    <div class="card"><div class="card-title">Weekly Views &mdash; IG + FB + TikTok</div><div class="chart-wrap"><canvas id="c-views-all"></canvas></div></div>
-    <div class="card"><div class="card-title">IG Eng Rate &mdash; vs 6% Target</div><div class="chart-wrap"><canvas id="c-eng-overview"></canvas></div></div>
+  <div class="chart-grid cols2">
+    <div class="card"><div class="card-title">Views by Platform (Stacked)</div><div class="chart-wrap"><canvas id="c-views-all"></canvas></div></div>
+    <div class="card"><div class="card-title">IG Eng Rate vs 6% Target</div><div class="chart-wrap"><canvas id="c-eng-overview"></canvas></div></div>
   </div>
 </div>
 
-<!-- INSTAGRAM -->
+<!-- ══ INSTAGRAM ══ -->
 <div class="panel" id="panel-ig">
   <div class="wk-note" id="ig-wk-note"></div>
   <div class="kpi-grid" id="ig-kpis"></div>
   <div class="chart-grid cols2">
-    <div class="card"><div class="card-title">Reach &amp; Views &mdash; All Weeks</div><div class="chart-wrap tall"><canvas id="c-ig-reach-views"></canvas></div></div>
+    <div class="card"><div class="card-title">Reach &amp; Views Trend</div><div class="chart-wrap tall"><canvas id="c-ig-reach-views"></canvas></div></div>
     <div class="card"><div class="card-title">Engagement Rate % <span>Target: 6.0%</span></div><div class="chart-wrap tall"><canvas id="c-ig-engrate"></canvas></div></div>
   </div>
-  <div class="chart-grid cols2" style="margin-top:14px">
-    <div class="card"><div class="card-title">Follows &amp; Interactions &mdash; All Weeks</div><div class="chart-wrap"><canvas id="c-ig-follows"></canvas></div></div>
+  <div class="chart-grid cols2">
+    <div class="card"><div class="card-title">Follows &amp; Interactions Trend</div><div class="chart-wrap"><canvas id="c-ig-follows"></canvas></div></div>
     <div class="card"><div class="card-title">Total Followers vs Q2 Goal (1,500)</div><div class="chart-wrap"><canvas id="c-ig-tf"></canvas></div></div>
   </div>
   <div class="aud-grid">
     <div class="card">
-      <div class="card-title">IG Audience — Age &amp; Gender <span>Lifetime · from Audience CSV</span></div>
+      <div class="card-title">IG Audience &mdash; Age &amp; Gender <span>Lifetime</span></div>
       <div id="ig-age-rows"></div>
       <div id="ig-aud-total" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--aurora)"></div>
     </div>
     <div class="card">
-      <div class="card-title">IG Audience — Geography <span>Lifetime · from Audience CSV</span></div>
+      <div class="card-title">IG Audience &mdash; Geography <span>Lifetime</span></div>
       <div id="ig-geo"></div>
     </div>
   </div>
 </div>
 
-<!-- FACEBOOK -->
+<!-- ══ FACEBOOK ══ -->
 <div class="panel" id="panel-fb">
   <div class="wk-note" id="fb-wk-note"></div>
   <div class="kpi-grid" id="fb-kpis"></div>
   <div class="chart-grid cols2">
-    <div class="card"><div class="card-title">Views &amp; Visits &mdash; All Weeks</div><div class="chart-wrap tall"><canvas id="c-fb-views"></canvas></div></div>
-    <div class="card"><div class="card-title">Follows &amp; Interactions</div><div class="chart-wrap tall"><canvas id="c-fb-engage"></canvas></div></div>
+    <div class="card"><div class="card-title">Views &amp; Visits Trend</div><div class="chart-wrap tall"><canvas id="c-fb-views"></canvas></div></div>
+    <div class="card"><div class="card-title">Follows &amp; Interactions Trend</div><div class="chart-wrap tall"><canvas id="c-fb-engage"></canvas></div></div>
   </div>
   <div class="card" style="margin-top:14px">
-    <div class="card-title">Weekly Summary Table</div>
+    <div class="card-title">Weekly Summary</div>
     <table class="trend-table"><thead><tr><th>Week</th><th>Views</th><th>Visits</th><th>Viewers</th><th>Follows</th><th>Interactions</th><th>Link Clicks</th></tr></thead><tbody id="fb-tbody"></tbody></table>
   </div>
   <div class="aud-grid">
     <div class="card">
-      <div class="card-title">FB Audience — Age &amp; Gender <span>Lifetime · from Audience CSV</span></div>
+      <div class="card-title">FB Audience &mdash; Age &amp; Gender <span>Lifetime</span></div>
       <div id="fb-age-rows"></div>
       <div id="fb-aud-total" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--aurora)"></div>
     </div>
     <div class="card">
-      <div class="card-title">FB Audience — Geography <span>Lifetime · from Audience CSV</span></div>
+      <div class="card-title">FB Audience &mdash; Geography <span>Lifetime</span></div>
       <div id="fb-geo"></div>
     </div>
   </div>
 </div>
 
-<!-- TIKTOK -->
+<!-- ══ TIKTOK ══ -->
 <div class="panel" id="panel-tt">
-  <div class="insight">TikTok launched May 2026. <strong>Apr 19&ndash;May 2 values = 0</strong> (account not yet active). First full week: May 3&ndash;9.</div>
+  <div class="insight info">TikTok launched May 2026. <strong>Apr 19 &ndash; May 2 values = 0</strong> (account not yet active). First full week: May 3 &ndash; 9.</div>
+  <div class="wk-note" id="tt-wk-note"></div>
   <div class="kpi-grid" id="tt-kpis"></div>
   <div class="chart-grid cols2">
-    <div class="card"><div class="card-title">Weekly Views &mdash; All Weeks</div><div class="chart-wrap tall"><canvas id="c-tt-weekly"></canvas></div></div>
-    <div class="card"><div class="card-title">Follower Growth &mdash; Weekly</div><div class="chart-wrap tall"><canvas id="c-tt-followers"></canvas></div></div>
+    <div class="card"><div class="card-title">Weekly Video Views</div><div class="chart-wrap tall"><canvas id="c-tt-weekly"></canvas></div></div>
+    <div class="card"><div class="card-title">Follower Growth</div><div class="chart-wrap tall"><canvas id="c-tt-followers"></canvas></div></div>
   </div>
-  <div class="chart-grid cols2" style="margin-top:14px">
-    <div class="card"><div class="card-title">New Followers per Week</div><div class="chart-wrap"><canvas id="c-tt-nf"></canvas></div></div>
-    <div class="card"><div class="card-title">Likes per Week</div><div class="chart-wrap"><canvas id="c-tt-likes"></canvas></div></div>
+  <div class="chart-grid cols2">
+    <div class="card"><div class="card-title">Daily Views &mdash; Selected Week</div><div class="chart-wrap" id="c-tt-daily-wrap"><canvas id="c-tt-daily"></canvas></div></div>
+    <div class="card"><div class="card-title">Daily Likes &amp; Comments &mdash; Selected Week</div><div class="chart-wrap" id="c-tt-daily-eng-wrap"><canvas id="c-tt-daily-eng"></canvas></div></div>
+  </div>
+  <div class="card" style="margin-top:14px" id="tt-daily-table-card">
+    <div class="card-title">Daily Breakdown <span id="tt-daily-tbl-label"></span></div>
+    <div id="tt-daily-tbl-wrap">
+      <table class="trend-table"><thead><tr><th>Date</th><th>Video Views</th><th>Reached</th><th>New Followers</th><th>Total Followers</th><th>Likes</th><th>Comments</th><th>Shares</th></tr></thead><tbody id="tt-daily-tbody"></tbody></table>
+    </div>
   </div>
 </div>
 
-<!-- ANALYTICS -->
+<!-- ══ ANALYTICS ══ -->
 <div class="panel" id="panel-ga">
   <div class="wk-note" id="ga-wk-note"></div>
+  <div id="ga-warn" style="display:none" class="insight warn"></div>
   <div class="kpi-grid" id="ga-kpis"></div>
   <div class="chart-grid cols12">
     <div class="card"><div class="card-title">Top Traffic Sources <span id="ga-src-label"></span></div><div class="chart-wrap tall"><canvas id="c-ga-sources"></canvas></div></div>
@@ -220,323 +371,859 @@ header{padding:24px 0 20px;border-bottom:1px solid var(--border);margin-bottom:2
   </div>
 </div>
 
+</div><!-- /main-content -->
+
+<!-- ══ COMPARE MODAL ══ -->
+<div class="modal-overlay" id="compare-modal">
+  <div class="modal" id="compare-modal-inner">
+    <div class="modal-header">
+      <div class="modal-title">Compare Weeks</div>
+      <button class="modal-close" id="modal-close">&times;</button>
+    </div>
+    <div class="card-title" style="margin-bottom:10px;font-size:10px">Select weeks to compare</div>
+    <div class="modal-wk-list" id="modal-wk-list"></div>
+    <div class="compare-table-wrap">
+      <table class="compare-table"><thead><tr><th>Week</th><th>IG Reach</th><th>IG Eng Rate</th><th>TT Views</th><th>GA Revenue</th></tr></thead><tbody id="compare-tbody"></tbody></table>
+    </div>
+    <div class="compare-charts">
+      <div class="card" style="padding:14px"><div class="card-title" style="font-size:10px">IG Reach</div><div class="chart-wrap"><canvas id="c-cmp-reach"></canvas></div></div>
+      <div class="card" style="padding:14px"><div class="card-title" style="font-size:10px">IG Eng Rate</div><div class="chart-wrap"><canvas id="c-cmp-eng"></canvas></div></div>
+      <div class="card" style="padding:14px"><div class="card-title" style="font-size:10px">TT Views</div><div class="chart-wrap"><canvas id="c-cmp-tt"></canvas></div></div>
+    </div>
+  </div>
 </div>
+
 <script>
-// ── CONFIG ────────────────────────────────────────────────────────────────────
-const SHEET_ID = "1MnIzcNINJSkvnm8DvH0mJuy71a_rv2txu6tEohnq8SY";
-const GID = "1489899994";
-const SHEETS_API_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/query?tq=SELECT * FROM ${GID}&tqx=out:json&headers=1`;
-const GOALS = { igFollowers:1500, igEngRate:6, ttFollowers:100 };
+'use strict';
 
-// GA data stays static — separate sheet, not in Weekly CSV
-const GA_DATA = [
-  {label:'Apr 19–25',sessions:927,engaged:479,revenue:1596,sources:[
-    {src:'(direct)',s:408,eng:39.7,rev:0},{src:'google',s:346,eng:63.6,rev:1596},
-    {src:'awl.com',s:41,eng:80.5,rev:0},{src:'alaska-org',s:34,eng:55.9,rev:0},
-    {src:'facebook',s:22,eng:40.9,rev:0},{src:'explorefairbanks',s:15,eng:73.3,rev:0},{src:'other',s:61,eng:0,rev:0}]},
-  {label:'Apr 26–May 2',sessions:897,engaged:451,revenue:915,sources:[
-    {src:'(direct)',s:370,eng:37.8,rev:0},{src:'google',s:333,eng:57.4,rev:915},
-    {src:'alaska-org',s:42,eng:47.6,rev:0},{src:'awl.com',s:41,eng:70.7,rev:0},
-    {src:'facebook',s:15,eng:26.7,rev:0},{src:'explorefairbanks',s:13,eng:76.9,rev:0},{src:'other',s:83,eng:0,rev:0}]},
-  {label:'May 3–9 (est.)',sessions:3905,engaged:2007,revenue:8923.50,
-    note:'Cumulative Apr 13 – May 10 — weekly breakdown not yet available',sources:[
-    {src:'(direct)',s:1755,eng:42.7,rev:0},{src:'google',s:1456,eng:59.6,rev:8423.50},
-    {src:'awl.com',s:175,eng:77.7,rev:0},{src:'alaska-org',s:148,eng:53.4,rev:500},
-    {src:'facebook',s:36,eng:30.6,rev:0},{src:'explorefairbanks',s:47,eng:74.5,rev:0},{src:'other',s:288,eng:0,rev:0}]}
-];
+// ── GLOBALS ──────────────────────────────────────────────────────────────────
+let DATA = null;
+let selectedWeek = 0;
+let rangeStart = 0;
+let rangeEnd = 0;
+const CHARTS = {};
 
-// Audience data — from IG_Audience.csv / FB_Audience.csv (lifetime, not in Weekly)
-const AUD = {
-  ig:{brackets:[{b:'18–24',w:7.8,m:3.3},{b:'25–34',w:22.6,m:13.2},{b:'35–44',w:22.4,m:12.6},{b:'45–54',w:8.4,m:5.4},{b:'55–64',w:2.3,m:1.5},{b:'65+',w:0.4,m:0.1}],
-    target2544:70.8,
-    countries:[{n:'United States',p:81.0},{n:'Canada',p:4.2},{n:'United Kingdom',p:2.1},{n:'Australia',p:1.8},{n:'Germany',p:0.9}],
-    cities:[{n:'College, AK',p:8.9},{n:'Anchorage, AK',p:7.1},{n:'Fairbanks, AK',p:5.2},{n:'Seattle, WA',p:2.8},{n:'New York, NY',p:1.9}]},
-  fb:{brackets:[{b:'18–24',w:3.1,m:4.2},{b:'25–34',w:9.4,m:4.7},{b:'35–44',w:14.1,m:9.4},{b:'45–54',w:10.3,m:8.8},{b:'55–64',w:6.2,m:7.5},{b:'65+',w:4.1,m:5.2}],
-    target2544:37.6,
-    countries:[{n:'United States',p:63.2},{n:'Canada',p:6.1},{n:'United Kingdom',p:4.8},{n:'Australia',p:3.2},{n:'Philippines',p:2.1}],
-    cities:[{n:'Anchorage, AK',p:9.4},{n:'Fairbanks, AK',p:7.8},{n:'Seattle, WA',p:4.2},{n:'Portland, OR',p:2.9},{n:'Denver, CO',p:1.8}]}
-};
-
-// ── STATE ─────────────────────────────────────────────────────────────────────
-let WEEKS=[], CUR=-1;
-const CHARTS={};
+// ── FORMATTERS ───────────────────────────────────────────────────────────────
+function fmt(n) { return n == null ? '—' : Number(n).toLocaleString(); }
+function fmtRev(n) { return '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+function fmtPct(n, dec=1) { return n == null ? '—' : Number(n).toFixed(dec) + '%'; }
+function wow(cur, prev) {
+  if (prev == null || prev === undefined) return '<span class="badge-na">—</span>';
+  if (prev === 0 && cur === 0) return '<span class="badge-na">—</span>';
+  if (prev === 0) return '<span class="badge-up">New</span>';
+  const d = Math.round((cur - prev) / Math.abs(prev) * 100);
+  return d >= 0
+    ? `<span class="badge-up">&#9650; +${d}%</span>`
+    : `<span class="badge-dn">&#9660; ${d}%</span>`;
+}
+function ttFmt(n, isPreLaunch) {
+  if (isPreLaunch) return '—';
+  return fmt(n);
+}
 
 // ── CHART DEFAULTS ────────────────────────────────────────────────────────────
-Chart.defaults.font.family="'DM Sans',sans-serif";
-Chart.defaults.font.size=11;
-Chart.defaults.color='#3D6E78';
-const TT={backgroundColor:'#0E1C2F',titleColor:'#E8F2F0',bodyColor:'#7BBDB4',borderColor:'rgba(0,192,139,0.2)',borderWidth:1,cornerRadius:8,padding:10,
-  callbacks:{label:ctx=>' '+(typeof ctx.raw==='number'?ctx.raw.toLocaleString():ctx.raw)}};
-const SC={x:{grid:{color:'rgba(0,192,139,0.05)',drawBorder:false},ticks:{color:'#3D6E78'}},y:{grid:{color:'rgba(0,192,139,0.05)',drawBorder:false},ticks:{color:'#3D6E78'}}};
-function mkC(id,cfg){const el=document.getElementById(id);if(!el)return null;if(CHARTS[id])CHARTS[id].destroy();CHARTS[id]=new Chart(el,cfg);return CHARTS[id];}
-function lds(label,data,color,fill=false){return{label,data,borderColor:color,backgroundColor:fill?color+'22':'transparent',tension:.4,pointRadius:4,pointHoverRadius:7,pointBackgroundColor:color,fill,borderWidth:2}}
-function bds(label,data,color){return{label,data,backgroundColor:color+'BB',hoverBackgroundColor:color,borderRadius:5,borderSkipped:false}}
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = '#3D6E78';
 
-function col(row,partial){if(!row)return 0;const k=Object.keys(row).find(k=>k.toLowerCase().includes(partial.toLowerCase()));return k?(parseFloat(row[k])||0):0;}
-function colStr(row,partial){if(!row)return'';const k=Object.keys(row).find(k=>k.toLowerCase().includes(partial.toLowerCase()));return k?(row[k]||''):'';}
+const TOOLTIP = {
+  backgroundColor: '#0E1C2F',
+  titleColor: '#E8F2F0',
+  bodyColor: '#7BBDB4',
+  borderColor: 'rgba(0,192,139,0.2)',
+  borderWidth: 1,
+  cornerRadius: 8,
+  padding: 10
+};
 
-// ── LOAD ──────────────────────────────────────────────────────────────────────
-async function loadData(){
-  try{
-    const resp = await fetch(SHEETS_API_URL);
-    if(!resp.ok) throw new Error('HTTP '+resp.status);
-    const text = await resp.text();
-    
-    // Google Visualization API returns JSONP, extract the JSON
-    const jsonMatch = text.match(/\/\*O_o\*\/\s*google\.visualization\.Query\.setResponse\((.*)\);?/);
-    if(!jsonMatch) throw new Error('Invalid response format');
-    
-    const data = JSON.parse(jsonMatch[1]);
-    if(data.status !== 'ok') throw new Error(data.message || 'API error');
-    
-    // Convert Google Visualization table to rows
-    const rows = [];
-    if(data.table && data.table.rows) {
-      const colLabels = data.table.cols.map(c => c.label);
-      rows.push(colLabels);
-      data.table.rows.forEach(r => {
-        const row = {};
-        colLabels.forEach((label, i) => {
-          row[label] = r.c[i] ? r.c[i].v : '';
-        });
-        rows.push(row);
-      });
-    }
-    
-    WEEKS = rows.slice(1).filter(r => Object.values(r).some(v => v !== ''));
-    if(!WEEKS.length) throw new Error('No data rows in Weekly sheet');
-    
-    CUR = WEEKS.length - 1;
-    document.getElementById('data-status').textContent = 'Live data from Google Sheets · '+WEEKS.length+' week'+(WEEKS.length>1?'s':'')+' · Updated every Monday at 1 PM AK';
-  }catch(e){
-    document.getElementById('data-status').textContent = '⚠ Could not load: '+e.message;
-    document.getElementById('ov-insight').textContent = 'Data unavailable. Error: '+e.message;
-    console.error('loadData error:', e);
+const SCALES_XY = {
+  x: { grid: { color: 'rgba(0,192,139,0.05)', drawBorder: false }, ticks: { color: '#3D6E78' } },
+  y: { grid: { color: 'rgba(0,192,139,0.05)', drawBorder: false }, ticks: { color: '#3D6E78' } }
+};
+
+function mkC(id, cfg) {
+  const el = document.getElementById(id);
+  if (!el) return null;
+  if (CHARTS[id]) { CHARTS[id].destroy(); delete CHARTS[id]; }
+  CHARTS[id] = new Chart(el, cfg);
+  return CHARTS[id];
+}
+
+function lineDS(label, data, color, fill=false, curIdx=-1) {
+  const pr = data.map((_, i) => (curIdx >= 0 && i === curIdx) ? 7 : 4);
+  const pbg = data.map((_, i) => (curIdx >= 0 && i === curIdx) ? '#FFFFFF' : color);
+  return {
+    label, data,
+    borderColor: color,
+    backgroundColor: fill ? color + '22' : 'transparent',
+    tension: 0.4,
+    pointRadius: pr,
+    pointHoverRadius: 7,
+    pointBackgroundColor: pbg,
+    fill,
+    borderWidth: 2
+  };
+}
+
+function barDS(label, data, color) {
+  return {
+    label, data,
+    backgroundColor: color + 'BB',
+    hoverBackgroundColor: color,
+    borderRadius: 5,
+    borderSkipped: false
+  };
+}
+
+function baseOpts(showLegend=false) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: showLegend, labels: { color: '#7BBDB4', boxWidth: 10, padding: 10 } },
+      tooltip: TOOLTIP
+    },
+    scales: SCALES_XY
+  };
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function filteredWeeks() {
+  return DATA.weeks.slice(rangeStart, rangeEnd + 1);
+}
+
+function filteredLabels() {
+  return filteredWeeks().map(w => w.week_label);
+}
+
+function isTTPreLaunch(w) {
+  // weeks where TT was not yet active — total_followers === 0 and video_views === 0
+  return w.tt.video_views === 0 && w.tt.total_followers === 0;
+}
+
+// ── EMBEDDED DATA (4 weeks — updated by Upload JSON each week) ───────────────
+const INITIAL_DATA = {"generated":"2026-05-25T00:00:00Z","goals":{"quarter":"Q2","deadline":"2026-06-30","ig_followers":1500,"ig_eng_rate":6.0,"tt_followers":100},"weeks":[{"week_label":"Apr 19 – 25","week_start":"2026-04-19","week_end":"2026-04-25","ig":{"reach":229,"views":354,"follows":7,"profile_visits":42,"interactions":3,"link_clicks":2,"total_followers":643,"eng_rate":1.31},"fb":{"views":164,"visits":67,"viewers":22,"follows":32,"interactions":2,"link_clicks":1},"tt":{"video_views":0,"reached":0,"new_followers":0,"total_followers":0,"likes":0,"comments":0,"shares":0,"favorites":0},"ga":{"date_range":"Apr 19–25","sessions":927,"engaged_sessions":479,"revenue":1596.0,"sources":[{"src":"(direct)","sessions":408,"eng_rate":39.7,"revenue":0},{"src":"google","sessions":346,"eng_rate":63.6,"revenue":1596},{"src":"alaskawildlights.com","sessions":41,"eng_rate":80.5,"revenue":0},{"src":"alaska-org","sessions":34,"eng_rate":55.9,"revenue":0},{"src":"m.facebook.com","sessions":17,"eng_rate":11.8,"revenue":0},{"src":"explorefairbanks.com","sessions":16,"eng_rate":62.5,"revenue":0}]}},{"week_label":"Apr 26 – May 2","week_start":"2026-04-26","week_end":"2026-05-02","ig":{"reach":693,"views":1189,"follows":13,"profile_visits":45,"interactions":33,"link_clicks":3,"total_followers":650,"eng_rate":4.77},"fb":{"views":1092,"visits":197,"viewers":673,"follows":65,"interactions":42,"link_clicks":2},"tt":{"video_views":0,"reached":0,"new_followers":0,"total_followers":1,"likes":0,"comments":0,"shares":0,"favorites":0},"ga":{"date_range":"Apr 26–May 2","sessions":891,"engaged_sessions":451,"revenue":915.0,"sources":[{"src":"(direct)","sessions":370,"eng_rate":37.8,"revenue":0},{"src":"google","sessions":333,"eng_rate":57.4,"revenue":915},{"src":"alaska-org","sessions":42,"eng_rate":47.6,"revenue":0},{"src":"alaskawildlights.com","sessions":41,"eng_rate":70.7,"revenue":0},{"src":"facebook","sessions":15,"eng_rate":26.7,"revenue":0},{"src":"explorefairbanks.com","sessions":13,"eng_rate":76.9,"revenue":0},{"src":"fairbanks.extranet.simpleviewcrm.com","sessions":12,"eng_rate":50.0,"revenue":0}]}},{"week_label":"May 3 – 9","week_start":"2026-05-03","week_end":"2026-05-09","ig":{"reach":1266,"views":2744,"follows":15,"profile_visits":76,"interactions":79,"link_clicks":4,"total_followers":663,"eng_rate":6.24},"fb":{"views":2706,"visits":166,"viewers":0,"follows":27,"interactions":71,"link_clicks":2},"tt":{"video_views":1367,"reached":1313,"new_followers":18,"total_followers":19,"likes":74,"comments":5,"shares":2,"favorites":0,"daily":[{"date":"2026-05-03","views":218,"reached":218,"new_followers":4,"total_followers":5,"likes":13,"comments":0,"shares":0},{"date":"2026-05-04","views":597,"reached":597,"new_followers":7,"total_followers":12,"likes":27,"comments":1,"shares":1},{"date":"2026-05-05","views":170,"reached":166,"new_followers":1,"total_followers":13,"likes":6,"comments":1,"shares":0},{"date":"2026-05-06","views":179,"reached":167,"new_followers":3,"total_followers":16,"likes":13,"comments":3,"shares":1},{"date":"2026-05-07","views":47,"reached":38,"new_followers":1,"total_followers":17,"likes":4,"comments":0,"shares":0},{"date":"2026-05-08","views":104,"reached":75,"new_followers":2,"total_followers":19,"likes":7,"comments":0,"shares":0},{"date":"2026-05-09","views":52,"reached":52,"new_followers":0,"total_followers":19,"likes":4,"comments":0,"shares":0}]},"ga":{"date_range":"Apr 13–May 10 (cumulative)","note":"Weekly GA not available — cumulative file used","sessions":3905,"engaged_sessions":2007,"revenue":8923.5,"sources":[{"src":"(direct)","sessions":1755,"eng_rate":42.7,"revenue":0},{"src":"google","sessions":1456,"eng_rate":59.5,"revenue":8423.5},{"src":"alaskawildlights.com","sessions":175,"eng_rate":77.7,"revenue":0},{"src":"alaska-org","sessions":148,"eng_rate":53.4,"revenue":500},{"src":"explorefairbanks.com","sessions":47,"eng_rate":74.5,"revenue":0},{"src":"facebook","sessions":36,"eng_rate":30.6,"revenue":0},{"src":"bing","sessions":34,"eng_rate":82.4,"revenue":0}]}},{"week_label":"May 10 – 16","week_start":"2026-05-10","week_end":"2026-05-16","ig":{"reach":1175,"views":2834,"follows":9,"profile_visits":60,"interactions":89,"link_clicks":0,"total_followers":667,"eng_rate":7.57},"fb":{"views":1576,"visits":169,"viewers":798,"follows":15,"interactions":64,"link_clicks":1},"tt":{"video_views":6774,"reached":5863,"new_followers":32,"total_followers":57,"likes":552,"comments":14,"shares":50,"favorites":35,"daily":[{"date":"2026-05-10","views":0,"reached":137,"new_followers":0,"total_followers":23,"likes":0,"comments":0,"shares":0},{"date":"2026-05-11","views":0,"reached":1517,"new_followers":8,"total_followers":27,"likes":0,"comments":0,"shares":0},{"date":"2026-05-12","views":0,"reached":816,"new_followers":1,"total_followers":28,"likes":0,"comments":0,"shares":0},{"date":"2026-05-13","views":0,"reached":370,"new_followers":1,"total_followers":29,"likes":0,"comments":0,"shares":0},{"date":"2026-05-14","views":0,"reached":590,"new_followers":3,"total_followers":32,"likes":0,"comments":0,"shares":0},{"date":"2026-05-15","views":0,"reached":1151,"new_followers":6,"total_followers":38,"likes":0,"comments":0,"shares":0},{"date":"2026-05-16","views":6774,"reached":1282,"new_followers":13,"total_followers":51,"likes":552,"comments":14,"shares":50}]},"ga":{"date_range":"Apr 20–May 17 (cumulative)","note":"Weekly GA not available — cumulative file used","sessions":3923,"engaged_sessions":1921,"revenue":3232.0,"sources":[{"src":"(direct) / (none)","sessions":1838,"eng_rate":43.1,"revenue":1610},{"src":"google / cpc","sessions":958,"eng_rate":63.9,"revenue":771},{"src":"google / organic","sessions":388,"eng_rate":50.0,"revenue":304},{"src":"alaskawildlights.com / referral","sessions":191,"eng_rate":83.8,"revenue":111},{"src":"alaska-org / partner","sessions":169,"eng_rate":55.6,"revenue":142},{"src":"facebook / bio","sessions":41,"eng_rate":31.7,"revenue":30},{"src":"explorefairbanks.com / referral","sessions":38,"eng_rate":76.3,"revenue":24}]}},{"week_label":"May 17 – 23","week_start":"2026-05-17","week_end":"2026-05-23","ig":{"reach":1649,"views":4004,"follows":9,"profile_visits":60,"interactions":142,"link_clicks":0,"total_followers":676,"eng_rate":8.61},"fb":{"views":2992,"visits":95,"viewers":2272,"follows":12,"interactions":76,"link_clicks":0},"tt":{"video_views":7696,"reached":7481,"new_followers":39,"total_followers":90,"likes":451,"comments":9,"shares":40,"favorites":12,"daily":[{"date":"2026-05-17","views":1240,"reached":1189,"new_followers":6,"total_followers":57,"likes":60,"comments":1,"shares":10},{"date":"2026-05-18","views":785,"reached":778,"new_followers":2,"total_followers":59,"likes":58,"comments":1,"shares":3},{"date":"2026-05-19","views":1407,"reached":1387,"new_followers":5,"total_followers":64,"likes":89,"comments":0,"shares":2},{"date":"2026-05-20","views":880,"reached":838,"new_followers":7,"total_followers":71,"likes":54,"comments":3,"shares":1},{"date":"2026-05-21","views":760,"reached":726,"new_followers":8,"total_followers":79,"likes":49,"comments":2,"shares":7},{"date":"2026-05-22","views":1558,"reached":1544,"new_followers":4,"total_followers":83,"likes":85,"comments":1,"shares":16},{"date":"2026-05-23","views":1066,"reached":1019,"new_followers":7,"total_followers":90,"likes":56,"comments":1,"shares":1}]},"ga":{"missing":true,"note":"Google Analytics data not available this week — file not submitted"}}],"audience":{"ig":{"age_gender":{"18-24":{"women":2.2,"men":1.7},"25-34":{"women":23.0,"men":12.7},"35-44":{"women":23.0,"men":12.1},"45-54":{"women":9.0,"men":4.7},"55-64":{"women":3.9,"men":3.4},"65+":{"women":3.2,"men":1.1}},"target_25_44_pct":70.8,"top_countries":[{"name":"United States","pct":82.2},{"name":"Brazil","pct":2.4},{"name":"Canada","pct":1.8},{"name":"Germany","pct":1.5},{"name":"Mexico","pct":1.3}],"top_cities":[{"name":"College, AK","pct":9.5},{"name":"Anchorage, AK","pct":7.6},{"name":"Palmer, AK","pct":2.4},{"name":"North Pole, AK","pct":2.4},{"name":"Wasilla, AK","pct":1.2}]},"fb":{"age_gender":{"18-24":{"men":0.0,"women":1.3},"25-34":{"men":9.4,"women":7.3},"35-44":{"men":12.8,"women":10.1},"45-54":{"men":17.5,"women":8.8},"55-64":{"men":9.4,"women":9.4},"65+":{"men":6.7,"women":7.3}},"target_25_44_pct":39.6,"top_countries":[{"name":"United States","pct":64.0},{"name":"South Africa","pct":3.7},{"name":"Canada","pct":3.0},{"name":"Bangladesh","pct":1.8},{"name":"Germany","pct":1.8}],"top_cities":[{"name":"College, AK","pct":9.5},{"name":"Anchorage, AK","pct":7.6},{"name":"Palmer, AK","pct":2.4},{"name":"North Pole, AK","pct":2.4},{"name":"Wasilla, AK","pct":1.2}]}}};
+
+// ── UPLOAD JSON HANDLER ───────────────────────────────────────────────────────
+function showToast(msg, type) {
+  const t = document.getElementById('upload-toast');
+  t.textContent = msg;
+  t.className = 'upload-toast show ' + type;
+  setTimeout(() => { t.className = 'upload-toast'; }, 3500);
+}
+
+function loadData(data) {
+  if (!data.weeks || !Array.isArray(data.weeks) || data.weeks.length === 0) {
+    showToast('Invalid data.json — missing weeks array', 'err');
     return;
   }
-  
-  buildWeekNav();buildAllCharts();buildAudience();updateWeek(CUR);
-  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');document.getElementById('panel-'+t.dataset.tab).classList.add('active');
-    setTimeout(()=>Object.values(CHARTS).forEach(c=>c&&c.resize()),50);
-  }));
+  DATA = data;
+  // Destroy all existing charts before re-init
+  Object.keys(CHARTS).forEach(k => { if (CHARTS[k]) { CHARTS[k].destroy(); CHARTS[k] = null; } });
+  initDashboard();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Wire up upload button
+  const fileInput = document.getElementById('json-file-input');
+  document.getElementById('btn-upload').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        loadData(data);
+        showToast('✓ Loaded ' + file.name + ' (' + data.weeks.length + ' weeks)', 'ok');
+      } catch(err) {
+        showToast('JSON parse error: ' + err.message, 'err');
+      }
+    };
+    reader.readAsText(file);
+    fileInput.value = ''; // allow re-selecting same file
+  });
+
+  // Try to load fresh data.json from server; fall back to embedded INITIAL_DATA
+  fetch('./data.json?v=' + Date.now())
+    .then(r => { if (!r.ok) throw new Error('no file'); return r.json(); })
+    .then(data => { loadData(data); })
+    .catch(() => { DATA = INITIAL_DATA; initDashboard(); });
+});
+
+function initDashboard() {
+  const n = DATA.weeks.length;
+  selectedWeek = n - 1;
+  rangeStart = 0;
+  rangeEnd = n - 1;
+
+  // Header badges
+  const g = DATA.goals;
+  document.getElementById('hdr-goal').textContent =
+    `${g.quarter} Goals: ${g.ig_followers.toLocaleString()} IG followers · ≥${g.ig_eng_rate}% eng · ${g.tt_followers} TT followers`;
+
+  buildWeekNav();
+  buildRangeSelectors();
+  buildAudience();
+  buildAllTrendCharts();
+  updateWeek(selectedWeek);
+
+  // Tab switching
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById('panel-' + t.dataset.tab).classList.add('active');
+      setTimeout(() => Object.values(CHARTS).forEach(c => c && c.resize()), 50);
+    });
+  });
+
+  // Goals toggle
+  let goalsOpen = true;
+  document.getElementById('goals-toggle').addEventListener('click', () => {
+    goalsOpen = !goalsOpen;
+    document.getElementById('goals-body').style.display = goalsOpen ? 'block' : 'none';
+    document.getElementById('goals-toggle').textContent = goalsOpen ? '▾ Collapse' : '▸ Expand';
+  });
+
+  // Compare modal
+  document.getElementById('btn-compare').addEventListener('click', openCompareModal);
+  document.getElementById('modal-close').addEventListener('click', closeCompareModal);
+  document.getElementById('compare-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('compare-modal')) closeCompareModal();
+  });
 }
 
 // ── WEEK NAV ──────────────────────────────────────────────────────────────────
-function buildWeekNav(){
-  const container=document.getElementById('wk-buttons');
-  container.innerHTML='';
-  // ALL WEEKS button — first/leftmost
-  const allBtn=document.createElement('button');
-  allBtn.className='wk-btn btn-all';allBtn.textContent='All Weeks';
-  allBtn.addEventListener('click',()=>{
-    document.querySelectorAll('.wk-btn').forEach(b=>b.classList.remove('active'));
-    allBtn.classList.add('active');
-    document.getElementById('hdr-week').textContent='All Weeks';
-    highlightPoint(-1);
-  });
-  container.appendChild(allBtn);
-  // Individual week buttons
-  WEEKS.forEach((w,i)=>{
-    const lbl=colStr(w,'week')||colStr(w,'Week')||('Week '+(i+1));
-    const btn=document.createElement('button');
-    btn.className='wk-btn'+(i===CUR?' active':'');
-    btn.textContent=lbl;
-    btn.addEventListener('click',()=>updateWeek(i));
+function buildWeekNav() {
+  const container = document.getElementById('wk-buttons');
+  container.innerHTML = '';
+  DATA.weeks.forEach((w, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'wk-btn' + (i === selectedWeek ? ' active' : '');
+    btn.textContent = w.week_label;
+    btn.addEventListener('click', () => updateWeek(i));
     container.appendChild(btn);
   });
 }
 
-// ── CHARTS ────────────────────────────────────────────────────────────────────
-function buildAllCharts(){
-  const labels=WEEKS.map(w=>colStr(w,'week')||colStr(w,'Week')||('Wk'+(WEEKS.indexOf(w)+1)));
-  const igReach=WEEKS.map(w=>col(w,'instagram|reach'));
-  const igViews=WEEKS.map(w=>col(w,'instagram|views'));
-  const igTF=WEEKS.map(w=>col(w,'instagram|total'));
-  const igEng=WEEKS.map(w=>col(w,'ig eng rate'));
-  const igFol=WEEKS.map(w=>col(w,'instagram|follows'));
-  const igInt=WEEKS.map(w=>col(w,'instagram|interact'));
-  const fbViews=WEEKS.map(w=>col(w,'facebook|views'));
-  const fbVis=WEEKS.map(w=>col(w,'facebook|visits'));
-  const fbFol=WEEKS.map(w=>col(w,'facebook|follows'));
-  const fbInt=WEEKS.map(w=>col(w,'facebook|interact'));
-  const ttViews=WEEKS.map(w=>col(w,'tiktok|video'));
-  const ttTF=WEEKS.map(w=>col(w,'tiktok|total'));
-  const ttNF=WEEKS.map(w=>col(w,'tiktok|new'));
-  const ttLikes=WEEKS.map(w=>col(w,'tiktok|likes'));
-  const ttComments=WEEKS.map(w=>col(w,'tiktok|comments')||0);
-  const ttFavorites=WEEKS.map(w=>col(w,'tiktok|favorites')||0);
-  const n=labels.length;
-  const tgt6=Array(n).fill(6),tgt1500=Array(n).fill(1500);
-  const base={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TT},scales:SC};
-  const baseL={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,labels:{color:'#7BBDB4',boxWidth:10}},tooltip:TT},scales:SC};
-  mkC('c-reach',{type:'line',data:{labels,datasets:[lds('IG Reach',igReach,'#E1306C',true)]},options:base});
-  mkC('c-followers',{type:'line',data:{labels,datasets:[lds('IG',igTF,'#E1306C'),lds('TikTok',ttTF,'#69C9D0')]},options:baseL});
-  mkC('c-views-all',{type:'bar',data:{labels,datasets:[bds('IG',igViews,'#E1306C'),bds('FB',fbViews,'#4080FF'),bds('TT',ttViews,'#69C9D0')]},options:baseL});
-  mkC('c-eng-overview',{type:'bar',data:{labels,datasets:[{...bds('Eng Rate',igEng,'#E1306C'),backgroundColor:igEng.map(v=>v>=6?'#00C08BAA':'#E1306CAA')},{type:'line',label:'6% target',data:tgt6,borderColor:'#FFD700',borderDash:[5,4],borderWidth:1.5,pointRadius:0,tension:0}]},options:base});
-  mkC('c-ig-reach-views',{type:'line',data:{labels,datasets:[lds('Reach',igReach,'#E1306C',true),lds('Views',igViews,'#F77737')]},options:baseL});
-  mkC('c-ig-engrate',{type:'bar',data:{labels,datasets:[{...bds('Eng Rate',igEng,'#E1306C'),backgroundColor:igEng.map(v=>v>=6?'#00C08BCC':'#E1306CAA')},{type:'line',label:'6% target',data:tgt6,borderColor:'#FFD700AA',borderDash:[5,4],borderWidth:1.5,pointRadius:0}]},options:base});
-  mkC('c-ig-follows',{type:'bar',data:{labels,datasets:[bds('Follows',igFol,'#E1306C'),bds('Interactions',igInt,'#F77737')]},options:baseL});
-  mkC('c-ig-tf',{type:'line',data:{labels,datasets:[lds('Followers',igTF,'#E1306C',true),{type:'line',label:'Q2 Goal',data:tgt1500,borderColor:'#FFD700AA',borderDash:[5,4],borderWidth:1.5,pointRadius:0,tension:0}]},options:base});
-  mkC('c-fb-views',{type:'bar',data:{labels,datasets:[bds('Views',fbViews,'#4080FF'),bds('Visits',fbVis,'#69C9D0')]},options:baseL});
-  mkC('c-fb-engage',{type:'bar',data:{labels,datasets:[bds('Follows',fbFol,'#4080FF'),bds('Interactions',fbInt,'#69C9D0')]},options:baseL});
-  mkC('c-tt-weekly',{type:'bar',data:{labels,datasets:[bds('TT Views',ttViews,'#69C9D0')]},options:base});
-  mkC('c-tt-followers',{type:'line',data:{labels,datasets:[lds('Total Followers',ttTF,'#69C9D0',true)]},options:base});
-  mkC('c-tt-nf',{type:'bar',data:{labels,datasets:[bds('New Followers',ttNF,'#69C9D0')]},options:base});
-  mkC('c-tt-likes',{type:'bar',data:{labels,datasets:[bds('Likes',ttLikes,'#69C9D0'),bds('Comments',ttComments,'#A0E8EE')]},options:baseL});
+// ── DATE RANGE SELECTORS ──────────────────────────────────────────────────────
+function buildRangeSelectors() {
+  const from = document.getElementById('range-from');
+  const to = document.getElementById('range-to');
+  from.innerHTML = '';
+  to.innerHTML = '';
+  DATA.weeks.forEach((w, i) => {
+    from.innerHTML += `<option value="${i}">${w.week_label}</option>`;
+    to.innerHTML += `<option value="${i}">${w.week_label}</option>`;
+  });
+  from.value = '0';
+  to.value = String(DATA.weeks.length - 1);
+
+  from.addEventListener('change', () => {
+    rangeStart = parseInt(from.value);
+    if (rangeStart > rangeEnd) { rangeEnd = rangeStart; to.value = String(rangeEnd); }
+    document.getElementById('btn-all-weeks').classList.toggle('active',
+      rangeStart === 0 && rangeEnd === DATA.weeks.length - 1);
+    refreshTrendCharts();
+  });
+  to.addEventListener('change', () => {
+    rangeEnd = parseInt(to.value);
+    if (rangeEnd < rangeStart) { rangeStart = rangeEnd; from.value = String(rangeStart); }
+    document.getElementById('btn-all-weeks').classList.toggle('active',
+      rangeStart === 0 && rangeEnd === DATA.weeks.length - 1);
+    refreshTrendCharts();
+  });
+  document.getElementById('btn-all-weeks').addEventListener('click', () => {
+    rangeStart = 0;
+    rangeEnd = DATA.weeks.length - 1;
+    from.value = '0';
+    to.value = String(rangeEnd);
+    document.getElementById('btn-all-weeks').classList.add('active');
+    refreshTrendCharts();
+  });
+}
+
+function refreshTrendCharts() {
+  buildAllTrendCharts();
+  updateWeek(selectedWeek);
+}
+
+// ── TREND CHARTS ──────────────────────────────────────────────────────────────
+function buildAllTrendCharts() {
+  const weeks = filteredWeeks();
+  const labels = filteredLabels();
+  const n = labels.length;
+  const curInRange = selectedWeek - rangeStart; // index within filtered set
+
+  const igReach  = weeks.map(w => w.ig.reach);
+  const igViews  = weeks.map(w => w.ig.views);
+  const igTF     = weeks.map(w => w.ig.total_followers);
+  const igEng    = weeks.map(w => w.ig.eng_rate);
+  const igFol    = weeks.map(w => w.ig.follows);
+  const igInt    = weeks.map(w => w.ig.interactions);
+  const fbViews  = weeks.map(w => w.fb.views);
+  const fbVis    = weeks.map(w => w.fb.visits);
+  const fbFol    = weeks.map(w => w.fb.follows);
+  const fbInt    = weeks.map(w => w.fb.interactions);
+  const ttViews  = weeks.map(w => w.tt.video_views);
+  const ttTF     = weeks.map(w => w.tt.total_followers);
+  const tgt6     = Array(n).fill(DATA.goals.ig_eng_rate);
+  const tgt1500  = Array(n).fill(DATA.goals.ig_followers);
+  const ci       = (curInRange >= 0 && curInRange < n) ? curInRange : -1;
+
+  // Overview: IG Reach
+  mkC('c-reach', {
+    type: 'line',
+    data: { labels, datasets: [lineDS('IG Reach', igReach, '#E1306C', true, ci)] },
+    options: baseOpts(false)
+  });
+
+  // Overview: Follower growth
+  mkC('c-followers', {
+    type: 'line',
+    data: { labels, datasets: [lineDS('IG', igTF, '#E1306C', false, ci), lineDS('TikTok', ttTF, '#69C9D0', false, ci)] },
+    options: baseOpts(true)
+  });
+
+  // Overview: Views stacked bar
+  mkC('c-views-all', {
+    type: 'bar',
+    data: { labels, datasets: [
+      { ...barDS('IG', igViews, '#E1306C'), stack: 'views' },
+      { ...barDS('FB', fbViews, '#4080FF'), stack: 'views' },
+      { ...barDS('TT', ttViews, '#69C9D0'), stack: 'views' }
+    ]},
+    options: { ...baseOpts(true), scales: { ...SCALES_XY } }
+  });
+
+  // Overview: Eng rate
+  mkC('c-eng-overview', {
+    type: 'bar',
+    data: { labels, datasets: [
+      { ...barDS('Eng Rate', igEng, '#E1306C'), backgroundColor: igEng.map(v => v >= 6 ? '#00C08BAA' : '#E1306CAA') },
+      { type: 'line', label: '6% target', data: tgt6, borderColor: '#FFD700', borderDash: [5,4], borderWidth: 1.5, pointRadius: 0, tension: 0 }
+    ]},
+    options: baseOpts(false)
+  });
+
+  // Instagram: Reach & Views
+  mkC('c-ig-reach-views', {
+    type: 'line',
+    data: { labels, datasets: [lineDS('Reach', igReach, '#E1306C', true, ci), lineDS('Views', igViews, '#F77737', false, ci)] },
+    options: baseOpts(true)
+  });
+
+  // Instagram: Eng Rate
+  mkC('c-ig-engrate', {
+    type: 'bar',
+    data: { labels, datasets: [
+      { ...barDS('Eng Rate %', igEng, '#E1306C'), backgroundColor: igEng.map(v => v >= 6 ? '#00C08BCC' : '#E1306CAA') },
+      { type: 'line', label: '6% target', data: tgt6, borderColor: '#FFD700AA', borderDash: [5,4], borderWidth: 1.5, pointRadius: 0 }
+    ]},
+    options: baseOpts(false)
+  });
+
+  // Instagram: Follows & Interactions
+  mkC('c-ig-follows', {
+    type: 'bar',
+    data: { labels, datasets: [barDS('Follows', igFol, '#E1306C'), barDS('Interactions', igInt, '#F77737')] },
+    options: baseOpts(true)
+  });
+
+  // Instagram: Total followers vs goal
+  mkC('c-ig-tf', {
+    type: 'line',
+    data: { labels, datasets: [
+      lineDS('Total Followers', igTF, '#E1306C', true, ci),
+      { type: 'line', label: 'Q2 Goal 1,500', data: tgt1500, borderColor: '#FFD700AA', borderDash: [5,4], borderWidth: 1.5, pointRadius: 0, tension: 0 }
+    ]},
+    options: baseOpts(true)
+  });
+
+  // Facebook: Views & Visits
+  mkC('c-fb-views', {
+    type: 'bar',
+    data: { labels, datasets: [barDS('Views', fbViews, '#4080FF'), barDS('Visits', fbVis, '#69C9D0')] },
+    options: baseOpts(true)
+  });
+
+  // Facebook: Follows & Interactions
+  mkC('c-fb-engage', {
+    type: 'bar',
+    data: { labels, datasets: [barDS('Follows', fbFol, '#4080FF'), barDS('Interactions', fbInt, '#69C9D0')] },
+    options: baseOpts(true)
+  });
+
+  // TikTok: Weekly views bar
+  mkC('c-tt-weekly', {
+    type: 'bar',
+    data: { labels, datasets: [barDS('Video Views', ttViews, '#69C9D0')] },
+    options: baseOpts(false)
+  });
+
+  // TikTok: Follower growth
+  mkC('c-tt-followers', {
+    type: 'line',
+    data: { labels, datasets: [lineDS('Total Followers', ttTF, '#69C9D0', true, ci)] },
+    options: baseOpts(false)
+  });
+}
+
+// ── WEEK UPDATE ───────────────────────────────────────────────────────────────
+function updateWeek(wi) {
+  selectedWeek = wi;
+  const w = DATA.weeks[wi];
+  const prev = wi > 0 ? DATA.weeks[wi - 1] : null;
+  const g = DATA.goals;
+  const preLaunch = isTTPreLaunch(w);
+
+  // Week nav highlight
+  document.querySelectorAll('.wk-btn').forEach((b, i) => b.classList.toggle('active', i === wi));
+  document.getElementById('hdr-week').textContent = 'Week: ' + w.week_label;
+
+  // ── OVERVIEW insight bar ────────────────────────────────────────────────────
+  const igR = w.ig.reach, igV = w.ig.views, igTF = w.ig.total_followers, igE = w.ig.eng_rate;
+  const rcChg = prev ? Math.round((igR - prev.ig.reach) / prev.ig.reach * 100) : null;
+  const engOk = igE >= g.ig_eng_rate;
+  document.getElementById('ov-insight').innerHTML =
+    `<strong>${w.week_label}:</strong> IG Reach <strong>${fmt(igR)}</strong>${rcChg != null ? ` (${rcChg >= 0 ? '+' : ''}${rcChg}% WoW)` : ''}. Views <strong>${fmt(igV)}</strong>. Followers <strong>${fmt(igTF)}</strong>. Eng rate <strong>${fmtPct(igE, 2)}</strong> &mdash; ${engOk ? '<strong style="color:var(--up)">on Q2 target ✓</strong>' : '<strong style="color:var(--down)">below 6% target</strong>'}. TikTok: ${preLaunch ? '<em>not yet launched</em>' : `${fmt(w.tt.video_views)} views, ${fmt(w.tt.total_followers)} followers`}.`;
+
+  // ── OVERVIEW KPIs ───────────────────────────────────────────────────────────
+  document.getElementById('ov-kpis').innerHTML =
+    kpiCard('ig', 'IG Reach', fmt(igR), wow(igR, prev?.ig.reach)) +
+    kpiCard('ig', 'IG Views', fmt(igV), wow(igV, prev?.ig.views)) +
+    kpiCard('ig', 'IG Followers', fmt(igTF), wow(igTF, prev?.ig.total_followers)) +
+    kpiCard('ig', 'IG Eng Rate', fmtPct(igE, 2), engOk ? '<span class="badge-up">✓ On target</span>' : '<span class="badge-dn">Below 6%</span>') +
+    kpiCard('fb', 'FB Views', fmt(w.fb.views), wow(w.fb.views, prev?.fb.views)) +
+    kpiCard('fb', 'FB Interactions', fmt(w.fb.interactions), wow(w.fb.interactions, prev?.fb.interactions)) +
+    kpiCard('tt', 'TT Views', preLaunch ? '—' : fmt(w.tt.video_views), preLaunch ? '<span class="badge-na">Pre-launch</span>' : wow(w.tt.video_views, prev?.tt.video_views)) +
+    kpiCard('tt', 'TT Followers', preLaunch ? '—' : fmt(w.tt.total_followers), preLaunch ? '<span class="badge-na">Pre-launch</span>' : wow(w.tt.total_followers, prev?.tt.total_followers));
+
+  // ── GOALS ──────────────────────────────────────────────────────────────────
+  const igGP = Math.min(100, Math.round(igTF / g.ig_followers * 100));
+  const engGP = Math.min(100, Math.round(igE / g.ig_eng_rate * 100));
+  const ttGP = Math.min(100, Math.round(w.tt.total_followers / g.tt_followers * 100));
+  document.getElementById('g-ig-bar').style.width = igGP + '%';
+  document.getElementById('g-ig-txt').textContent = fmt(igTF) + ' / ' + fmt(g.ig_followers) + ' (' + igGP + '%)';
+  document.getElementById('g-ig-txt').className = 'goal-pct ' + (igGP >= 50 ? 'up' : 'dn');
+  document.getElementById('g-eng-bar').style.width = engGP + '%';
+  document.getElementById('g-eng-txt').textContent = fmtPct(igE, 2) + (engOk ? ' ✓' : '');
+  document.getElementById('g-eng-txt').className = 'goal-pct ' + (engOk ? 'up' : 'dn');
+  document.getElementById('g-tt-bar').style.width = ttGP + '%';
+  document.getElementById('g-tt-txt').textContent = fmt(w.tt.total_followers) + ' / ' + fmt(g.tt_followers) + ' (' + ttGP + '%)';
+  document.getElementById('g-tt-txt').className = 'goal-pct ' + (ttGP >= 50 ? 'up' : 'dn');
+
+  // Projections
+  if (wi > 0) {
+    const weeksLeft = weeksUntilDeadline(w.week_end, g.deadline);
+    const igGrowth = igTF - prev.ig.total_followers;
+    const igProj = Math.round(igTF + igGrowth * weeksLeft);
+    document.getElementById('g-ig-proj').textContent = `Projected end-of-Q2: ~${fmt(igProj)} followers (${weeksLeft} weeks left, +${fmt(igGrowth)}/wk)`;
+    const ttGrowth = w.tt.new_followers;
+    const ttProj = Math.round(w.tt.total_followers + ttGrowth * weeksLeft);
+    document.getElementById('g-tt-proj').textContent = `Projected end-of-Q2: ~${fmt(ttProj)} followers (${weeksLeft} weeks left, +${fmt(ttGrowth)}/wk)`;
+    document.getElementById('g-eng-proj').textContent = `Current rate: ${fmtPct(igE, 2)} — ${engOk ? 'on track ✓' : 'needs improvement'}`;
+  }
+
+  // ── INSTAGRAM TAB ──────────────────────────────────────────────────────────
+  if (w.ig.missing) {
+    document.getElementById('ig-wk-note').innerHTML =
+      '<span style="color:var(--ga)">⚠ ' + (w.ig.note || 'Instagram data not available this week — file not submitted') + '</span>';
+    document.getElementById('ig-kpis').innerHTML =
+      ['Reach','Views','Follows','Profile Visits','Interactions','Link Clicks','Total Followers','Eng Rate']
+        .map(l => kpiCard('ig', l, '—', '<span class="badge-na">Not submitted</span>')).join('');
+  } else {
+    document.getElementById('ig-wk-note').textContent = 'Showing: ' + w.week_label + ' — use week selector to switch';
+    document.getElementById('ig-kpis').innerHTML =
+      kpiCard('ig', 'Reach', fmt(w.ig.reach), wow(w.ig.reach, prev?.ig.reach)) +
+      kpiCard('ig', 'Views', fmt(w.ig.views), wow(w.ig.views, prev?.ig.views)) +
+      kpiCard('ig', 'Follows', fmt(w.ig.follows), wow(w.ig.follows, prev?.ig.follows)) +
+      kpiCard('ig', 'Profile Visits', fmt(w.ig.profile_visits), wow(w.ig.profile_visits, prev?.ig.profile_visits)) +
+      kpiCard('ig', 'Interactions', fmt(w.ig.interactions), wow(w.ig.interactions, prev?.ig.interactions)) +
+      kpiCard('ig', 'Link Clicks', fmt(w.ig.link_clicks), wow(w.ig.link_clicks, prev?.ig.link_clicks)) +
+      kpiCard('ig', 'Total Followers', fmt(w.ig.total_followers), wow(w.ig.total_followers, prev?.ig.total_followers)) +
+      kpiCard('ig', 'Eng Rate', fmtPct(w.ig.eng_rate, 2), engOk ? '<span class="badge-up">✓ On target</span>' : '<span class="badge-dn">Below 6%</span>');
+  }
+
+  // ── FACEBOOK TAB ───────────────────────────────────────────────────────────
+  if (w.fb.missing) {
+    document.getElementById('fb-wk-note').innerHTML =
+      '<span style="color:var(--ga)">⚠ ' + (w.fb.note || 'Facebook data not available this week — file not submitted') + '</span>';
+    document.getElementById('fb-kpis').innerHTML =
+      ['Views','Visits','Viewers','Follows','Interactions','Link Clicks']
+        .map(l => kpiCard('fb', l, '—', '<span class="badge-na">Not submitted</span>')).join('');
+  } else {
+    document.getElementById('fb-wk-note').textContent = 'Showing: ' + w.week_label + ' — use week selector to switch';
+    document.getElementById('fb-kpis').innerHTML =
+      kpiCard('fb', 'Views', fmt(w.fb.views), wow(w.fb.views, prev?.fb.views)) +
+      kpiCard('fb', 'Visits', fmt(w.fb.visits), wow(w.fb.visits, prev?.fb.visits)) +
+      kpiCard('fb', 'Viewers', fmt(w.fb.viewers), wow(w.fb.viewers, prev?.fb.viewers)) +
+      kpiCard('fb', 'Follows', fmt(w.fb.follows), wow(w.fb.follows, prev?.fb.follows)) +
+      kpiCard('fb', 'Interactions', fmt(w.fb.interactions), wow(w.fb.interactions, prev?.fb.interactions)) +
+      kpiCard('fb', 'Link Clicks', fmt(w.fb.link_clicks), wow(w.fb.link_clicks, prev?.fb.link_clicks));
+  }
+
+  // FB table
+  const fbTb = document.getElementById('fb-tbody');
+  fbTb.innerHTML = '';
+  DATA.weeks.forEach((wk, i) => {
+    const fbMiss = wk.fb.missing;
+    fbTb.innerHTML += `<tr${i === wi ? ' class="active-week"' : ''}>
+      <td>${wk.week_label}${fbMiss ? ' <span style="color:var(--ga);font-size:9px">⚠ no data</span>' : ''}</td>
+      <td>${fbMiss ? '—' : fmt(wk.fb.views)}</td><td>${fbMiss ? '—' : fmt(wk.fb.visits)}</td><td>${fbMiss ? '—' : fmt(wk.fb.viewers)}</td>
+      <td>${fbMiss ? '—' : fmt(wk.fb.follows)}</td><td>${fbMiss ? '—' : fmt(wk.fb.interactions)}</td><td>${fbMiss ? '—' : fmt(wk.fb.link_clicks)}</td>
+    </tr>`;
+  });
+
+  // ── TIKTOK TAB ─────────────────────────────────────────────────────────────
+  document.getElementById('tt-wk-note').textContent = 'Showing: ' + w.week_label + ' — use week selector to switch';
+  document.getElementById('tt-kpis').innerHTML =
+    kpiCard('tt', 'Video Views', preLaunch ? '—' : fmt(w.tt.video_views), preLaunch ? '<span class="badge-na">Pre-launch</span>' : wow(w.tt.video_views, prev?.tt.video_views)) +
+    kpiCard('tt', 'Reached', preLaunch ? '—' : fmt(w.tt.reached), '') +
+    kpiCard('tt', 'New Followers', preLaunch ? '—' : fmt(w.tt.new_followers), '') +
+    kpiCard('tt', 'Total Followers', preLaunch ? '—' : fmt(w.tt.total_followers), preLaunch ? '' : wow(w.tt.total_followers, prev?.tt.total_followers)) +
+    kpiCard('tt', 'Likes', preLaunch ? '—' : fmt(w.tt.likes), '') +
+    kpiCard('tt', 'Comments', preLaunch ? '—' : fmt(w.tt.comments), '') +
+    kpiCard('tt', 'Shares', preLaunch ? '—' : fmt(w.tt.shares), '') +
+    kpiCard('tt', 'Favorites', preLaunch ? '—' : fmt(w.tt.favorites || 0), '');
+
+  buildTTDailyCharts(w);
+
+  // ── ANALYTICS TAB ──────────────────────────────────────────────────────────
+  buildGASection(w, wi);
+
+  // ── Highlight current in trend charts ────────────────────────────────────
+  highlightCurrentPoint();
+}
+
+// ── TT DAILY CHARTS ───────────────────────────────────────────────────────────
+function buildTTDailyCharts(w) {
+  const daily = w.tt.daily;
+  const tblCard = document.getElementById('tt-daily-table-card');
+  const tblLabel = document.getElementById('tt-daily-tbl-label');
+
+  if (!daily || daily.length === 0) {
+    // No daily data
+    if (CHARTS['c-tt-daily']) { CHARTS['c-tt-daily'].destroy(); delete CHARTS['c-tt-daily']; }
+    if (CHARTS['c-tt-daily-eng']) { CHARTS['c-tt-daily-eng'].destroy(); delete CHARTS['c-tt-daily-eng']; }
+    document.getElementById('c-tt-daily-wrap').innerHTML = '<div style="color:var(--t3);font-size:11px;padding:60px 0;text-align:center">No daily data available</div>';
+    document.getElementById('c-tt-daily-eng-wrap').innerHTML = '<div style="color:var(--t3);font-size:11px;padding:60px 0;text-align:center">No daily data available</div>';
+    tblCard.style.display = 'none';
+    return;
+  }
+
+  // Restore canvases if they were replaced
+  const dw = document.getElementById('c-tt-daily-wrap');
+  if (!dw.querySelector('canvas')) {
+    dw.innerHTML = '<canvas id="c-tt-daily"></canvas>';
+  }
+  const dew = document.getElementById('c-tt-daily-eng-wrap');
+  if (!dew.querySelector('canvas')) {
+    dew.innerHTML = '<canvas id="c-tt-daily-eng"></canvas>';
+  }
+
+  const dlabels = daily.map(d => d.date.slice(5)); // MM-DD
+  const dviews  = daily.map(d => d.views);
+  const dlikes  = daily.map(d => d.likes);
+  const dcmts   = daily.map(d => d.comments);
+
+  mkC('c-tt-daily', {
+    type: 'bar',
+    data: { labels: dlabels, datasets: [barDS('Video Views', dviews, '#69C9D0')] },
+    options: baseOpts(false)
+  });
+
+  mkC('c-tt-daily-eng', {
+    type: 'bar',
+    data: { labels: dlabels, datasets: [barDS('Likes', dlikes, '#69C9D0'), barDS('Comments', dcmts, '#A0E8EE')] },
+    options: baseOpts(true)
+  });
+
+  // Daily table
+  tblCard.style.display = 'block';
+  tblLabel.textContent = w.week_label;
+  const tbody = document.getElementById('tt-daily-tbody');
+  tbody.innerHTML = '';
+  daily.forEach(d => {
+    tbody.innerHTML += `<tr>
+      <td>${d.date}</td><td>${fmt(d.views)}</td><td>${fmt(d.reached)}</td>
+      <td>${fmt(d.new_followers)}</td><td>${fmt(d.total_followers)}</td>
+      <td>${fmt(d.likes)}</td><td>${fmt(d.comments)}</td><td>${fmt(d.shares)}</td>
+    </tr>`;
+  });
+}
+
+// ── GA SECTION ────────────────────────────────────────────────────────────────
+function buildGASection(w, wi) {
+  const ga = w.ga || {};
+  const warn = document.getElementById('ga-warn');
+
+  // Platform data missing — file was not submitted this week
+  if (ga.missing) {
+    document.getElementById('ga-wk-note').textContent = 'Week: ' + w.week_label;
+    warn.style.display = 'block';
+    warn.innerHTML = '⚠ ' + (ga.note || 'Google Analytics data not available this week — file not submitted');
+    document.getElementById('ga-kpis').innerHTML =
+      kpiCard('ga','Sessions','—','<span class="badge-na">Not submitted</span>') +
+      kpiCard('ga','Engaged Sessions','—','') +
+      kpiCard('ga','Revenue','—','') +
+      kpiCard('ga','Eng Rate %','—','');
+    ['c-ga-sources','c-ga-donut'].forEach(id => { if(CHARTS[id]){CHARTS[id].destroy();delete CHARTS[id];} });
+    document.getElementById('ga-tbody').innerHTML =
+      `<tr><td colspan="5" style="text-align:center;color:var(--t3);padding:24px;font-family:'DM Mono',monospace;font-size:11px">No data available for this week</td></tr>`;
+    document.getElementById('ga-src-label').textContent = '';
+    document.getElementById('ga-tbl-label').textContent = '';
+    return;
+  }
+
+  document.getElementById('ga-wk-note').textContent = 'Period: ' + (ga.date_range || w.week_label);
+
+  if (ga.note) {
+    warn.style.display = 'block';
+    warn.innerHTML = '⚠ ' + ga.note;
+  } else {
+    warn.style.display = 'none';
+  }
+
+  const engRate = ga.sessions > 0 ? (ga.engaged_sessions / ga.sessions * 100) : 0;
+  document.getElementById('ga-kpis').innerHTML =
+    kpiCard('ga', 'Sessions', fmt(ga.sessions), ga.note ? '<span class="badge-na">Cumulative</span>' : '') +
+    kpiCard('ga', 'Engaged Sessions', fmt(ga.engaged_sessions), fmtPct(engRate, 1) + ' rate') +
+    kpiCard('ga', 'Revenue', fmtRev(ga.revenue), ga.note ? '<span class="badge-na">Cumulative</span>' : '') +
+    kpiCard('ga', 'Eng Rate %', fmtPct(engRate, 1), 'Engaged / Total');
+
+  const srcLabel = ga.date_range;
+  document.getElementById('ga-src-label').textContent = srcLabel;
+  document.getElementById('ga-tbl-label').textContent = srcLabel + ' · by source';
+
+  const srcs = ga.sources;
+  const labels = srcs.map(s => s.src);
+  const sessions = srcs.map(s => s.sessions);
+  const maxS = Math.max(...sessions, 1);
+
+  // GA bar chart (horizontal)
+  const gopts = {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: TOOLTIP },
+    scales: {
+      x: { grid: { color: 'rgba(0,192,139,0.05)' }, ticks: { color: '#3D6E78' } },
+      y: { grid: { display: false }, ticks: { color: '#7BBDB4', font: { size: 10 } } }
+    }
+  };
+  mkC('c-ga-sources', {
+    type: 'bar',
+    data: { labels, datasets: [{ ...barDS('Sessions', sessions, '#FFAD1F'), borderRadius: 3 }] },
+    options: gopts
+  });
+
+  // GA donut
+  const dc = ['#3D6E78CC','#FFAD1FCC','#00C08BCC','#4080FFCC','#69C9D0CC','#E1306CCC','#8B5CF6CC','#F97316CC'];
+  mkC('c-ga-donut', {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: sessions, backgroundColor: dc.slice(0, labels.length), borderColor: '#0E1C2F', borderWidth: 3, hoverOffset: 6 }] },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#7BBDB4', boxWidth: 10, padding: 8, font: { size: 10 } } },
+        tooltip: TOOLTIP
+      }
+    }
+  });
+
+  // GA table
+  const tbody = document.getElementById('ga-tbody');
+  tbody.innerHTML = '';
+  srcs.forEach(s => {
+    const pct = Math.round(s.sessions / maxS * 100);
+    tbody.innerHTML += `<tr>
+      <td>${s.src}</td>
+      <td>${fmt(s.sessions)}</td>
+      <td>${fmtPct(s.eng_rate, 1)}</td>
+      <td>${s.revenue > 0 ? fmtRev(s.revenue) : '—'}</td>
+      <td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:var(--ga)"></div></div></div></td>
+    </tr>`;
+  });
 }
 
 // ── AUDIENCE ──────────────────────────────────────────────────────────────────
-function buildAudience(){
-  ['ig','fb'].forEach(p=>{
-    const a=AUD[p];
-    const maxT=Math.max(...a.brackets.map(b=>b.w+b.m));
-    const ageEl=document.getElementById(p+'-age-rows');
-    ageEl.innerHTML='';
-    a.brackets.forEach(b=>{
-      const t=Math.round((b.w+b.m)*10)/10;
-      const isT=b.b==='25–34'||b.b==='35–44';
-      const bw=Math.round(t/maxT*100);
-      ageEl.innerHTML+=`<div class="aud-row${isT?' aud-target':''}">
-        <div class="aud-bracket">${b.b}</div>
-        <div class="aud-bar-bg"><div class="aud-bar-fill" style="width:${bw}%;background:${isT?'var(--aurora)':'var(--t3)'}"></div></div>
-        <div class="aud-pct">${t}%${isT?'<span class="aud-tag">target</span>':''}</div>
+function buildAudience() {
+  buildPlatformAudience('ig', DATA.audience.ig);
+  buildPlatformAudience('fb', DATA.audience.fb);
+}
+
+function buildPlatformAudience(pfx, aud) {
+  const brackets = Object.entries(aud.age_gender);
+  const maxT = Math.max(...brackets.map(([, v]) => (v.women||0) + (v.men||0)));
+  const ageEl = document.getElementById(pfx + '-age-rows');
+  ageEl.innerHTML = '';
+  brackets.forEach(([bracket, vals]) => {
+    const w = vals.women || 0, m = vals.men || 0;
+    const total = Math.round((w + m) * 10) / 10;
+    const isT = bracket === '25-34' || bracket === '35-44';
+    const wPct = Math.round(w / maxT * 100);
+    const mPct = Math.round(m / maxT * 100);
+    ageEl.innerHTML += `<div class="aud-row${isT ? ' aud-target' : ''}">
+      <div class="aud-bracket">${bracket}${isT ? '<span class="aud-tag">target</span>' : ''}</div>
+      <div class="aud-bars">
+        <div class="aud-bar-row"><span class="aud-bar-lbl">W ${w}%</span><div class="aud-bar-bg"><div class="aud-bar-fill" style="width:${wPct}%;background:${isT ? 'var(--aurora)' : 'var(--t3)'}"></div></div></div>
+        <div class="aud-bar-row"><span class="aud-bar-lbl">M ${m}%</span><div class="aud-bar-bg"><div class="aud-bar-fill" style="width:${mPct}%;background:${isT ? 'var(--aurora2)' : 'var(--t3)'}opacity(.6)"></div></div></div>
+      </div>
+      <div class="aud-pct">${total}%</div>
+    </div>`;
+  });
+  document.getElementById(pfx + '-aud-total').innerHTML = `25–44 combined: <strong>${aud.target_25_44_pct}%</strong> of followers`;
+
+  const geoEl = document.getElementById(pfx + '-geo');
+  geoEl.innerHTML = '';
+  const maxCP = Math.max(...aud.top_countries.map(c => c.pct));
+  geoEl.innerHTML += `<div class="geo-section"><div class="geo-section-title">Top Countries</div>`;
+  aud.top_countries.forEach(c => {
+    geoEl.innerHTML += `<div class="geo-row">
+      <span class="geo-name">${c.name}</span>
+      <div class="geo-bar-bg"><div class="geo-bar-fill" style="width:${Math.round(c.pct/maxCP*100)}%;background:var(--aurora)"></div></div>
+      <span class="geo-pct">${c.pct}%</span>
+    </div>`;
+  });
+  geoEl.innerHTML += '</div>';
+
+  if (aud.top_cities && aud.top_cities.length > 0) {
+    const maxCiP = Math.max(...aud.top_cities.map(c => c.pct));
+    geoEl.innerHTML += `<div class="geo-section" style="margin-top:14px"><div class="geo-section-title">Top Cities</div>`;
+    aud.top_cities.forEach(c => {
+      geoEl.innerHTML += `<div class="geo-row">
+        <span class="geo-name">${c.name}</span>
+        <div class="geo-bar-bg"><div class="geo-bar-fill" style="width:${Math.round(c.pct/maxCiP*100)}%;background:var(--fb)"></div></div>
+        <span class="geo-pct">${c.pct}%</span>
       </div>`;
     });
-    document.getElementById(p+'-aud-total').innerHTML=`25–44 combined: <strong>${a.target2544}%</strong>`;
-    const geoEl=document.getElementById(p+'-geo');
-    geoEl.innerHTML='<div style="font-size:10px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Countries</div>';
-    a.countries.forEach(c=>{geoEl.innerHTML+=`<div class="geo-row"><span style="color:var(--t2)">${c.n}</span><span style="color:var(--t3);font-family:\'DM Mono\',monospace">${c.p}%</span></div>`;});
-    geoEl.innerHTML+='<div style="font-size:10px;color:var(--t3);letter-spacing:.06em;text-transform:uppercase;margin:12px 0 8px">Top Cities</div>';
-    a.cities.forEach(c=>{geoEl.innerHTML+=`<div class="geo-row"><span style="color:var(--t2)">${c.n}</span><span style="color:var(--t3);font-family:\'DM Mono\',monospace">${c.p}%</span></div>`;});
+    geoEl.innerHTML += '</div>';
+  }
+}
+
+// ── HIGHLIGHT CURRENT WEEK ────────────────────────────────────────────────────
+function highlightCurrentPoint() {
+  const ci = selectedWeek - rangeStart;
+  const trendIds = ['c-reach','c-followers','c-ig-reach-views','c-ig-tf','c-tt-followers'];
+  trendIds.forEach(id => {
+    const c = CHARTS[id];
+    if (!c) return;
+    c.data.datasets.forEach(ds => {
+      if (!ds.pointRadius) return;
+      const n = ds.data.length;
+      ds.pointRadius = ds.data.map((_, i) => i === ci ? 7 : 4);
+      ds.pointBackgroundColor = ds.data.map((_, i) => i === ci ? '#FFFFFF' : (ds.borderColor || '#aaa'));
+    });
+    c.update('none');
   });
 }
 
-// ── GA ────────────────────────────────────────────────────────────────────────
-let gaBar=null,gaDt=null;
-function buildGACharts(wi){
-  const g=GA_DATA[Math.min(wi,GA_DATA.length-1)];
-  const labels=g.sources.map(s=>s.src);
-  const sess=g.sources.map(s=>s.s);
-  const maxS=Math.max(...sess);
-  document.getElementById('ga-src-label').textContent=g.label;
-  document.getElementById('ga-tbl-label').textContent=g.label+' · sessions by source';
-  document.getElementById('ga-wk-note').textContent=g.note?'⚠ '+g.note:'';
-  const tbody=document.getElementById('ga-tbody');tbody.innerHTML='';
-  g.sources.forEach(s=>{const pct=Math.round(s.s/maxS*100);tbody.innerHTML+=`<tr><td>${s.src}</td><td>${s.s.toLocaleString()}</td><td>${s.eng.toFixed(1)}%</td><td>${s.rev>0?'$'+s.rev.toLocaleString():'—'}</td><td><div class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:${pct}%;background:var(--ga)"></div></div></div></td></tr>`;});
-  const gopts={indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:TT},scales:{x:{grid:{color:'rgba(0,192,139,0.05)'},ticks:{color:'#3D6E78'}},y:{grid:{display:false},ticks:{color:'#7BBDB4'}}}};
-  if(gaBar){gaBar.data.labels=labels;gaBar.data.datasets[0].data=sess;gaBar.update();}
-  else{gaBar=mkC('c-ga-sources',{type:'bar',data:{labels,datasets:[bds('Sessions',sess,'#FFAD1F')]},options:gopts});}
-  const dc=['#3D6E78CC','#FFAD1FCC','#00C08BCC','#4080FFCC','#69C9D0CC','#E1306CCC','#555555CC'];
-  if(gaDt){gaDt.data.labels=labels;gaDt.data.datasets[0].data=sess;gaDt.update();}
-  else{gaDt=mkC('c-ga-donut',{type:'doughnut',data:{labels,datasets:[{data:sess,backgroundColor:dc,borderColor:'#0E1C2F',borderWidth:3,hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{color:'#7BBDB4',boxWidth:10,padding:8,font:{size:10}}},tooltip:TT}}});}
-  document.getElementById('ga-kpis').innerHTML=
-    kpi('ga','Sessions',g.sessions.toLocaleString(),g.note?'Cumulative period':'Weekly')+
-    kpi('ga','Engaged Sessions',g.engaged.toLocaleString(),Math.round(g.engaged/g.sessions*100)+'% rate')+
-    kpi('ga','Revenue','$'+g.revenue.toLocaleString(),g.note?'Cumulative':'Weekly')+
-    kpi('ga','Eng Rate',Math.round(g.engaged/g.sessions*100)+'%','Engaged/total');
+// ── KPI CARD ──────────────────────────────────────────────────────────────────
+function kpiCard(cls, label, val, sub) {
+  return `<div class="kpi ${cls}"><div class="kl">${label}</div><div class="kv">${val}</div><div class="kd">${sub || ''}</div></div>`;
 }
 
-// ── KPI ───────────────────────────────────────────────────────────────────────
-function kpi(cls,label,val,sub,subCls='na'){return`<div class="kpi ${cls}"><div class="kl">${label}</div><div class="kv">${val}</div><div class="kd ${subCls}">${sub}</div></div>`;}
-function chg(cur,prev){
-  if(prev===null||prev===undefined)return'<span class="kd na">—</span>';
-  if(prev===0&&cur===0)return'<span class="kd na">—</span>';
-  if(prev===0)return'<span class="kd na">New</span>';
-  const d=Math.round((cur-prev)/Math.abs(prev)*100);
-  return`<span class="kd ${d>=0?'up':'dn'}">${d>=0?'▲+':'▼'}${d}%</span>`;
+// ── WEEKS UNTIL DEADLINE ──────────────────────────────────────────────────────
+function weeksUntilDeadline(weekEndStr, deadlineStr) {
+  const we = new Date(weekEndStr);
+  const dl = new Date(deadlineStr);
+  const diff = dl - we;
+  return Math.max(0, Math.round(diff / (7 * 24 * 60 * 60 * 1000)));
 }
 
-// ── HIGHLIGHT POINT ───────────────────────────────────────────────────────────
-function highlightPoint(wi){
-  ['c-reach','c-followers','c-views-all','c-eng-overview','c-ig-reach-views','c-ig-engrate','c-ig-follows','c-ig-tf','c-fb-views','c-fb-engage','c-tt-weekly','c-tt-followers','c-tt-nf','c-tt-likes'].forEach(id=>{
-    const c=CHARTS[id];if(!c)return;
-    c.data.datasets.forEach(ds=>{
-      if(ds.pointRadius&&Array.isArray(ds.data)){
-        ds.pointRadius=ds.data.map((_,i)=>wi<0?4:(i===wi?7:4));
-        ds.pointBackgroundColor=ds.data.map((_,i)=>wi<0?(ds.borderColor||'#aaa'):(i===wi?'#FFFFFF':(ds.borderColor||'#aaa')));
-      }
-    });c.update('none');
+// ── COMPARE MODAL ─────────────────────────────────────────────────────────────
+function openCompareModal() {
+  const modal = document.getElementById('compare-modal');
+  const list = document.getElementById('modal-wk-list');
+  list.innerHTML = '';
+  DATA.weeks.forEach((w, i) => {
+    const id = 'cmp-chk-' + i;
+    list.innerHTML += `<label class="modal-wk-check" for="${id}">
+      <input type="checkbox" id="${id}" value="${i}" ${i >= DATA.weeks.length - 2 ? 'checked' : ''}>
+      ${w.week_label}
+    </label>`;
+  });
+  modal.classList.add('open');
+  updateCompareModal();
+
+  document.querySelectorAll('[id^="cmp-chk-"]').forEach(cb => {
+    cb.addEventListener('change', updateCompareModal);
   });
 }
 
-// ── UPDATE WEEK ───────────────────────────────────────────────────────────────
-function updateWeek(wi){
-  CUR=wi;
-  const w=WEEKS[wi],prev=wi>0?WEEKS[wi-1]:null;
-  const wlbl=colStr(w,'week')||colStr(w,'Week')||('Week '+(wi+1));
-  document.querySelectorAll('.wk-btn').forEach((b,i)=>b.classList.toggle('active',i===wi+1));
-  document.getElementById('hdr-week').textContent='Week: '+wlbl;
-  const igR=col(w,'instagram|reach'),igV=col(w,'instagram|views'),igF=col(w,'instagram|follows'),
-    igPV=col(w,'instagram|profile'),igIn=col(w,'instagram|interact'),igLC=col(w,'instagram|link'),
-    igTF=col(w,'instagram|total'),igE=col(w,'ig eng rate');
-  const fbV=col(w,'facebook|views'),fbVs=col(w,'facebook|visits'),fbVw=col(w,'facebook|viewers'),
-    fbF=col(w,'facebook|follows'),fbIn=col(w,'facebook|interact'),fbLC=col(w,'facebook|link');
-  const ttV=col(w,'tiktok|video'),ttR=col(w,'tiktok|reached'),ttNF=col(w,'tiktok|new'),
-    ttTF=col(w,'tiktok|total'),ttL=col(w,'tiktok|likes'),ttWC=col(w,'tiktok|website')||col(w,'tiktok|web');
-  const pIgR=prev?col(prev,'instagram|reach'):null,pIgV=prev?col(prev,'instagram|views'):null,
-    pIgF=prev?col(prev,'instagram|follows'):null,pIgTF=prev?col(prev,'instagram|total'):null,
-    pFbV=prev?col(prev,'facebook|views'):null,pFbIn=prev?col(prev,'facebook|interact'):null,
-    pTtV=prev?col(prev,'tiktok|video'):null;
-  const engOk=igE>=GOALS.igEngRate;
-
-  document.getElementById('ov-kpis').innerHTML=
-    kpi('ig','IG Reach',igR.toLocaleString(),chg(igR,pIgR))+
-    kpi('ig','IG Views',igV.toLocaleString(),chg(igV,pIgV))+
-    kpi('ig','IG Followers',igTF.toLocaleString(),chg(igTF,pIgTF))+
-    kpi('ig','IG Eng Rate',igE.toFixed(2)+'%',engOk?'<span class="kd up">✓ On target</span>':'<span class="kd dn">Below 6%</span>')+
-    kpi('fb','FB Views',fbV.toLocaleString(),chg(fbV,pFbV))+
-    kpi('fb','FB Interactions',fbIn.toLocaleString(),chg(fbIn,pFbIn))+
-    kpi('tt','TT Views',ttV.toLocaleString(),chg(ttV,pTtV))+
-    kpi('tt','TT Followers',ttTF.toLocaleString(),ttTF>0?'<span class="kd up">Growing</span>':'');
-
-  const rcChg=pIgR?Math.round((igR-pIgR)/pIgR*100):0;
-  document.getElementById('ov-insight').innerHTML=
-    `<strong>Week of ${wlbl}:</strong> IG Reach ${igR.toLocaleString()}${rcChg?` (${rcChg>0?'+':''}${rcChg}% WoW)`:''}. Views ${igV.toLocaleString()}. Followers <strong>${igTF.toLocaleString()}</strong>. Eng rate <strong>${igE.toFixed(2)}%</strong> &mdash; ${engOk?'on Q2 target ✓':'below 6% target'}. TikTok: ${ttV.toLocaleString()} views, ${ttTF} followers.`;
-
-  const igGP=Math.min(100,Math.round(igTF/GOALS.igFollowers*100));
-  const engGP=Math.min(100,Math.round(igE/GOALS.igEngRate*100));
-  const ttGP=Math.min(100,Math.round(ttTF/GOALS.ttFollowers*100));
-  document.getElementById('g-ig-bar').style.width=igGP+'%';
-  document.getElementById('g-ig-txt').textContent=igTF.toLocaleString()+' / 1,500';
-  document.getElementById('g-ig-txt').className='goal-pct '+(igGP>=50?'up':'dn');
-  document.getElementById('g-eng-bar').style.width=engGP+'%';
-  document.getElementById('g-eng-txt').textContent=igE.toFixed(2)+'%'+(engOk?' ✓':'');
-  document.getElementById('g-eng-txt').className='goal-pct '+(engOk?'up':'dn');
-  document.getElementById('g-tt-bar').style.width=ttGP+'%';
-  document.getElementById('g-tt-txt').textContent=ttTF+' / 100';
-
-  document.getElementById('ig-wk-note').textContent='Showing: '+wlbl+' — use week selector above to switch';
-  document.getElementById('ig-kpis').innerHTML=
-    kpi('ig','Reach',igR.toLocaleString(),chg(igR,pIgR))+kpi('ig','Views',igV.toLocaleString(),chg(igV,pIgV))+
-    kpi('ig','Follows',igF.toLocaleString(),chg(igF,pIgF))+kpi('ig','Profile Visits',igPV.toLocaleString(),'')+
-    kpi('ig','Interactions',igIn.toLocaleString(),'')+kpi('ig','Link Clicks',igLC.toLocaleString(),'')+
-    kpi('ig','Total Followers',igTF.toLocaleString(),chg(igTF,pIgTF))+
-    kpi('ig','Eng Rate',igE.toFixed(2)+'%',engOk?'<span class="kd up">✓ On target</span>':'<span class="kd dn">Below 6%</span>');
-
-  document.getElementById('fb-wk-note').textContent='Showing: '+wlbl+' — use week selector above to switch';
-  document.getElementById('fb-kpis').innerHTML=
-    kpi('fb','Views',fbV.toLocaleString(),chg(fbV,pFbV))+kpi('fb','Visits',fbVs.toLocaleString(),chg(fbVs,prev?col(prev,'facebook|visits'):null))+
-    kpi('fb','Viewers',fbVw.toLocaleString(),'')+kpi('fb','Follows',fbF.toLocaleString(),chg(fbF,prev?col(prev,'facebook|follows'):null))+
-    kpi('fb','Interactions',fbIn.toLocaleString(),chg(fbIn,pFbIn))+kpi('fb','Link Clicks',fbLC.toLocaleString(),'');
-
-  const fbTb=document.getElementById('fb-tbody');fbTb.innerHTML='';
-  WEEKS.forEach((wk,i)=>{const cls=i===CUR?' class="active-week"':'';const lbl=colStr(wk,'week')||colStr(wk,'Week')||('Week '+(i+1));
-    fbTb.innerHTML+=`<tr${cls}><td>${lbl}</td><td>${col(wk,'facebook|views').toLocaleString()}</td><td>${col(wk,'facebook|visits').toLocaleString()}</td><td>${col(wk,'facebook|viewers').toLocaleString()}</td><td>${col(wk,'facebook|follows').toLocaleString()}</td><td>${col(wk,'facebook|interact').toLocaleString()}</td><td>${col(wk,'facebook|link').toLocaleString()}</td></tr>`;});
-
-  document.getElementById('tt-kpis').innerHTML=
-    kpi('tt','Video Views',ttV.toLocaleString(),chg(ttV,pTtV))+kpi('tt','Reached',ttR.toLocaleString(),'')+
-    kpi('tt','New Followers',ttNF.toLocaleString(),'')+kpi('tt','Total Followers',ttTF.toLocaleString(),ttTF>0?'<span class="kd up">Growing</span>':'')+
-    kpi('tt','Likes',ttL.toLocaleString(),'')+kpi('tt','Comments',col(w,'tiktok|comments')||0,'')+
-    kpi('tt','Shares',col(w,'tiktok|shares')||0,'')+kpi('tt','Favorites',col(w,'tiktok|favorites')||0,'');
-
-  buildGACharts(wi);
-  highlightPoint(wi);
+function closeCompareModal() {
+  document.getElementById('compare-modal').classList.remove('open');
+  ['c-cmp-reach','c-cmp-eng','c-cmp-tt'].forEach(id => {
+    if (CHARTS[id]) { CHARTS[id].destroy(); delete CHARTS[id]; }
+  });
 }
 
-loadData();
+function updateCompareModal() {
+  const selected = [];
+  document.querySelectorAll('[id^="cmp-chk-"]:checked').forEach(cb => {
+    selected.push(parseInt(cb.value));
+  });
+  if (selected.length === 0) { return; }
+
+  const rows = selected.map(i => DATA.weeks[i]);
+  const labels = rows.map(w => w.week_label);
+  const reaches = rows.map(w => w.ig.reach);
+  const engs = rows.map(w => w.ig.eng_rate);
+  const ttViews = rows.map(w => w.tt.video_views);
+  const revenues = rows.map(w => w.ga.revenue);
+
+  // Find best week per metric
+  const bestReach = reaches.indexOf(Math.max(...reaches));
+  const bestEng = engs.indexOf(Math.max(...engs));
+  const bestTT = ttViews.indexOf(Math.max(...ttViews));
+  const bestRev = revenues.indexOf(Math.max(...revenues));
+
+  // Table
+  const tbody = document.getElementById('compare-tbody');
+  tbody.innerHTML = '';
+  rows.forEach((w, idx) => {
+    const isBest = idx === bestReach || idx === bestEng || idx === bestTT;
+    tbody.innerHTML += `<tr${isBest ? ' class="best-week"' : ''}>
+      <td>${w.week_label}${isBest ? ' ★' : ''}</td>
+      <td>${fmt(w.ig.reach)}</td>
+      <td>${fmtPct(w.ig.eng_rate, 2)}</td>
+      <td>${isTTPreLaunch(w) ? '—' : fmt(w.tt.video_views)}</td>
+      <td>${fmtRev(w.ga.revenue)}</td>
+    </tr>`;
+  });
+
+  // Charts
+  const cOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: TOOLTIP },
+    scales: {
+      x: { grid: { color: 'rgba(0,192,139,0.05)' }, ticks: { color: '#3D6E78', font: { size: 10 } } },
+      y: { grid: { color: 'rgba(0,192,139,0.05)' }, ticks: { color: '#3D6E78', font: { size: 10 } } }
+    }
+  };
+  mkC('c-cmp-reach', {
+    type: 'line',
+    data: { labels, datasets: [lineDS('IG Reach', reaches, '#E1306C', true, bestReach)] },
+    options: cOpts
+  });
+  mkC('c-cmp-eng', {
+    type: 'line',
+    data: { labels, datasets: [lineDS('Eng Rate', engs, '#00C08B', true, bestEng)] },
+    options: cOpts
+  });
+  mkC('c-cmp-tt', {
+    type: 'line',
+    data: { labels, datasets: [lineDS('TT Views', ttViews, '#69C9D0', true, bestTT)] },
+    options: cOpts
+  });
+}
 </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-29T05:14:56.671Z",
+  "generated": "2026-05-29T05:19:55.289Z",
   "goals": {
     "quarter": "Q2",
     "deadline": "2026-06-30",
@@ -13,24 +13,22 @@
       "week_start": "2026-04-19",
       "week_end": "2026-04-25",
       "ig": {
-        "reach": 0,
-        "views": 0,
-        "follows": 0,
-        "profile_visits": 0,
-        "interactions": 0,
-        "link_clicks": 0,
+        "reach": 229,
+        "views": 354,
+        "follows": 7,
+        "profile_visits": 42,
+        "interactions": 3,
+        "link_clicks": 2,
         "total_followers": 643,
-        "eng_rate": 0
+        "eng_rate": 1.31
       },
       "fb": {
-        "missing": true,
-        "note": "Facebook file not submitted this week",
-        "views": 0,
-        "visits": 0,
-        "viewers": 0,
-        "follows": 0,
-        "interactions": 0,
-        "link_clicks": 0
+        "views": 164,
+        "visits": 67,
+        "viewers": 22,
+        "follows": 32,
+        "interactions": 2,
+        "link_clicks": 1
       },
       "tt": {
         "video_views": 0,
@@ -55,13 +53,156 @@
         ]
       },
       "ga": {
-        "missing": true,
-        "note": "Google Analytics file not submitted this week",
-        "date_range": "Apr 19 ? Apr 25",
-        "sessions": 0,
-        "engaged_sessions": 0,
-        "revenue": 0,
-        "sources": []
+        "date_range": "20260419 ? 20260425",
+        "sessions": 927,
+        "engaged_sessions": 479,
+        "revenue": 1596,
+        "sources": [
+          {
+            "src": "(direct)",
+            "sessions": 408,
+            "eng_rate": 39.71,
+            "revenue": 0
+          },
+          {
+            "src": "google",
+            "sessions": 346,
+            "eng_rate": 63.58,
+            "revenue": 1596
+          },
+          {
+            "src": "alaskawildlights.com",
+            "sessions": 41,
+            "eng_rate": 80.49,
+            "revenue": 0
+          },
+          {
+            "src": "alaska-org",
+            "sessions": 34,
+            "eng_rate": 55.88,
+            "revenue": 0
+          },
+          {
+            "src": "m.facebook.com",
+            "sessions": 17,
+            "eng_rate": 11.76,
+            "revenue": 0
+          },
+          {
+            "src": "explorefairbanks.com",
+            "sessions": 16,
+            "eng_rate": 62.5,
+            "revenue": 0
+          },
+          {
+            "src": "bing",
+            "sessions": 12,
+            "eng_rate": 83.33,
+            "revenue": 0
+          },
+          {
+            "src": "fairbanks.extranet.simpleviewcrm.com",
+            "sessions": 8,
+            "eng_rate": 75,
+            "revenue": 0
+          },
+          {
+            "src": "(data not available)",
+            "sessions": 6,
+            "eng_rate": 66.67,
+            "revenue": 0
+          },
+          {
+            "src": "instagram",
+            "sessions": 6,
+            "eng_rate": 66.67,
+            "revenue": 0
+          },
+          {
+            "src": "tiktok",
+            "sessions": 6,
+            "eng_rate": 0,
+            "revenue": 0
+          },
+          {
+            "src": "facebook",
+            "sessions": 5,
+            "eng_rate": 0,
+            "revenue": 0
+          },
+          {
+            "src": "(not set)",
+            "sessions": 4,
+            "eng_rate": 0,
+            "revenue": 0
+          },
+          {
+            "src": "duckduckgo",
+            "sessions": 3,
+            "eng_rate": 100,
+            "revenue": 0
+          },
+          {
+            "src": "l.instagram.com",
+            "sessions": 3,
+            "eng_rate": 66.67,
+            "revenue": 0
+          },
+          {
+            "src": "alaska.org",
+            "sessions": 2,
+            "eng_rate": 0,
+            "revenue": 0
+          },
+          {
+            "src": "alaskawildlights.activehosted.com",
+            "sessions": 2,
+            "eng_rate": 0,
+            "revenue": 0
+          },
+          {
+            "src": "chatgpt.com",
+            "sessions": 2,
+            "eng_rate": 50,
+            "revenue": 0
+          },
+          {
+            "src": "darkflux.top",
+            "sessions": 1,
+            "eng_rate": 0,
+            "revenue": 0
+          },
+          {
+            "src": "facebook.com",
+            "sessions": 1,
+            "eng_rate": 0,
+            "revenue": 0
+          },
+          {
+            "src": "mail.google.com",
+            "sessions": 1,
+            "eng_rate": 100,
+            "revenue": 0
+          },
+          {
+            "src": "rack_card",
+            "sessions": 1,
+            "eng_rate": 0,
+            "revenue": 0
+          },
+          {
+            "src": "url-opener.com",
+            "sessions": 1,
+            "eng_rate": 100,
+            "revenue": 0
+          },
+          {
+            "src": "yahoo",
+            "sessions": 1,
+            "eng_rate": 100,
+            "revenue": 0
+          }
+        ]
       }
     },
     {
@@ -445,128 +586,15 @@
   ],
   "audience": {
     "ig": {
-      "age_gender": {
-        "18-24": {
-          "women": 0.023,
-          "men": 0.017
-        },
-        "25-34": {
-          "women": 0.231,
-          "men": 0.127
-        },
-        "35-44": {
-          "women": 0.234,
-          "men": 0.116
-        },
-        "45-54": {
-          "women": 0.091,
-          "men": 0.046
-        },
-        "55-64": {
-          "women": 0.04,
-          "men": 0.036
-        },
-        "65+": {
-          "women": 0.03,
-          "men": 0.009
-        }
-      },
-      "target_25_44_pct": 0.708,
-      "top_countries": [
-        {
-          "name": "United States",
-          "pct": 0.809
-        },
-        {
-          "name": "Brazil",
-          "pct": 0.024
-        },
-        {
-          "name": "Canada",
-          "pct": 0.017
-        },
-        {
-          "name": "Mexico",
-          "pct": 0.014
-        },
-        {
-          "name": "India",
-          "pct": 0.014
-        }
-      ],
-      "top_cities": [
-        {
-          "name": "College",
-          "pct": 0.089
-        },
-        {
-          "name": "AK",
-          "pct": 0.071
-        },
-        {
-          "name": "Anchorage",
-          "pct": 0.021
-        },
-        {
-          "name": "AK",
-          "pct": 0.02
-        },
-        {
-          "name": "North Pole",
-          "pct": 0.014
-        }
-      ]
+      "age_gender": {},
+      "target_25_44_pct": 0,
+      "top_countries": [],
+      "top_cities": []
     },
     "fb": {
-      "age_gender": {
-        "18-24": {
-          "men": 0,
-          "women": 0.015
-        },
-        "25-34": {
-          "men": 0.106,
-          "women": 0.045
-        },
-        "35-44": {
-          "men": 0.122,
-          "women": 0.098
-        },
-        "45-54": {
-          "men": 0.198,
-          "women": 0.083
-        },
-        "55-64": {
-          "men": 0.098,
-          "women": 0.083
-        },
-        "65+": {
-          "men": 0.076,
-          "women": 0.076
-        }
-      },
-      "target_25_44_pct": 0.371,
-      "top_countries": [
-        {
-          "name": "United States",
-          "pct": 0.605
-        },
-        {
-          "name": "South Africa",
-          "pct": 0.041
-        },
-        {
-          "name": "Canada",
-          "pct": 0.027
-        },
-        {
-          "name": "Germany",
-          "pct": 0.02
-        },
-        {
-          "name": "India",
-          "pct": 0.02
-        }
-      ],
+      "age_gender": {},
+      "target_25_44_pct": 0,
+      "top_countries": [],
       "top_cities": []
     }
   }

@@ -148,20 +148,96 @@ function parseCSVLine(line) {
 }
 
 // ─── File classification ───────────────────────────────────────────────────────
+// Two-pass: name-based first, content-based fallback for unknowns.
 
 function classifyFile(fl) {
-  if (hasAny(fl, ["traffic acquisition","session source","acquisition session","ga traffic","ga_traffic"])) return "ga";
-  if (hasAny(fl, ["tiktok","tik tok"])) {
+  // ── Google Analytics ─────────────────────────────────────────────────────
+  // GA4 exports arrive with many different report names
+  if (hasAny(fl, [
+    "traffic acquisition","session source","acquisition session",
+    "ga traffic","ga_traffic","acquisition overview","sessions by",
+    "google analytics","analytics","ga4","session default"
+  ])) return "ga";
+
+  // ── TikTok ───────────────────────────────────────────────────────────────
+  if (hasAny(fl, ["tiktok","tik tok","tt overview","tt video","tt audience"])) {
     if (hasAny(fl, ["audience"])) return "tt_audience";
     if (hasAny(fl, ["video"]))    return "tt_videos";
     return "tt_overview";
   }
-  if (hasAny(fl, ["audience"])) {
-    if (hasAny(fl, ["facebook","fb"])) return "fb_audience";
-    return "ig_audience"; // default audience → Instagram
+
+  // ── Audience / Demographics ───────────────────────────────────────────────
+  if (hasAny(fl, ["audience","demographics","demographic"])) {
+    if (hasAny(fl, ["facebook","fb","page"])) return "fb_audience";
+    return "ig_audience";
   }
-  if (hasAny(fl, ["instagram"]) || /^instagram/.test(fl) || /\big\b/.test(fl)) return "ig_metric";
-  if (hasAny(fl, ["facebook"])  || /^facebook/.test(fl)  || /\bfb\b/.test(fl)) return "fb_metric";
+
+  // ── Facebook ─────────────────────────────────────────────────────────────
+  // "page" is a strong FB signal (Facebook Page exports)
+  if (hasAny(fl, ["facebook","fb page","page view","page reach","page like","page follower"]) ||
+      /^facebook/.test(fl) || /\bfb\b/.test(fl)) return "fb_metric";
+
+  // ── Instagram ─────────────────────────────────────────────────────────────
+  // "story","reel","profile" are IG-only export names
+  if (hasAny(fl, ["instagram","story","stories","reel","reels","profile visit","ig_"]) ||
+      /^instagram/.test(fl) || /\big\b/.test(fl)) return "ig_metric";
+
+  return "unknown";
+}
+
+// Content-based fallback — called only when classifyFile returns "unknown"
+function classifyFileByContent(file) {
+  var raw;
+  try { raw = readFile(file); } catch(e) { return "unknown"; }
+
+  // GA: has "# Start Date: YYYYMMDD" comment (very reliable signal)
+  if (/start\s*date[:\s]+\d{8}/i.test(raw)) {
+    log("  ↳ classified as GA by content (# Start Date comment found)");
+    return "ga";
+  }
+
+  // TikTok overview: first line contains unique TT column names
+  var firstLine = raw.replace(/\r/g,"").replace(/﻿/g,"").split("\n")[0].toLowerCase();
+  if (hasAny(firstLine, ["net growth","reached audience","lost followers"])) {
+    log("  ↳ classified as TT_OVERVIEW by content (TikTok column names)");
+    return "tt_overview";
+  }
+  if (firstLine.indexOf("post time") > -1) {
+    log("  ↳ classified as TT_VIDEOS by content (Post time column)");
+    return "tt_videos";
+  }
+
+  // Meta CSV: UTF-16 LE encoding + "Date,Primary" structure → IG or FB metric
+  var bytes = file.getBlob().getBytes();
+  var isUTF16LE = (bytes[0]&0xFF)===0xFF && (bytes[1]&0xFF)===0xFE;
+  if (isUTF16LE) {
+    var lines = raw.replace(/\r/g,"").split("\n").map(function(l){
+      return l.replace(/^sep=.*$/i,"").replace(/﻿/g,"").replace(/"/g,"").trim();
+    }).filter(function(l){ return l; });
+
+    var title = "";
+    for (var i = 0; i < lines.length; i++) {
+      var ll = lines[i].toLowerCase();
+      if (ll.indexOf("date") > -1 && ll.indexOf("primary") > -1) break;
+      title = ll;
+    }
+
+    // FB-only metric names
+    if (hasAny(title, ["viewer","page view","page reach","page like"])) {
+      log("  ↳ classified as FB_METRIC by content (title: '" + title + "')");
+      return "fb_metric";
+    }
+    // IG-only metric names
+    if (hasAny(title, ["profile visit","story","reel"])) {
+      log("  ↳ classified as IG_METRIC by content (title: '" + title + "')");
+      return "ig_metric";
+    }
+    // Shared metric (reach, views, follows, interactions, link clicks):
+    // can't tell IG vs FB from content alone → log warning, stay unknown
+    log("⚠️ Meta CSV (UTF-16 LE) with shared metric '" + title + "' — cannot determine IG vs FB. Rename file to include 'instagram' or 'facebook'.");
+    return "unknown";
+  }
+
   return "unknown";
 }
 
@@ -603,11 +679,12 @@ function processAllFiles(cutoff) {
     var fname = file.getName();
     var fl    = fname.toLowerCase().replace(/[^a-z0-9]/g," ").replace(/\s+/g," ").trim();
     var route = classifyFile(fl);
+    if (route === "unknown") route = classifyFileByContent(file); // content fallback
     log("→ " + fname + " [" + route + "]");
 
     try {
       if (route === "unknown") {
-        log("⚠️ UNKNOWN file type — archiving: " + fname);
+        log("⚠️ UNKNOWN file type — cannot classify by name or content: " + fname);
         file.moveTo(procFolder);
         return;
       }
@@ -750,7 +827,8 @@ function testFiles() {
     var fname = file.getName();
     var fl    = fname.toLowerCase().replace(/[^a-z0-9]/g," ").replace(/\s+/g," ").trim();
     var route = classifyFile(fl);
-    var week  = (route !== "unknown") ? (detectWeekFromContent(file, route) || "?") : "—";
+    if (route === "unknown") route = classifyFileByContent(file);
+    var week  = (route !== "unknown") ? (detectWeekFromContent(file, route) || "? (no date in content)") : "—";
     log((idx+1) + ". [" + route.toUpperCase() + "] [" + week + "] " + fname);
   });
   SpreadsheetApp.getActiveSpreadsheet().toast(files.length + " file(s) found — see Apps Script Logs.", "Test Files", 10);

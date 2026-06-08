@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-01T21:20:00.786Z",
+  "generated": "2026-06-08T21:20:55.470Z",
   "goals": {
     "quarter": "Q2",
     "deadline": "2026-06-30",
@@ -577,6 +577,118 @@
         "missing": true,
         "note": "Google Analytics file not submitted this week",
         "date_range": "May 17 ? May 23",
+        "sessions": 0,
+        "engaged_sessions": 0,
+        "revenue": 0,
+        "sources": []
+      }
+    },
+    {
+      "week_label": "May 24 ? May 30",
+      "week_start": "2026-05-24",
+      "week_end": "2026-05-30",
+      "ig": {
+        "reach": 0,
+        "views": 0,
+        "follows": 0,
+        "profile_visits": 0,
+        "interactions": 0,
+        "link_clicks": 0,
+        "total_followers": 686,
+        "eng_rate": 0
+      },
+      "fb": {
+        "missing": true,
+        "note": "Facebook file not submitted this week",
+        "views": 0,
+        "visits": 0,
+        "viewers": 0,
+        "follows": 0,
+        "interactions": 0,
+        "link_clicks": 0
+      },
+      "tt": {
+        "video_views": 0,
+        "reached": 0,
+        "new_followers": 0,
+        "total_followers": 126,
+        "likes": 0,
+        "comments": 0,
+        "shares": 0,
+        "favorites": 0,
+        "daily": [
+          {
+            "date": "2026-05-30",
+            "views": 0,
+            "reached": 0,
+            "new_followers": 0,
+            "total_followers": 126,
+            "likes": 0,
+            "comments": 0,
+            "shares": 0
+          }
+        ]
+      },
+      "ga": {
+        "missing": true,
+        "note": "Google Analytics file not submitted this week",
+        "date_range": "May 24 ? May 30",
+        "sessions": 0,
+        "engaged_sessions": 0,
+        "revenue": 0,
+        "sources": []
+      }
+    },
+    {
+      "week_label": "May 31 ? Jun 6",
+      "week_start": "2026-05-31",
+      "week_end": "2026-06-06",
+      "ig": {
+        "reach": 0,
+        "views": 0,
+        "follows": 0,
+        "profile_visits": 0,
+        "interactions": 0,
+        "link_clicks": 0,
+        "total_followers": 690,
+        "eng_rate": 0
+      },
+      "fb": {
+        "missing": true,
+        "note": "Facebook file not submitted this week",
+        "views": 0,
+        "visits": 0,
+        "viewers": 0,
+        "follows": 0,
+        "interactions": 0,
+        "link_clicks": 0
+      },
+      "tt": {
+        "video_views": 0,
+        "reached": 0,
+        "new_followers": 0,
+        "total_followers": 168,
+        "likes": 0,
+        "comments": 0,
+        "shares": 0,
+        "favorites": 0,
+        "daily": [
+          {
+            "date": "2026-06-06",
+            "views": 0,
+            "reached": 0,
+            "new_followers": 0,
+            "total_followers": 168,
+            "likes": 0,
+            "comments": 0,
+            "shares": 0
+          }
+        ]
+      },
+      "ga": {
+        "missing": true,
+        "note": "Google Analytics file not submitted this week",
+        "date_range": "May 31 ? Jun 6",
         "sessions": 0,
         "engaged_sessions": 0,
         "revenue": 0,

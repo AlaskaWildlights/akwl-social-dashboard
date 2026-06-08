@@ -48,11 +48,16 @@ var WEEK_CALENDAR = [
   {iso:"W53",start:"2026-12-27",end:"2027-01-02"}
 ];
 
-// All file types expected per week (Rule 2 — missing file detection)
+// All 18 file types expected per week (Rule 2 — missing file detection)
+// IG: 6 metrics + 1 audience = 7
+// FB: 6 metrics + 1 audience = 7
+// TT: overview + video + audience = 3
+// GA: traffic = 1   →   total = 18
 var EXPECTED_KEYS = [
-  "ig_reach","ig_views","ig_follows","ig_visits","ig_interactions","ig_link_clicks",
-  "fb_views","fb_visits","fb_viewers","fb_follows","fb_interactions","fb_link_clicks",
-  "tt_overview","tt_video","tt_audience","ga"
+  "ig_reach","ig_views","ig_follows","ig_visits","ig_interactions","ig_link_clicks","ig_audience",
+  "fb_views","fb_visits","fb_viewers","fb_follows","fb_interactions","fb_link_clicks","fb_audience",
+  "tt_overview","tt_video","tt_audience",
+  "ga"
 ];
 
 // ─── Week calendar helpers ─────────────────────────────────────────────────────
@@ -151,7 +156,10 @@ function classifyFile(fl) {
     if (hasAny(fl, ["video"]))    return "tt_videos";
     return "tt_overview";
   }
-  if (hasAny(fl, ["audience"])) return "unknown";
+  if (hasAny(fl, ["audience"])) {
+    if (hasAny(fl, ["facebook","fb"])) return "fb_audience";
+    return "ig_audience"; // default audience → Instagram
+  }
   if (hasAny(fl, ["instagram"]) || /^instagram/.test(fl) || /\big\b/.test(fl)) return "ig_metric";
   if (hasAny(fl, ["facebook"])  || /^facebook/.test(fl)  || /\bfb\b/.test(fl)) return "fb_metric";
   return "unknown";
@@ -227,6 +235,14 @@ function detectWeekFromContent(file, route) {
     for (var i = 0; i < lines.length; i++) {
       var m = lines[i].match(/start\s*date[:\s]+(\d{4})(\d{2})(\d{2})/i);
       if (m) { dateStr = m[1]+"-"+m[2]+"-"+m[3]; break; }
+    }
+
+  } else if (route === "ig_audience" || route === "fb_audience") {
+    // Audience files may not have a "Date" column — scan the whole file for any YYYY-MM-DD
+    var allLines = raw.replace(/\r/g,"").split("\n");
+    for (var i = 0; i < allLines.length; i++) {
+      var m = allLines[i].match(/(\d{4}-\d{2}-\d{2})/);
+      if (m && dateStrToWeekISO(m[1])) { dateStr = m[1]; break; }
     }
   }
 
@@ -663,6 +679,12 @@ function processAllFiles(cutoff) {
           weekData[weekISO].ga = r;
           foundFiles[weekISO]["ga"] = true;
         }
+
+      } else if (route === "ig_audience") {
+        foundFiles[weekISO]["ig_audience"] = true; // archive only, not written to tracker
+
+      } else if (route === "fb_audience") {
+        foundFiles[weekISO]["fb_audience"] = true; // archive only, not written to tracker
       }
 
       // Move to /Processed/W##/

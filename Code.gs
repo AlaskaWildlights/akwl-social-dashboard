@@ -1,0 +1,988 @@
+// ══════════════════════════════════════════════════════════════════════════════
+// AKWL Social Media Tracker — v7
+// Pre-structured Google Sheets. One row per week. Week detected from CSV content.
+// ══════════════════════════════════════════════════════════════════════════════
+
+var FOLDER_ID      = "1G861p7ZUSpLhoFZjLDRPmUykN5QKXFEz";
+var PROCESSED_NAME = "Processed";
+var AKWL_EMAIL     = "info@alaskawildlights.com";
+
+// ─── Week calendar W17–W53 (Sunday–Saturday) ──────────────────────────────────
+var WEEK_CALENDAR = [
+  {iso:"W17",start:"2026-04-19",end:"2026-04-25"},
+  {iso:"W18",start:"2026-04-26",end:"2026-05-02"},
+  {iso:"W19",start:"2026-05-03",end:"2026-05-09"},
+  {iso:"W20",start:"2026-05-10",end:"2026-05-16"},
+  {iso:"W21",start:"2026-05-17",end:"2026-05-23"},
+  {iso:"W22",start:"2026-05-24",end:"2026-05-30"},
+  {iso:"W23",start:"2026-05-31",end:"2026-06-06"},
+  {iso:"W24",start:"2026-06-07",end:"2026-06-13"},
+  {iso:"W25",start:"2026-06-14",end:"2026-06-20"},
+  {iso:"W26",start:"2026-06-21",end:"2026-06-27"},
+  {iso:"W27",start:"2026-06-28",end:"2026-07-04"},
+  {iso:"W28",start:"2026-07-05",end:"2026-07-11"},
+  {iso:"W29",start:"2026-07-12",end:"2026-07-18"},
+  {iso:"W30",start:"2026-07-19",end:"2026-07-25"},
+  {iso:"W31",start:"2026-07-26",end:"2026-08-01"},
+  {iso:"W32",start:"2026-08-02",end:"2026-08-08"},
+  {iso:"W33",start:"2026-08-09",end:"2026-08-15"},
+  {iso:"W34",start:"2026-08-16",end:"2026-08-22"},
+  {iso:"W35",start:"2026-08-23",end:"2026-08-29"},
+  {iso:"W36",start:"2026-08-30",end:"2026-09-05"},
+  {iso:"W37",start:"2026-09-06",end:"2026-09-12"},
+  {iso:"W38",start:"2026-09-13",end:"2026-09-19"},
+  {iso:"W39",start:"2026-09-20",end:"2026-09-26"},
+  {iso:"W40",start:"2026-09-27",end:"2026-10-03"},
+  {iso:"W41",start:"2026-10-04",end:"2026-10-10"},
+  {iso:"W42",start:"2026-10-11",end:"2026-10-17"},
+  {iso:"W43",start:"2026-10-18",end:"2026-10-24"},
+  {iso:"W44",start:"2026-10-25",end:"2026-10-31"},
+  {iso:"W45",start:"2026-11-01",end:"2026-11-07"},
+  {iso:"W46",start:"2026-11-08",end:"2026-11-14"},
+  {iso:"W47",start:"2026-11-15",end:"2026-11-21"},
+  {iso:"W48",start:"2026-11-22",end:"2026-11-28"},
+  {iso:"W49",start:"2026-11-29",end:"2026-12-05"},
+  {iso:"W50",start:"2026-12-06",end:"2026-12-12"},
+  {iso:"W51",start:"2026-12-13",end:"2026-12-19"},
+  {iso:"W52",start:"2026-12-20",end:"2026-12-26"},
+  {iso:"W53",start:"2026-12-27",end:"2027-01-02"}
+];
+
+// All file types expected per week (Rule 2 — missing file detection)
+var EXPECTED_KEYS = [
+  "ig_reach","ig_views","ig_follows","ig_visits","ig_interactions","ig_link_clicks",
+  "fb_views","fb_visits","fb_viewers","fb_follows","fb_interactions","fb_link_clicks",
+  "tt_overview","tt_video","tt_audience","ga"
+];
+
+// ─── Week calendar helpers ─────────────────────────────────────────────────────
+
+function dateStrToWeekISO(dateStr) {
+  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null;
+  for (var i = 0; i < WEEK_CALENDAR.length; i++) {
+    if (dateStr >= WEEK_CALENDAR[i].start && dateStr <= WEEK_CALENDAR[i].end) {
+      return WEEK_CALENDAR[i].iso;
+    }
+  }
+  return null;
+}
+
+function weekISOtoDates(weekISO) {
+  for (var i = 0; i < WEEK_CALENDAR.length; i++) {
+    if (WEEK_CALENDAR[i].iso === weekISO) return WEEK_CALENDAR[i];
+  }
+  return null;
+}
+
+function weekISOtoLabel(weekISO) {
+  var wk = weekISOtoDates(weekISO);
+  if (!wk) return weekISO;
+  var s = new Date(wk.start + "T12:00:00Z");
+  var e = new Date(wk.end   + "T12:00:00Z");
+  var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var sm = months[s.getUTCMonth()], em = months[e.getUTCMonth()];
+  if (sm === em) return sm + " " + s.getUTCDate() + "–" + e.getUTCDate();
+  return sm + " " + s.getUTCDate() + "–" + em + " " + e.getUTCDate();
+}
+
+// ─── Utilities ─────────────────────────────────────────────────────────────────
+
+function log(msg) { Logger.log(msg); }
+function hasAny(str, arr) { return arr.some(function(s){ return str.indexOf(s) > -1; }); }
+
+function isInsideFolder(file, folder) {
+  var parents = file.getParents();
+  while (parents.hasNext()) {
+    if (parents.next().getId() === folder.getId()) return true;
+  }
+  return false;
+}
+
+function getOrCreateSubfolder(parent, name) {
+  var ex = parent.getFoldersByName(name);
+  return ex.hasNext() ? ex.next() : parent.createFolder(name);
+}
+
+function lastClosedSaturday() {
+  var now = new Date();
+  var akOffsetMs = -8 * 60 * 60 * 1000;
+  var akNowMs = now.getTime() + akOffsetMs;
+  var akNow = new Date(akNowMs);
+  var dow  = akNow.getUTCDay();
+  var hour = akNow.getUTCHours();
+  var daysBack = 0;
+  if      (dow === 6) { if (hour < 23) daysBack = 7; }
+  else if (dow === 0) { daysBack = 1; }
+  else                { daysBack = dow + 1; }
+  var satEndMs = akNowMs - (daysBack * 86400000) + (24*60*60*1000) - 1;
+  return new Date(satEndMs);
+}
+
+// ─── File I/O ──────────────────────────────────────────────────────────────────
+
+function readFile(file) {
+  var blob  = file.getBlob();
+  var bytes = blob.getBytes();
+  var b0 = bytes[0]&0xFF, b1 = bytes[1]&0xFF, b2 = bytes.length>2?(bytes[2]&0xFF):0;
+  if (b0===0xFF && b1===0xFE) return blob.getDataAsString("UTF-16LE");
+  if (b0===0xFE && b1===0xFF) return blob.getDataAsString("UTF-16BE");
+  if (b0===0xEF && b1===0xBB && b2===0xBF) return blob.getDataAsString("UTF-8");
+  return blob.getDataAsString("UTF-8");
+}
+
+function parseCSVLine(line) {
+  var result = [], current = "", inQ = false;
+  for (var i = 0; i < line.length; i++) {
+    var c = line[i];
+    if (c === '"')            { inQ = !inQ; }
+    else if (c === ',' && !inQ) { result.push(current.trim()); current = ""; }
+    else                      { current += c; }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+// ─── File classification ───────────────────────────────────────────────────────
+
+function classifyFile(fl) {
+  if (hasAny(fl, ["traffic acquisition","session source","acquisition session","ga traffic","ga_traffic"])) return "ga";
+  if (hasAny(fl, ["tiktok","tik tok"])) {
+    if (hasAny(fl, ["audience"])) return "tt_audience";
+    if (hasAny(fl, ["video"]))    return "tt_videos";
+    return "tt_overview";
+  }
+  if (hasAny(fl, ["audience"])) return "unknown";
+  if (hasAny(fl, ["instagram"]) || /^instagram/.test(fl) || /\big\b/.test(fl)) return "ig_metric";
+  if (hasAny(fl, ["facebook"])  || /^facebook/.test(fl)  || /\bfb\b/.test(fl)) return "fb_metric";
+  return "unknown";
+}
+
+function fileSortPriority(f) {
+  var fl = f.getName().toLowerCase().replace(/[^a-z0-9]/g," ").replace(/\s+/g," ").trim();
+  var order = {ig_metric:0,fb_metric:1,tt_overview:2,tt_videos:3,tt_audience:4,ga:5};
+  var r = classifyFile(fl);
+  return order[r] !== undefined ? order[r] : 9;
+}
+
+// ─── Week detection from CSV content (Rule 1) ──────────────────────────────────
+
+function detectWeekFromContent(file, route) {
+  var raw;
+  try { raw = readFile(file); } catch(e) { return null; }
+
+  var dateStr = null;
+
+  if (route === "ig_metric" || route === "fb_metric") {
+    var lines = raw.replace(/\r/g,"").split("\n").map(function(l){
+      return l.replace(/^sep=.*$/i,"").replace(/﻿/g,"").replace(/"/g,"").trim();
+    }).filter(function(l){ return l; });
+    var headerFound = false;
+    for (var i = 0; i < lines.length; i++) {
+      var ll = lines[i].toLowerCase();
+      if (!headerFound && ll.indexOf("date") > -1 && ll.indexOf("primary") > -1) {
+        headerFound = true; continue;
+      }
+      if (headerFound) {
+        var parts = lines[i].split(",");
+        if (parts.length >= 2 && /^\d{4}-\d{2}-\d{2}/.test(parts[0])) {
+          dateStr = parts[0].substring(0, 10); break;
+        }
+      }
+    }
+
+  } else if (route === "tt_overview" || route === "tt_audience") {
+    var lines = raw.replace(/\r/g,"").replace(/﻿/g,"").split("\n")
+                   .filter(function(l){ return l.trim(); });
+    if (lines.length >= 2) {
+      var headers = lines[0].split(",").map(function(h){ return h.trim().toLowerCase(); });
+      var dateIdx = headers.indexOf("date");
+      if (dateIdx > -1) {
+        for (var i = 1; i < lines.length; i++) {
+          var parts = lines[i].split(",").map(function(p){ return p.trim(); });
+          if (!parts[dateIdx]) continue;
+          var d = parts[dateIdx].replace(/\//g,"-");
+          if (/^\d{4}-\d{2}-\d{2}$/.test(d)) { dateStr = d; break; }
+        }
+      }
+    }
+
+  } else if (route === "tt_videos") {
+    var lines = raw.replace(/\r/g,"").replace(/﻿/g,"").split("\n")
+                   .filter(function(l){ return l.trim(); });
+    if (lines.length >= 2) {
+      var headers = lines[0].split(",").map(function(h){ return h.trim().toLowerCase(); });
+      var ptIdx = headers.indexOf("post time");
+      if (ptIdx > -1) {
+        for (var i = 1; i < lines.length; i++) {
+          var parts = parseCSVLine(lines[i]);
+          if (!parts[ptIdx]) continue;
+          var m = parts[ptIdx].trim().match(/^(\d{4})\/(\d{2})\/(\d{2})/);
+          if (m) { dateStr = m[1]+"-"+m[2]+"-"+m[3]; break; }
+        }
+      }
+    }
+
+  } else if (route === "ga") {
+    var lines = raw.replace(/\r/g,"").split("\n");
+    for (var i = 0; i < lines.length; i++) {
+      var m = lines[i].match(/start\s*date[:\s]+(\d{4})(\d{2})(\d{2})/i);
+      if (m) { dateStr = m[1]+"-"+m[2]+"-"+m[3]; break; }
+    }
+  }
+
+  return dateStr ? dateStrToWeekISO(dateStr) : null;
+}
+
+// ─── Metric resolution from CSV title ─────────────────────────────────────────
+
+function resolveIGMetric(title) {
+  var t = title.toLowerCase().replace(/[^a-z ]/g," ").replace(/\s+/g," ").trim();
+  if (t.indexOf("link click") > -1 || t.indexOf("website click") > -1) return "link_clicks";
+  if (t.indexOf("profile visit") > -1) return "visits";
+  if (t.indexOf("interaction") > -1)   return "interactions";
+  if (t.indexOf("follow") > -1)        return "follows";
+  if (t.indexOf("reach") > -1)         return "reach";
+  if (t === "views" || t === "view" || t.indexOf("impression") > -1) return "views";
+  if (t.indexOf("visit") > -1)         return "visits";
+  return null;
+}
+
+function resolveFBMetric(title) {
+  var t = title.toLowerCase().replace(/[^a-z ]/g," ").replace(/\s+/g," ").trim();
+  if (t.indexOf("link click") > -1)    return "link_clicks";
+  if (t.indexOf("viewer") > -1)        return "viewers";
+  if (t.indexOf("interaction") > -1)   return "interactions";
+  if (t.indexOf("follow") > -1 || t.indexOf("like") > -1) return "follows";
+  if (t.indexOf("visit") > -1)         return "visits";
+  if (t.indexOf("reach") > -1)         return "viewers";
+  if (t === "views" || t === "view" || t.indexOf("impression") > -1) return "views";
+  return null;
+}
+
+// ─── CSV parsers ───────────────────────────────────────────────────────────────
+
+// Meta (IG/FB) — returns { metricKey, sum } or null
+function parseMetaCSV(file, platform, weekISO) {
+  var raw = readFile(file);
+  var lines = raw.replace(/\r/g,"").split("\n").map(function(l){
+    return l.replace(/^sep=.*$/i,"").replace(/﻿/g,"").replace(/"/g,"").trim();
+  }).filter(function(l){ return l; });
+
+  var wk = weekISOtoDates(weekISO);
+  var title = "", headerFound = false, total = 0;
+
+  for (var i = 0; i < lines.length; i++) {
+    var ll = lines[i].toLowerCase();
+    if (!headerFound && ll.indexOf("date") > -1 && ll.indexOf("primary") > -1) {
+      headerFound = true; continue;
+    }
+    if (!headerFound) {
+      title = lines[i].trim();
+    } else {
+      var parts = lines[i].split(",");
+      if (parts.length >= 2 && /^\d{4}-\d{2}-\d{2}/.test(parts[0])) {
+        var d = parts[0].substring(0, 10);
+        if (wk && d >= wk.start && d <= wk.end) {
+          total += parseFloat(parts[1]) || 0;
+        }
+      }
+    }
+  }
+
+  if (!title) return null;
+  var metricKey = platform === "Instagram" ? resolveIGMetric(title) : resolveFBMetric(title);
+  if (!metricKey) { log("⚠️ Unresolved title: '" + title + "' for " + platform); return null; }
+  return { metricKey: metricKey, sum: total };
+}
+
+// TikTok Overview — returns sums object or null
+function parseTikTokOverview(file, weekISO) {
+  var raw = readFile(file);
+  var lines = raw.replace(/\r/g,"").replace(/﻿/g,"").split("\n")
+                 .filter(function(l){ return l.trim(); });
+  if (lines.length < 2) return null;
+
+  var headers = lines[0].split(",").map(function(h){ return h.trim().toLowerCase(); });
+  var dateIdx = headers.indexOf("date");
+  if (dateIdx === -1) return null;
+
+  var wk = weekISOtoDates(weekISO);
+  var colMap = {
+    "video views":"videoViews","reached audience":"reached","profile views":"profileViews",
+    "likes":"likes","shares":"shares","comments":"comments","website clicks":"websiteClicks",
+    "net growth":"netGrowth","new followers":"newFollowers","lost followers":"lostFollowers"
+  };
+  var sums = {videoViews:0,reached:0,profileViews:0,likes:0,shares:0,comments:0,
+              websiteClicks:0,netGrowth:0,newFollowers:0,lostFollowers:0};
+
+  for (var i = 1; i < lines.length; i++) {
+    var parts = lines[i].split(",").map(function(p){ return p.trim(); });
+    if (!parts[dateIdx]) continue;
+    var d = parts[dateIdx].replace(/\//g,"-");
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) continue;
+    if (wk && (d < wk.start || d > wk.end)) continue;
+    headers.forEach(function(h, idx) {
+      var key = colMap[h];
+      if (key !== undefined) sums[key] += parseFloat(parts[idx]) || 0;
+    });
+  }
+  return sums;
+}
+
+// Google Analytics — returns { sessions, engaged_sessions, revenue, sources[] } or null
+function parseGoogleAnalyticsCSV(file) {
+  var raw = readFile(file);
+  var lines = raw.replace(/\r/g,"").split("\n").map(function(l){ return l.trim(); });
+  var headerLine = -1;
+  for (var i = 0; i < lines.length; i++) {
+    if (!lines[i].startsWith("#") && lines[i].toLowerCase().indexOf("session") > -1) {
+      headerLine = i; break;
+    }
+  }
+  if (headerLine === -1) return null;
+
+  var headers = parseCSVLine(lines[headerLine]);
+  function hi(p) {
+    return headers.findIndex(function(h){
+      return (h+"").toLowerCase().replace(/[^a-z]/g," ").trim().indexOf(p) > -1;
+    });
+  }
+  var sessIdx = hi("sessions"), engIdx = hi("engaged session"),
+      revIdx  = hi("revenue"),  srcIdx = hi("session source");
+
+  var totalSessions = 0, totalEngaged = 0, totalRevenue = 0, sources = [];
+  for (var i = headerLine+1; i < lines.length; i++) {
+    if (!lines[i] || lines[i].startsWith("#")) continue;
+    var parts = parseCSVLine(lines[i]);
+    if (!parts[0]) continue;
+    var sess = sessIdx > -1 ? (parseInt(parts[sessIdx])||0)   : 0;
+    var eng  = engIdx  > -1 ? (parseInt(parts[engIdx])||0)    : 0;
+    var rev  = revIdx  > -1 ? (parseFloat(parts[revIdx])||0)  : 0;
+    var src  = srcIdx  > -1 ? (parts[srcIdx]||"").trim()      : "";
+    totalSessions += sess;
+    totalEngaged  += eng;
+    totalRevenue  += rev;
+    if (src) sources.push({
+      src: src, sessions: sess,
+      eng_rate: sess > 0 ? Math.round(eng/sess*10000)/100 : 0,
+      revenue: Math.round(rev*100)/100
+    });
+  }
+  if (!totalSessions && !totalEngaged) return null;
+  return {
+    sessions: totalSessions,
+    engaged_sessions: totalEngaged,
+    revenue: Math.round(totalRevenue*100)/100,
+    sources: sources.sort(function(a,b){ return b.sessions-a.sessions; })
+  };
+}
+
+// ─── Sheet row helpers ─────────────────────────────────────────────────────────
+
+// Returns the row number for weekISO in col A (starting at firstDataRow), or next append row
+function findOrAppendWeekRow(ws, weekISO, firstDataRow) {
+  var lastRow = ws.getLastRow();
+  if (lastRow >= firstDataRow) {
+    var colA = ws.getRange(firstDataRow, 1, lastRow - firstDataRow + 1, 1).getValues();
+    for (var i = 0; i < colA.length; i++) {
+      if (colA[i][0] === weekISO) return i + firstDataRow;
+    }
+    return lastRow + 1;
+  }
+  return firstDataRow;
+}
+
+// Read IG Total Followers from Manual Data tab for a weekISO
+function readManualFollowers(ss, weekISO) {
+  var ws = ss.getSheetByName("Manual Data");
+  if (!ws) return 0;
+  var data = ws.getRange("A2:C38").getValues();
+  for (var i = 0; i < data.length; i++) {
+    if (data[i][0] === weekISO) return parseInt(data[i][2]) || 0;
+  }
+  return 0;
+}
+
+// Read TikTok Total Followers for a weekISO from the TikTok tab (col C)
+function readTikTokTotalFromSheet(ss, weekISO) {
+  var ws = ss.getSheetByName("TikTok");
+  if (!ws || ws.getLastRow() < 3) return 0;
+  var rows = ws.getRange(3, 1, ws.getLastRow()-2, 3).getValues();
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i][0] === weekISO) return rows[i][2] || 0;
+  }
+  return 0;
+}
+
+// ─── Write to platform tabs ────────────────────────────────────────────────────
+
+function writeInstagram(ss, weekISO, data) {
+  var ws = ss.getSheetByName("Instagram");
+  if (!ws) { log("❌ Instagram sheet not found"); return; }
+
+  var ig = data.ig;
+  var igFollowers = readManualFollowers(ss, weekISO);
+  var engRate = ig.reach > 0 ? ig.interactions / ig.reach : 0;
+  var targetRow = findOrAppendWeekRow(ws, weekISO, 3);
+
+  ws.getRange(targetRow, 1, 1, 10).setValues([[
+    weekISO, weekISOtoLabel(weekISO), igFollowers,
+    ig.reach, ig.views, ig.follows, ig.visits,
+    ig.interactions, ig.link_clicks, engRate
+  ]]);
+  log("✅ Instagram " + weekISO + " row " + targetRow);
+}
+
+function writeFacebook(ss, weekISO, data) {
+  var ws = ss.getSheetByName("Facebook");
+  if (!ws) { log("❌ Facebook sheet not found"); return; }
+
+  var fb = data.fb;
+  var targetRow = findOrAppendWeekRow(ws, weekISO, 3);
+
+  ws.getRange(targetRow, 1, 1, 8).setValues([[
+    weekISO, weekISOtoLabel(weekISO),
+    fb.views, fb.visits, fb.viewers, fb.follows, fb.interactions, fb.link_clicks
+  ]]);
+  log("✅ Facebook " + weekISO + " row " + targetRow);
+}
+
+function writeTikTok(ss, weekISO, data) {
+  var ws = ss.getSheetByName("TikTok");
+  if (!ws) { log("❌ TikTok sheet not found"); return; }
+
+  var tt = data.tt;
+  var targetRow = findOrAppendWeekRow(ws, weekISO, 3);
+
+  // Prior total = last written value in col C before this row
+  var priorTotal = 0;
+  var lastRow = ws.getLastRow();
+  if (lastRow >= 3) {
+    var colC = ws.getRange(3, 3, Math.max(1, lastRow-2), 1).getValues();
+    for (var i = colC.length-1; i >= 0; i--) {
+      if (typeof colC[i][0] === "number" && colC[i][0] !== 0) {
+        priorTotal = colC[i][0]; break;
+      }
+    }
+  }
+  var ttTotalFollowers = priorTotal + (tt.netGrowth || 0);
+
+  ws.getRange(targetRow, 1, 1, 9).setValues([[
+    weekISO, weekISOtoLabel(weekISO),
+    ttTotalFollowers,
+    tt.videoViews, tt.reached, tt.newFollowers,
+    tt.likes, tt.comments, tt.shares
+  ]]);
+  log("✅ TikTok " + weekISO + " row " + targetRow + " totalFollowers=" + ttTotalFollowers);
+}
+
+function writeAnalytics(ss, weekISO, data) {
+  var ws = ss.getSheetByName("Analytics");
+  if (!ws) { log("❌ Analytics sheet not found"); return; }
+
+  var ga = data.ga;
+  var targetRow = findOrAppendWeekRow(ws, weekISO, 3);
+
+  ws.getRange(targetRow, 1, 1, 2).setValues([[weekISO, weekISOtoLabel(weekISO)]]);
+  if (!ga) {
+    ws.getRange(targetRow, 3).setValue("—");
+    ws.getRange(targetRow, 4).setValue("—");
+    // col E = formula — skip
+    ws.getRange(targetRow, 6).setValue("—");
+    log("⚠️ Analytics " + weekISO + " — GA missing");
+  } else {
+    ws.getRange(targetRow, 3).setValue(ga.sessions);
+    ws.getRange(targetRow, 4).setValue(ga.engaged_sessions);
+    // col E = =IFERROR(D/C,"—") formula — do NOT write
+    ws.getRange(targetRow, 6).setValue(ga.revenue);
+    log("✅ Analytics " + weekISO + " row " + targetRow);
+  }
+}
+
+// ─── Write to Weekly Log ───────────────────────────────────────────────────────
+
+function writeWeeklyLog(ss, weekISO, data) {
+  var ws = ss.getSheetByName("Weekly Log");
+  if (!ws) { log("❌ Weekly Log sheet not found"); return; }
+
+  // Find pre-populated row
+  var colA = ws.getRange("A2:A38").getValues();
+  var targetRow = -1;
+  for (var i = 0; i < colA.length; i++) {
+    if (colA[i][0] === weekISO) { targetRow = i + 2; break; }
+  }
+  if (targetRow === -1) { log("⚠️ " + weekISO + " not found in Weekly Log"); return; }
+
+  var ig = data.ig, fb = data.fb, tt = data.tt, ga = data.ga;
+  var igFollowers    = readManualFollowers(ss, weekISO);
+  var ttTotalFlw     = readTikTokTotalFromSheet(ss, weekISO);
+  var engRate        = ig.reach > 0 ? ig.interactions / ig.reach : 0;
+  var gaS = ga ? ga.sessions          : "—";
+  var gaE = ga ? ga.engaged_sessions  : "—";
+  var gaR = ga ? ga.revenue           : "—";
+
+  // Cols C–Y = columns 3–25 (23 values)
+  // C  D       E       F       G               H              I        J
+  // igReach igViews igFollows igVisits igInteractions igLinkClicks igEng% igFollowers
+  // K       L       M        N        O               P
+  // fbViews fbVisits fbViewers fbFollows fbInteractions fbLinkClicks
+  // Q       R        S          T          U       V         W
+  // ttViews ttReached ttNewFlw ttTotalFlw ttLikes ttComments ttShares
+  // X   Y
+  // gaS gaE
+  ws.getRange(targetRow, 3, 1, 23).setValues([[
+    ig.reach, ig.views, ig.follows, ig.visits, ig.interactions, ig.link_clicks,
+    engRate, igFollowers,
+    fb.views, fb.visits, fb.viewers, fb.follows, fb.interactions, fb.link_clicks,
+    tt.videoViews, tt.reached, tt.newFollowers, ttTotalFlw,
+    tt.likes, tt.comments, tt.shares,
+    gaS, gaE
+  ]]);
+  // Col Z (index 26) = formula — skip
+  ws.getRange(targetRow, 27).setValue(gaR); // col AA
+  log("✅ Weekly Log " + weekISO + " row " + targetRow);
+}
+
+// ─── Missing file check (Rule 2) ───────────────────────────────────────────────
+
+function checkMissingFiles(foundFiles) {
+  var report = {};
+  Object.keys(foundFiles).forEach(function(weekISO) {
+    var missing = [];
+    EXPECTED_KEYS.forEach(function(key) {
+      if (!foundFiles[weekISO][key]) missing.push(key);
+    });
+    if (missing.length) {
+      missing.forEach(function(k){
+        log("⚠️ Missing: " + k + " (" + weekISO + ") — document not available");
+      });
+      report[weekISO] = missing;
+    }
+  });
+  return report;
+}
+
+// ─── Process all CSV files ─────────────────────────────────────────────────────
+
+function processAllFiles(cutoff) {
+  var folder     = DriveApp.getFolderById(FOLDER_ID);
+  var procFolder = getOrCreateSubfolder(folder, PROCESSED_NAME);
+  var unidentFolder = getOrCreateSubfolder(procFolder, "unidentifiable");
+
+  var weekData     = {}; // weekISO → { ig, fb, tt, ga }
+  var foundFiles   = {}; // weekISO → { key: true }
+  var unidentifiable = [];
+
+  // Collect unprocessed CSVs
+  var files = [];
+  var iter = folder.getFilesByType(MimeType.CSV);
+  while (iter.hasNext()) {
+    var f = iter.next();
+    if (!isInsideFolder(f, procFolder)) files.push(f);
+  }
+  log("Found " + files.length + " unprocessed CSV(s)");
+  files.sort(function(a,b){ return fileSortPriority(a)-fileSortPriority(b); });
+
+  files.forEach(function(file) {
+    var fname = file.getName();
+    var fl    = fname.toLowerCase().replace(/[^a-z0-9]/g," ").replace(/\s+/g," ").trim();
+    var route = classifyFile(fl);
+    log("→ " + fname + " [" + route + "]");
+
+    try {
+      if (route === "unknown") {
+        log("⚠️ UNKNOWN file type — archiving: " + fname);
+        file.moveTo(procFolder);
+        return;
+      }
+
+      var weekISO = detectWeekFromContent(file, route);
+      if (!weekISO) {
+        log("❌ UNIDENTIFIABLE — cannot determine week from content: " + fname);
+        unidentifiable.push(fname);
+        file.moveTo(unidentFolder);
+        return;
+      }
+
+      // Skip weeks not yet closed
+      var wk = weekISOtoDates(weekISO);
+      if (wk && new Date(wk.end + "T23:59:59Z") > cutoff) {
+        log("⏭ " + fname + " belongs to " + weekISO + " (not yet closed) — leaving in inbox");
+        return;
+      }
+
+      // Init accumulators
+      if (!weekData[weekISO]) {
+        weekData[weekISO] = {
+          ig: {reach:0,views:0,follows:0,visits:0,interactions:0,link_clicks:0},
+          fb: {views:0,visits:0,viewers:0,follows:0,interactions:0,link_clicks:0},
+          tt: {videoViews:0,reached:0,newFollowers:0,netGrowth:0,likes:0,comments:0,shares:0},
+          ga: null
+        };
+        foundFiles[weekISO] = {};
+      }
+
+      // Parse & accumulate
+      if (route === "ig_metric") {
+        var r = parseMetaCSV(file, "Instagram", weekISO);
+        if (r) {
+          weekData[weekISO].ig[r.metricKey] = (weekData[weekISO].ig[r.metricKey]||0) + r.sum;
+          foundFiles[weekISO]["ig_" + r.metricKey] = true;
+        }
+
+      } else if (route === "fb_metric") {
+        var r = parseMetaCSV(file, "Facebook", weekISO);
+        if (r) {
+          weekData[weekISO].fb[r.metricKey] = (weekData[weekISO].fb[r.metricKey]||0) + r.sum;
+          foundFiles[weekISO]["fb_" + r.metricKey] = true;
+        }
+
+      } else if (route === "tt_overview") {
+        var r = parseTikTokOverview(file, weekISO);
+        if (r) {
+          var tt = weekData[weekISO].tt;
+          tt.videoViews   += r.videoViews;
+          tt.reached      += r.reached;
+          tt.newFollowers += r.newFollowers;
+          tt.netGrowth    += r.netGrowth;
+          tt.likes        += r.likes;
+          tt.comments     += r.comments;
+          tt.shares       += r.shares;
+          foundFiles[weekISO]["tt_overview"] = true;
+        }
+
+      } else if (route === "tt_videos") {
+        foundFiles[weekISO]["tt_video"] = true; // archive only
+
+      } else if (route === "tt_audience") {
+        foundFiles[weekISO]["tt_audience"] = true; // archive only
+
+      } else if (route === "ga") {
+        var r = parseGoogleAnalyticsCSV(file);
+        if (r) {
+          weekData[weekISO].ga = r;
+          foundFiles[weekISO]["ga"] = true;
+        }
+      }
+
+      // Move to /Processed/W##/
+      getOrCreateSubfolder(procFolder, weekISO);
+      file.moveTo(getOrCreateSubfolder(procFolder, weekISO));
+
+    } catch(e) {
+      log("❌ Error processing " + fname + ": " + e.message + "\n" + (e.stack||""));
+    }
+  });
+
+  return { weekData: weekData, foundFiles: foundFiles, unidentifiable: unidentifiable };
+}
+
+// ─── Main entry point ──────────────────────────────────────────────────────────
+
+function processAllCSVs() {
+  var t0 = new Date();
+  try {
+    var cutoff = lastClosedSaturday();
+    log("Cutoff (last closed Saturday): " + Utilities.formatDate(cutoff,"UTC","yyyy-MM-dd"));
+
+    var result = processAllFiles(cutoff);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    Object.keys(result.weekData).sort().forEach(function(weekISO) {
+      var data = result.weekData[weekISO];
+      writeInstagram(ss, weekISO, data);
+      writeFacebook(ss, weekISO, data);
+      writeTikTok(ss, weekISO, data);    // must run before writeWeeklyLog reads TT col C
+      writeAnalytics(ss, weekISO, data);
+      writeWeeklyLog(ss, weekISO, data);
+    });
+
+    var missingReport   = checkMissingFiles(result.foundFiles);
+    var jsonStr         = buildJSON();
+    pushToGitHub(jsonStr);
+    sendWeeklyEmail(jsonStr, missingReport, result.unidentifiable);
+
+    var secs = Math.round((new Date()-t0)/1000);
+    SpreadsheetApp.getActiveSpreadsheet().toast("Done in " + secs + "s", "AKWL v7", 8);
+    log("✅ processAllCSVs complete in " + secs + "s");
+  } catch(err) {
+    log("❌ FATAL: " + err.message + "\n" + (err.stack||""));
+    try { GmailApp.sendEmail(AKWL_EMAIL, "⚠️ AKWL Tracker v7 error", err.message+"\n\n"+(err.stack||"")); } catch(e){}
+    throw err;
+  }
+}
+
+// ─── testFiles (preview only, no writes) ──────────────────────────────────────
+
+function testFiles() {
+  var folder = DriveApp.getFolderById(FOLDER_ID);
+  var procFolder = getOrCreateSubfolder(folder, PROCESSED_NAME);
+  var files = [];
+  var iter = folder.getFilesByType(MimeType.CSV);
+  while (iter.hasNext()) {
+    var f = iter.next();
+    if (!isInsideFolder(f, procFolder)) files.push(f);
+  }
+  if (!files.length) { log("✅ No unprocessed files in inbox."); return; }
+  files.forEach(function(file, idx) {
+    var fname = file.getName();
+    var fl    = fname.toLowerCase().replace(/[^a-z0-9]/g," ").replace(/\s+/g," ").trim();
+    var route = classifyFile(fl);
+    var week  = (route !== "unknown") ? (detectWeekFromContent(file, route) || "?") : "—";
+    log((idx+1) + ". [" + route.toUpperCase() + "] [" + week + "] " + fname);
+  });
+  SpreadsheetApp.getActiveSpreadsheet().toast(files.length + " file(s) found — see Apps Script Logs.", "Test Files", 10);
+}
+
+// ─── clearAll (archive inbox only — NEVER touches sheet data rows) ─────────────
+
+function clearAll() {
+  var folder = DriveApp.getFolderById(FOLDER_ID);
+  var archiveName = "Archive_" + Utilities.formatDate(new Date(),"America/Anchorage","yyyyMMdd_HHmm");
+  var archiveFolder = getOrCreateSubfolder(folder, archiveName);
+  var procFolder    = getOrCreateSubfolder(folder, PROCESSED_NAME);
+  var count = 0;
+  var iter = folder.getFilesByType(MimeType.CSV);
+  while (iter.hasNext()) {
+    var f = iter.next();
+    if (!isInsideFolder(f, procFolder)) { f.moveTo(archiveFolder); count++; }
+  }
+  log("Archived " + count + " inbox file(s) to " + archiveName);
+  SpreadsheetApp.getActiveSpreadsheet().toast("Archived " + count + " file(s).", "AKWL v7", 8);
+}
+
+// ─── buildJSON ────────────────────────────────────────────────────────────────
+
+function buildJSON() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var cutoff = lastClosedSaturday();
+
+  function sheetRows(name, firstDataRow) {
+    var ws = ss.getSheetByName(name);
+    if (!ws || ws.getLastRow() < firstDataRow) return {};
+    var data = ws.getRange(firstDataRow, 1, ws.getLastRow()-firstDataRow+1, ws.getLastColumn()).getValues();
+    var m = {};
+    data.forEach(function(r){ if (r[0]) m[r[0]] = r; });
+    return m;
+  }
+
+  var igRows = sheetRows("Instagram", 3);
+  var fbRows = sheetRows("Facebook",  3);
+  var ttRows = sheetRows("TikTok",    3);
+  var gaRows = sheetRows("Analytics", 3);
+
+  var goals = {quarter:"Q2",deadline:"2026-06-30",ig_followers:1500,ig_eng_rate:6,tt_followers:100};
+  var weeks = [];
+
+  WEEK_CALENDAR.forEach(function(wk) {
+    // Only emit weeks up to last closed Saturday
+    if (new Date(wk.end + "T23:59:59Z") > cutoff) return;
+
+    var weekISO   = wk.iso;
+    var weekLabel = weekISOtoLabel(weekISO);
+
+    // Instagram
+    var igRow = igRows[weekISO];
+    var igObj = igRow
+      ? { reach:        igRow[3]||0,
+          views:        igRow[4]||0,
+          follows:      igRow[5]||0,
+          profile_visits: igRow[6]||0,
+          interactions: igRow[7]||0,
+          link_clicks:  igRow[8]||0,
+          total_followers: igRow[2]||0,
+          eng_rate:     typeof igRow[9]==="number" ? igRow[9] : 0 }
+      : { missing:true, note:"Instagram file not submitted this week",
+          reach:0,views:0,follows:0,profile_visits:0,interactions:0,
+          link_clicks:0,total_followers:0,eng_rate:0 };
+
+    // Facebook
+    var fbRow = fbRows[weekISO];
+    var fbObj = fbRow
+      ? { views:        fbRow[2]||0,
+          visits:       fbRow[3]||0,
+          viewers:      fbRow[4]||0,
+          follows:      fbRow[5]||0,
+          interactions: fbRow[6]||0,
+          link_clicks:  fbRow[7]||0 }
+      : { missing:true, note:"Facebook file not submitted this week",
+          views:0,visits:0,viewers:0,follows:0,interactions:0,link_clicks:0 };
+
+    // TikTok
+    var ttRow = ttRows[weekISO];
+    var ttObj = ttRow
+      ? { video_views:     ttRow[3]||0,
+          reached:         ttRow[4]||0,
+          new_followers:   ttRow[5]||0,
+          total_followers: ttRow[2]||0,
+          likes:           ttRow[6]||0,
+          comments:        ttRow[7]||0,
+          shares:          ttRow[8]||0 }
+      : { video_views:0,reached:0,new_followers:0,total_followers:0,
+          likes:0,comments:0,shares:0 };
+
+    // Google Analytics
+    var gaRow = gaRows[weekISO];
+    var gaObj;
+    if (!gaRow || gaRow[2] === "—" || gaRow[2] === "" || gaRow[2] === undefined) {
+      gaObj = { missing:true, note:"Google Analytics file not submitted this week",
+                sessions:0, engaged_sessions:0, revenue:0, sources:[] };
+    } else {
+      gaObj = { sessions: gaRow[2]||0, engaged_sessions: gaRow[3]||0,
+                revenue: gaRow[5]||0, sources:[] };
+    }
+
+    weeks.push({
+      week_iso:   weekISO,
+      week_label: weekLabel,
+      week_start: wk.start,
+      week_end:   wk.end,
+      ig: igObj, fb: fbObj, tt: ttObj, ga: gaObj
+    });
+  });
+
+  var output = {
+    generated: new Date().toISOString(),
+    goals: goals,
+    weeks: weeks,
+    audience: {
+      ig: {age_gender:{},target_25_44_pct:0,top_countries:[],top_cities:[]},
+      fb: {age_gender:{},target_25_44_pct:0,top_countries:[],top_cities:[]}
+    }
+  };
+
+  var jsonStr = JSON.stringify(output, null, 2);
+  log("✅ JSON built: " + weeks.length + " week(s), " + jsonStr.length + " chars");
+  return jsonStr;
+}
+
+// ─── GitHub push ───────────────────────────────────────────────────────────────
+
+function pushToGitHub(jsonStr) {
+  var props  = PropertiesService.getScriptProperties();
+  var token  = props.getProperty("GITHUB_TOKEN");
+  var branch = props.getProperty("GITHUB_BRANCH") || "main";
+  if (!token) { log("⚠️ GITHUB_TOKEN not set in Script Properties — skipping push"); return; }
+
+  var owner = "alaskawildlights", repo = "akwl-social-dashboard", path = "data.json";
+  var apiBase = "https://api.github.com/repos/"+owner+"/"+repo+"/contents/"+path;
+  var sha = null;
+
+  try {
+    var getResp = UrlFetchApp.fetch(apiBase+"?ref="+branch, {
+      method:"get",
+      headers:{Authorization:"token "+token, Accept:"application/vnd.github.v3+json"},
+      muteHttpExceptions:true
+    });
+    if (getResp.getResponseCode() === 200) sha = JSON.parse(getResp.getContentText()).sha;
+  } catch(e) { log("⚠️ SHA fetch: "+e.message); }
+
+  var body = {
+    message: "data.json update — "+Utilities.formatDate(new Date(),"America/Anchorage","MMM dd, yyyy"),
+    content: Utilities.base64Encode(jsonStr),
+    branch:  branch
+  };
+  if (sha) body.sha = sha;
+
+  try {
+    var putResp = UrlFetchApp.fetch(apiBase, {
+      method:"put",
+      headers:{Authorization:"token "+token, Accept:"application/vnd.github.v3+json",
+               "Content-Type":"application/json"},
+      payload: JSON.stringify(body),
+      muteHttpExceptions:true
+    });
+    var code = putResp.getResponseCode();
+    if (code===200||code===201) log("✅ GitHub push OK ("+code+")");
+    else log("⚠️ GitHub push failed ("+code+"): "+putResp.getContentText().substring(0,300));
+  } catch(e) { log("⚠️ GitHub push error: "+e.message); }
+}
+
+// ─── Weekly email (Rule 3 — to info@alaskawildlights.com ONLY) ────────────────
+
+function sendWeeklyEmail(jsonStr, missingReport, unidentifiable) {
+  if (!jsonStr) { log("⚠️ sendWeeklyEmail: no JSON to send"); return; }
+  var parsed;
+  try { parsed = JSON.parse(jsonStr); } catch(e) { log("⚠️ Email parse error: "+e.message); return; }
+  if (!parsed.weeks || !parsed.weeks.length) { log("⚠️ Email: no weeks in JSON"); return; }
+
+  var wk = parsed.weeks[parsed.weeks.length-1];
+  var ig = wk.ig||{}, fb = wk.fb||{}, tt = wk.tt||{}, ga = wk.ga||{};
+
+  function n(v){ return (Math.round(v)||0).toLocaleString(); }
+  function pct(v){ return (parseFloat(v)*100).toFixed(2)+"%"; }
+
+  var body = "📅 Week: "+wk.week_label+" ("+wk.week_iso+")\n";
+  body += "━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
+
+  body += "📸 INSTAGRAM\n";
+  if (ig.missing) { body += "• ⚠️ No file submitted\n"; }
+  else {
+    body += "• Reach: "+n(ig.reach)+"\n";
+    body += "• Views: "+n(ig.views)+"\n";
+    body += "• New Follows: "+n(ig.follows)+"\n";
+    body += "• Total Followers: "+n(ig.total_followers)+"\n";
+    body += "• Eng Rate: "+pct(ig.eng_rate)+"\n";
+  }
+
+  body += "\n📘 FACEBOOK\n";
+  if (fb.missing) { body += "• ⚠️ No file submitted\n"; }
+  else {
+    body += "• Views: "+n(fb.views)+"\n";
+    body += "• Viewers: "+n(fb.viewers)+"\n";
+    body += "• Visits: "+n(fb.visits)+"\n";
+    body += "• Follows: "+n(fb.follows)+"\n";
+  }
+
+  body += "\n🎵 TIKTOK\n";
+  if (!tt.video_views && !tt.total_followers) { body += "• ⚠️ No file submitted\n"; }
+  else {
+    body += "• Video Views: "+n(tt.video_views)+"\n";
+    body += "• Total Followers: "+n(tt.total_followers)+"\n";
+    body += "• New Followers: "+n(tt.new_followers)+"\n";
+  }
+
+  body += "\n📊 GOOGLE ANALYTICS\n";
+  if (ga.missing) { body += "• ⚠️ No file submitted\n"; }
+  else {
+    body += "• Sessions: "+n(ga.sessions)+"\n";
+    body += "• Engaged Sessions: "+n(ga.engaged_sessions)+"\n";
+    body += "• Revenue: $"+(ga.revenue||0).toFixed(2)+"\n";
+  }
+
+  var hasMissing = Object.keys(missingReport||{}).length>0 || (unidentifiable||[]).length>0;
+  if (hasMissing) {
+    body += "\n━━━━━━━━━━━━━━━━━━━━━━━━\n⚠️ MISSING / UNIDENTIFIABLE FILES\n\n";
+    Object.keys(missingReport||{}).forEach(function(w) {
+      (missingReport[w]||[]).forEach(function(k) {
+        body += "• ⚠️ Missing: "+k+" ("+w+") — document not available\n";
+      });
+    });
+    (unidentifiable||[]).forEach(function(fname) {
+      body += "• ❌ UNIDENTIFIABLE — cannot determine week from content: "+fname+"\n";
+    });
+  }
+
+  body += "\n━━━━━━━━━━━━━━━━━━━━━━━━\nAlaska Wild Lights · alaskawildlights.com\n";
+
+  var subject = "AKWL Weekly Report — "+wk.week_label;
+  try {
+    GmailApp.sendEmail(AKWL_EMAIL, subject, body, {
+      attachments: [Utilities.newBlob(jsonStr,"application/json","data.json")]
+    });
+    log("✅ Email sent to "+AKWL_EMAIL);
+  } catch(e) {
+    log("⚠️ Email send failed: "+e.message);
+  }
+}
+
+// ─── Menu ──────────────────────────────────────────────────────────────────────
+
+function onOpen() {
+  SpreadsheetApp.getActiveSpreadsheet().addMenu("AKWL Tracker", [
+    {name:"▶ Run Now (process CSVs)", functionName:"processAllCSVs"},
+    {name:"📋 Build JSON only",       functionName:"buildJSON"},
+    {name:"🔍 Test file scan",        functionName:"testFiles"},
+    {name:"🗃 Archive inbox files",   functionName:"clearAll"}
+  ]);
+}

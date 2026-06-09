@@ -3,6 +3,7 @@
 // Pre-structured Google Sheets. One row per week. Week detected from CSV content.
 // ══════════════════════════════════════════════════════════════════════════════
 
+var SPREADSHEET_ID = "15QgxsImalEM_At3fOkZDag1G1C_6ueEy2OsL8Cw7GZQ";
 var FOLDER_ID      = "1G861p7ZUSpLhoFZjLDRPmUykN5QKXFEz";
 var PROCESSED_NAME = "Processed";
 var AKWL_EMAIL     = "info@alaskawildlights.com";
@@ -144,6 +145,19 @@ function parseCSVLine(line) {
     else                      { current += c; }
   }
   result.push(current.trim());
+  return result;
+}
+
+// Shared helper: parse a two-row "names / values" CSV block (used by audience parsers)
+function parseTwoRowSection(namesLine, valuesLine) {
+  var names = parseCSVLine(namesLine || "");
+  var vals  = parseCSVLine(valuesLine || "");
+  var result = [];
+  for (var j = 0; j < names.length; j++) {
+    var name = names[j].replace(/"/g,"").trim();
+    var pct  = (parseFloat((vals[j]||"").replace(/"/g,"")) || 0) / 100;
+    if (name) result.push({ name: name, pct: pct });
+  }
   return result;
 }
 
@@ -469,6 +483,151 @@ function parseGoogleAnalyticsCSV(file) {
   };
 }
 
+// IG Audience CSV (UTF-16 LE): Age & gender, Top cities, Top countries.
+// CSV percentages are whole numbers (9.5 = 9.5%) — stored as decimals (0.095).
+function parseIGAudienceCSV(file) {
+  var raw = readFile(file);
+  var lines = raw.replace(/\r/g,"").split("\n").map(function(l){
+    return l.replace(/^sep=.*$/i,"").trim();
+  }).filter(function(l){ return l.length > 0; });
+
+  var result = { age_gender: [], top_countries: [], top_cities: [] };
+  var section = "";
+  var i = 0;
+  while (i < lines.length) {
+    var line    = lines[i];
+    var stripped = line.replace(/^"(.*)"$/, "$1").trim();
+
+    if (stripped === "Age & gender") { section = "age"; i++; continue; }
+
+    if (stripped === "Top cities") {
+      if (i + 2 < lines.length) {
+        result.top_cities = parseTwoRowSection(lines[i+1], lines[i+2]);
+        i += 3;
+      } else i++;
+      section = "";
+      continue;
+    }
+
+    if (stripped === "Top countries") {
+      if (i + 2 < lines.length) {
+        result.top_countries = parseTwoRowSection(lines[i+1], lines[i+2]);
+        i += 3;
+      } else i++;
+      section = "";
+      continue;
+    }
+
+    if (section === "age") {
+      var parts = parseCSVLine(line);
+      var band = (parts[0]||"").replace(/"/g,"").trim();
+      if (band && /^\d/.test(band)) {
+        // IG col order: Women(1), Men(2)
+        result.age_gender.push({
+          band:      band,
+          women_pct: (parseFloat((parts[1]||"").replace(/"/g,"")) || 0) / 100,
+          men_pct:   (parseFloat((parts[2]||"").replace(/"/g,"")) || 0) / 100
+        });
+      }
+    }
+    i++;
+  }
+  return result;
+}
+
+// FB Audience CSV (UTF-16 LE): same format as IG but col order is Men(1), Women(2).
+function parseFBAudienceCSV(file) {
+  var raw = readFile(file);
+  var lines = raw.replace(/\r/g,"").split("\n").map(function(l){
+    return l.replace(/^sep=.*$/i,"").trim();
+  }).filter(function(l){ return l.length > 0; });
+
+  var result = { age_gender: [], top_countries: [], top_cities: [] };
+  var section = "";
+  var i = 0;
+  while (i < lines.length) {
+    var line    = lines[i];
+    var stripped = line.replace(/^"(.*)"$/, "$1").trim();
+
+    if (stripped === "Age & gender") { section = "age"; i++; continue; }
+
+    if (stripped === "Top cities") {
+      if (i + 2 < lines.length) {
+        result.top_cities = parseTwoRowSection(lines[i+1], lines[i+2]);
+        i += 3;
+      } else i++;
+      section = "";
+      continue;
+    }
+
+    if (stripped === "Top countries") {
+      if (i + 2 < lines.length) {
+        result.top_countries = parseTwoRowSection(lines[i+1], lines[i+2]);
+        i += 3;
+      } else i++;
+      section = "";
+      continue;
+    }
+
+    if (section === "age") {
+      var parts = parseCSVLine(line);
+      var band = (parts[0]||"").replace(/"/g,"").trim();
+      if (band && /^\d/.test(band)) {
+        // FB col order: Men(1), Women(2) — opposite of IG
+        result.age_gender.push({
+          band:      band,
+          men_pct:   (parseFloat((parts[1]||"").replace(/"/g,"")) || 0) / 100,
+          women_pct: (parseFloat((parts[2]||"").replace(/"/g,"")) || 0) / 100
+        });
+      }
+    }
+    i++;
+  }
+  return result;
+}
+
+// TikTok Audience CSV (UTF-8 BOM): Date, New followers, Total followers, Reached, Engaged.
+function parseTTAudienceCSV(file) {
+  var raw = readFile(file);
+  var lines = raw.replace(/\r/g,"").replace(/﻿/g,"").split("\n")
+                 .filter(function(l){ return l.trim(); });
+  if (lines.length < 2) return null;
+
+  var headers    = lines[0].split(",").map(function(h){ return h.trim().toLowerCase(); });
+  var dateIdx    = headers.indexOf("date");
+  var newFlwIdx  = headers.indexOf("new followers");
+  var totFlwIdx  = headers.indexOf("total followers");
+  var reachedIdx = headers.indexOf("reached audience");
+  var engIdx     = headers.indexOf("engaged audience");
+  if (dateIdx === -1) return null;
+
+  var daily = [];
+  for (var i = 1; i < lines.length; i++) {
+    var parts = lines[i].split(",").map(function(p){ return p.trim(); });
+    if (!parts[dateIdx]) continue;
+    daily.push({
+      date:            parts[dateIdx].replace(/\//g,"-"),
+      new_followers:   parseInt(parts[newFlwIdx])  || 0,
+      total_followers: parseInt(parts[totFlwIdx])  || 0,
+      reached:         parseInt(parts[reachedIdx]) || 0,
+      engaged:         parseInt(parts[engIdx])     || 0
+    });
+  }
+  if (!daily.length) return null;
+
+  var last = daily[daily.length - 1];
+  return {
+    snapshot: {
+      date:            last.date,
+      total_followers: last.total_followers,
+      new_followers:   last.new_followers,
+      reached:         last.reached,
+      engaged:         last.engaged
+    },
+    daily: daily
+  };
+}
+
 // ─── Sheet row helpers ─────────────────────────────────────────────────────────
 
 // Returns the row number for weekISO in col A (starting at firstDataRow), or next append row
@@ -591,6 +750,82 @@ function writeAnalytics(ss, weekISO, data) {
   }
 }
 
+// Audience tab — overwrites data zones completely each run (no history, no append).
+// igAud / fbAud: { age_gender[], top_countries[], top_cities[] }
+// ttAud: { snapshot: {date,total_followers,new_followers,reached,engaged}, daily[] }
+function writeAudienceTab(ss, igAud, fbAud, ttAud) {
+  var ws = ss.getSheetByName("Audience");
+  if (!ws) { log("❌ Audience sheet not found — skipping audience write"); return; }
+
+  // Clear all data zones (headers in the sheet stay untouched)
+  ws.getRange(7, 1, 10, 3).clearContent();  // IG age rows 7-16, cols A-C
+  ws.getRange(7, 5, 10, 3).clearContent();  // FB age rows 7-16, cols E-G
+  ws.getRange(20, 1, 15, 2).clearContent(); // IG countries rows 20-34, cols A-B
+  ws.getRange(20, 5, 15, 2).clearContent(); // FB countries rows 20-34, cols E-F
+  ws.getRange(38, 1, 15, 2).clearContent(); // IG cities rows 38-52, cols A-B
+  ws.getRange(38, 5, 15, 2).clearContent(); // FB cities rows 38-52, cols E-F
+  ws.getRange(59, 2, 5, 1).clearContent();  // TT snapshot rows 59-63, col B
+  ws.getRange(66, 1, 10, 5).clearContent(); // TT daily rows 66-75, cols A-E
+
+  // IG Age & Gender: col A=age band, B=Women%, C=Men%
+  if (igAud && igAud.age_gender.length) {
+    var d = igAud.age_gender.map(function(r){ return [r.band, r.women_pct, r.men_pct]; });
+    ws.getRange(7, 1, d.length, 3).setValues(d);
+  }
+
+  // FB Age & Gender: col E=age band, F=Men%, G=Women% (Men first — spec requirement)
+  if (fbAud && fbAud.age_gender.length) {
+    var d = fbAud.age_gender.map(function(r){ return [r.band, r.men_pct, r.women_pct]; });
+    ws.getRange(7, 5, d.length, 3).setValues(d);
+  }
+
+  // IG Top Countries: col A=name, B=%
+  if (igAud && igAud.top_countries.length) {
+    var d = igAud.top_countries.map(function(r){ return [r.name, r.pct]; });
+    ws.getRange(20, 1, d.length, 2).setValues(d);
+  }
+
+  // FB Top Countries: col E=name, F=%
+  if (fbAud && fbAud.top_countries.length) {
+    var d = fbAud.top_countries.map(function(r){ return [r.name, r.pct]; });
+    ws.getRange(20, 5, d.length, 2).setValues(d);
+  }
+
+  // IG Top Cities: col A=name, B=%
+  if (igAud && igAud.top_cities.length) {
+    var d = igAud.top_cities.map(function(r){ return [r.name, r.pct]; });
+    ws.getRange(38, 1, d.length, 2).setValues(d);
+  }
+
+  // FB Top Cities: col E=name, F=%
+  if (fbAud && fbAud.top_cities.length) {
+    var d = fbAud.top_cities.map(function(r){ return [r.name, r.pct]; });
+    ws.getRange(38, 5, d.length, 2).setValues(d);
+  }
+
+  // TikTok Snapshot (rows 59-63, col B)
+  if (ttAud && ttAud.snapshot) {
+    var s = ttAud.snapshot;
+    ws.getRange(59, 2).setValue(s.date);
+    ws.getRange(60, 2).setValue(s.total_followers);
+    ws.getRange(61, 2).setValue(s.new_followers);
+    ws.getRange(62, 2).setValue(s.reached);
+    ws.getRange(63, 2).setValue(s.engaged);
+  }
+
+  // TikTok Daily Table (rows 66-75, cols A-E): Date|NewFlw|TotalFlw|Reached|Engaged
+  if (ttAud && ttAud.daily && ttAud.daily.length) {
+    var rows = ttAud.daily.slice(-10).map(function(r){
+      return [r.date, r.new_followers, r.total_followers, r.reached, r.engaged];
+    });
+    ws.getRange(66, 1, rows.length, 5).setValues(rows);
+  }
+
+  log("✅ Audience tab updated (IG:" + (igAud ? igAud.age_gender.length + " bands" : "none") +
+      " FB:" + (fbAud ? fbAud.age_gender.length + " bands" : "none") +
+      " TT:" + (ttAud ? ttAud.daily.length + " daily rows" : "none") + ")");
+}
+
 // ─── Write to Weekly Log ───────────────────────────────────────────────────────
 
 function writeWeeklyLog(ss, weekISO, data) {
@@ -663,6 +898,7 @@ function processAllFiles(cutoff) {
 
   var weekData     = {}; // weekISO → { ig, fb, tt, ga }
   var foundFiles   = {}; // weekISO → { key: true }
+  var audienceData = {}; // weekISO → { ig, fb, tt } parsed audience objects
   var unidentifiable = [];
 
   // Collect unprocessed CSVs
@@ -748,7 +984,12 @@ function processAllFiles(cutoff) {
         foundFiles[weekISO]["tt_video"] = true; // archive only
 
       } else if (route === "tt_audience") {
-        foundFiles[weekISO]["tt_audience"] = true; // archive only
+        var ttAud = parseTTAudienceCSV(file);
+        if (ttAud) {
+          if (!audienceData[weekISO]) audienceData[weekISO] = {};
+          audienceData[weekISO].tt = ttAud;
+        }
+        foundFiles[weekISO]["tt_audience"] = true;
 
       } else if (route === "ga") {
         var r = parseGoogleAnalyticsCSV(file);
@@ -758,10 +999,20 @@ function processAllFiles(cutoff) {
         }
 
       } else if (route === "ig_audience") {
-        foundFiles[weekISO]["ig_audience"] = true; // archive only, not written to tracker
+        var igAud = parseIGAudienceCSV(file);
+        if (igAud) {
+          if (!audienceData[weekISO]) audienceData[weekISO] = {};
+          audienceData[weekISO].ig = igAud;
+        }
+        foundFiles[weekISO]["ig_audience"] = true;
 
       } else if (route === "fb_audience") {
-        foundFiles[weekISO]["fb_audience"] = true; // archive only, not written to tracker
+        var fbAud = parseFBAudienceCSV(file);
+        if (fbAud) {
+          if (!audienceData[weekISO]) audienceData[weekISO] = {};
+          audienceData[weekISO].fb = fbAud;
+        }
+        foundFiles[weekISO]["fb_audience"] = true;
       }
 
       // Move to /Processed/W##/
@@ -773,7 +1024,7 @@ function processAllFiles(cutoff) {
     }
   });
 
-  return { weekData: weekData, foundFiles: foundFiles, unidentifiable: unidentifiable };
+  return { weekData: weekData, foundFiles: foundFiles, audienceData: audienceData, unidentifiable: unidentifiable };
 }
 
 // ─── Main entry point ──────────────────────────────────────────────────────────
@@ -795,6 +1046,18 @@ function processAllCSVs() {
       writeAnalytics(ss, weekISO, data);
       writeWeeklyLog(ss, weekISO, data);
     });
+
+    // Audience tab: use most-recent submitted data for each platform
+    var igLatest = null, fbLatest = null, ttLatest = null;
+    Object.keys(result.audienceData).sort().reverse().forEach(function(weekISO) {
+      var aud = result.audienceData[weekISO];
+      if (!igLatest && aud.ig) igLatest = aud.ig;
+      if (!fbLatest && aud.fb) fbLatest = aud.fb;
+      if (!ttLatest && aud.tt) ttLatest = aud.tt;
+    });
+    if (igLatest || fbLatest || ttLatest) {
+      writeAudienceTab(ss, igLatest, fbLatest, ttLatest);
+    }
 
     var missingReport   = checkMissingFiles(result.foundFiles);
     var jsonStr         = buildJSON();
@@ -849,6 +1112,87 @@ function clearAll() {
   }
   log("Archived " + count + " inbox file(s) to " + archiveName);
   SpreadsheetApp.getActiveSpreadsheet().toast("Archived " + count + " file(s).", "AKWL v7", 8);
+}
+
+// Read audience data from the Audience tab for JSON output
+function readAudienceTab(ss) {
+  var ws = ss.getSheetByName("Audience");
+  if (!ws) return { ig: {}, fb: {}, tt: {} };
+
+  function rangeVals(r1, c1, rows, cols) {
+    return ws.getRange(r1, c1, rows, cols).getValues();
+  }
+
+  function readAgeGender(startRow, colOffset) {
+    // colOffset 0=IG(A-C), 4=FB(E-G)
+    // IG: colA=band B=Women C=Men; FB: colE=band F=Men G=Women
+    var rows = rangeVals(startRow, 1 + colOffset, 10, 3);
+    var result = {};
+    rows.forEach(function(r) {
+      var band = r[0];
+      if (!band || band === "") return;
+      if (colOffset === 0) { // IG: col B=Women, C=Men
+        result[band] = { women: r[1] || 0, men: r[2] || 0 };
+      } else {               // FB: col F=Men, G=Women
+        result[band] = { men: r[1] || 0, women: r[2] || 0 };
+      }
+    });
+    return result;
+  }
+
+  function readNamePct(startRow, col, rows) {
+    var vals = rangeVals(startRow, col, rows, 2);
+    return vals.filter(function(r){ return r[0]; })
+               .map(function(r){ return { name: r[0], pct: r[1] || 0 }; });
+  }
+
+  function target2544pct(ageGender) {
+    var total = 0;
+    ["25-34","35-44"].forEach(function(b) {
+      if (ageGender[b]) total += (ageGender[b].women||0) + (ageGender[b].men||0);
+    });
+    return Math.round(total * 10000) / 10000;
+  }
+
+  var igAge = readAgeGender(7, 0);
+  var fbAge = readAgeGender(7, 4);
+
+  // TikTok snapshot (rows 59-63, col B)
+  var ttSnap = rangeVals(59, 2, 5, 1);
+  var ttSnapshot = {
+    date:            ttSnap[0][0] || "",
+    total_followers: ttSnap[1][0] || 0,
+    new_followers:   ttSnap[2][0] || 0,
+    reached:         ttSnap[3][0] || 0,
+    engaged:         ttSnap[4][0] || 0
+  };
+
+  // TikTok daily (rows 66-75, cols A-E)
+  var ttDailyVals = rangeVals(66, 1, 10, 5);
+  var ttDaily = ttDailyVals.filter(function(r){ return r[0]; })
+    .map(function(r){ return {
+      date: r[0], new_followers: r[1]||0,
+      total_followers: r[2]||0, reached: r[3]||0, engaged: r[4]||0
+    }; });
+
+  return {
+    ig: {
+      age_gender:      igAge,
+      target_25_44_pct: target2544pct(igAge),
+      top_countries:   readNamePct(20, 1, 15),
+      top_cities:      readNamePct(38, 1, 15)
+    },
+    fb: {
+      age_gender:      fbAge,
+      target_25_44_pct: target2544pct(fbAge),
+      top_countries:   readNamePct(20, 5, 15),
+      top_cities:      readNamePct(38, 5, 15)
+    },
+    tt: {
+      snapshot: ttSnapshot,
+      daily:    ttDaily
+    }
+  };
 }
 
 // ─── buildJSON ────────────────────────────────────────────────────────────────
@@ -945,10 +1289,7 @@ function buildJSON() {
     generated: new Date().toISOString(),
     goals: goals,
     weeks: weeks,
-    audience: {
-      ig: {age_gender:{},target_25_44_pct:0,top_countries:[],top_cities:[]},
-      fb: {age_gender:{},target_25_44_pct:0,top_countries:[],top_cities:[]}
-    }
+    audience: readAudienceTab(ss)
   };
 
   var jsonStr = JSON.stringify(output, null, 2);

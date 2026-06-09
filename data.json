@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-08T21:20:55.470Z",
+  "generated": "2026-06-09T04:00:00.000Z",
   "goals": {
     "quarter": "Q2",
     "deadline": "2026-06-30",
@@ -9,7 +9,8 @@
   },
   "weeks": [
     {
-      "week_label": "Apr 19 ? Apr 25",
+      "week_iso": "W17",
+      "week_label": "Apr 19–25",
       "week_start": "2026-04-19",
       "week_end": "2026-04-25",
       "ig": {
@@ -20,7 +21,7 @@
         "interactions": 3,
         "link_clicks": 2,
         "total_followers": 643,
-        "eng_rate": 1.31
+        "eng_rate": 0.0131
       },
       "fb": {
         "views": 164,
@@ -37,176 +38,25 @@
         "total_followers": 0,
         "likes": 0,
         "comments": 0,
-        "shares": 0,
-        "favorites": 0,
-        "daily": [
-          {
-            "date": "2026-04-25",
-            "views": 0,
-            "reached": 0,
-            "new_followers": 0,
-            "total_followers": 0,
-            "likes": 0,
-            "comments": 0,
-            "shares": 0
-          }
-        ]
+        "shares": 0
       },
       "ga": {
-        "date_range": "20260419 ? 20260425",
         "sessions": 927,
         "engaged_sessions": 479,
-        "revenue": 1596,
+        "revenue": 1596.0,
         "sources": [
-          {
-            "src": "(direct)",
-            "sessions": 408,
-            "eng_rate": 39.71,
-            "revenue": 0
-          },
-          {
-            "src": "google",
-            "sessions": 346,
-            "eng_rate": 63.58,
-            "revenue": 1596
-          },
-          {
-            "src": "alaskawildlights.com",
-            "sessions": 41,
-            "eng_rate": 80.49,
-            "revenue": 0
-          },
-          {
-            "src": "alaska-org",
-            "sessions": 34,
-            "eng_rate": 55.88,
-            "revenue": 0
-          },
-          {
-            "src": "m.facebook.com",
-            "sessions": 17,
-            "eng_rate": 11.76,
-            "revenue": 0
-          },
-          {
-            "src": "explorefairbanks.com",
-            "sessions": 16,
-            "eng_rate": 62.5,
-            "revenue": 0
-          },
-          {
-            "src": "bing",
-            "sessions": 12,
-            "eng_rate": 83.33,
-            "revenue": 0
-          },
-          {
-            "src": "fairbanks.extranet.simpleviewcrm.com",
-            "sessions": 8,
-            "eng_rate": 75,
-            "revenue": 0
-          },
-          {
-            "src": "(data not available)",
-            "sessions": 6,
-            "eng_rate": 66.67,
-            "revenue": 0
-          },
-          {
-            "src": "instagram",
-            "sessions": 6,
-            "eng_rate": 66.67,
-            "revenue": 0
-          },
-          {
-            "src": "tiktok",
-            "sessions": 6,
-            "eng_rate": 0,
-            "revenue": 0
-          },
-          {
-            "src": "facebook",
-            "sessions": 5,
-            "eng_rate": 0,
-            "revenue": 0
-          },
-          {
-            "src": "(not set)",
-            "sessions": 4,
-            "eng_rate": 0,
-            "revenue": 0
-          },
-          {
-            "src": "duckduckgo",
-            "sessions": 3,
-            "eng_rate": 100,
-            "revenue": 0
-          },
-          {
-            "src": "l.instagram.com",
-            "sessions": 3,
-            "eng_rate": 66.67,
-            "revenue": 0
-          },
-          {
-            "src": "alaska.org",
-            "sessions": 2,
-            "eng_rate": 0,
-            "revenue": 0
-          },
-          {
-            "src": "alaskawildlights.activehosted.com",
-            "sessions": 2,
-            "eng_rate": 0,
-            "revenue": 0
-          },
-          {
-            "src": "chatgpt.com",
-            "sessions": 2,
-            "eng_rate": 50,
-            "revenue": 0
-          },
-          {
-            "src": "darkflux.top",
-            "sessions": 1,
-            "eng_rate": 0,
-            "revenue": 0
-          },
-          {
-            "src": "facebook.com",
-            "sessions": 1,
-            "eng_rate": 0,
-            "revenue": 0
-          },
-          {
-            "src": "mail.google.com",
-            "sessions": 1,
-            "eng_rate": 100,
-            "revenue": 0
-          },
-          {
-            "src": "rack_card",
-            "sessions": 1,
-            "eng_rate": 0,
-            "revenue": 0
-          },
-          {
-            "src": "url-opener.com",
-            "sessions": 1,
-            "eng_rate": 100,
-            "revenue": 0
-          },
-          {
-            "src": "yahoo",
-            "sessions": 1,
-            "eng_rate": 100,
-            "revenue": 0
-          }
+          { "src": "(direct)", "sessions": 408, "eng_rate": 39.71, "revenue": 0.0 },
+          { "src": "google", "sessions": 346, "eng_rate": 63.58, "revenue": 1596.0 },
+          { "src": "alaskawildlights.com", "sessions": 41, "eng_rate": 80.49, "revenue": 0.0 },
+          { "src": "alaska-org", "sessions": 34, "eng_rate": 55.88, "revenue": 0.0 },
+          { "src": "m.facebook.com", "sessions": 17, "eng_rate": 11.76, "revenue": 0.0 },
+          { "src": "explorefairbanks.com", "sessions": 16, "eng_rate": 62.5, "revenue": 0.0 }
         ]
       }
     },
     {
-      "week_label": "Apr 26 ? May 2",
+      "week_iso": "W18",
+      "week_label": "Apr 26–May 2",
       "week_start": "2026-04-26",
       "week_end": "2026-05-02",
       "ig": {
@@ -217,7 +67,7 @@
         "interactions": 33,
         "link_clicks": 3,
         "total_followers": 650,
-        "eng_rate": 4.76
+        "eng_rate": 0.047619
       },
       "fb": {
         "views": 1092,
@@ -231,352 +81,152 @@
         "video_views": 0,
         "reached": 0,
         "new_followers": 0,
-        "total_followers": 1,
+        "total_followers": 0,
         "likes": 0,
         "comments": 0,
-        "shares": 0,
-        "favorites": 0,
-        "daily": [
-          {
-            "date": "2026-05-02",
-            "views": 0,
-            "reached": 0,
-            "new_followers": 0,
-            "total_followers": 1,
-            "likes": 0,
-            "comments": 0,
-            "shares": 0
-          }
-        ]
+        "shares": 0
       },
       "ga": {
-        "date_range": "20260426 ? 20260502",
         "sessions": 891,
         "engaged_sessions": 429,
-        "revenue": 915,
+        "revenue": 915.0,
         "sources": [
-          {
-            "src": "(direct)",
-            "sessions": 370,
-            "eng_rate": 37.84,
-            "revenue": 0
-          },
-          {
-            "src": "google",
-            "sessions": 333,
-            "eng_rate": 57.36,
-            "revenue": 915
-          },
-          {
-            "src": "alaska-org",
-            "sessions": 42,
-            "eng_rate": 47.62,
-            "revenue": 0
-          },
-          {
-            "src": "alaskawildlights.com",
-            "sessions": 41,
-            "eng_rate": 70.73,
-            "revenue": 0
-          },
-          {
-            "src": "facebook",
-            "sessions": 15,
-            "eng_rate": 26.67,
-            "revenue": 0
-          },
-          {
-            "src": "explorefairbanks.com",
-            "sessions": 13,
-            "eng_rate": 76.92,
-            "revenue": 0
-          },
-          {
-            "src": "fairbanks.extranet.simpleviewcrm.com",
-            "sessions": 12,
-            "eng_rate": 50,
-            "revenue": 0
-          },
-          {
-            "src": "(not set)",
-            "sessions": 9,
-            "eng_rate": 0,
-            "revenue": 0
-          },
-          {
-            "src": "m.facebook.com",
-            "sessions": 9,
-            "eng_rate": 33.33,
-            "revenue": 0
-          },
-          {
-            "src": "l.facebook.com",
-            "sessions": 8,
-            "eng_rate": 87.5,
-            "revenue": 0
-          },
-          {
-            "src": "facebook.com",
-            "sessions": 7,
-            "eng_rate": 85.71,
-            "revenue": 0
-          },
-          {
-            "src": "instagram",
-            "sessions": 6,
-            "eng_rate": 0,
-            "revenue": 0
-          },
-          {
-            "src": "chatgpt.com",
-            "sessions": 5,
-            "eng_rate": 60,
-            "revenue": 0
-          },
-          {
-            "src": "yahoo",
-            "sessions": 3,
-            "eng_rate": 0,
-            "revenue": 0
-          },
-          {
-            "src": "(data not available)",
-            "sessions": 2,
-            "eng_rate": 100,
-            "revenue": 0
-          },
-          {
-            "src": "alaska.org",
-            "sessions": 2,
-            "eng_rate": 50,
-            "revenue": 0
-          },
-          {
-            "src": "alaskawildlights.activehosted.com",
-            "sessions": 2,
-            "eng_rate": 50,
-            "revenue": 0
-          },
-          {
-            "src": "bing",
-            "sessions": 2,
-            "eng_rate": 100,
-            "revenue": 0
-          },
-          {
-            "src": "lm.facebook.com",
-            "sessions": 2,
-            "eng_rate": 50,
-            "revenue": 0
-          },
-          {
-            "src": "rack_card",
-            "sessions": 2,
-            "eng_rate": 0,
-            "revenue": 0
-          },
-          {
-            "src": "ActiveCampaign",
-            "sessions": 1,
-            "eng_rate": 100,
-            "revenue": 0
-          },
-          {
-            "src": "alaskaelement.com",
-            "sessions": 1,
-            "eng_rate": 100,
-            "revenue": 0
-          },
-          {
-            "src": "aurorapointe.net",
-            "sessions": 1,
-            "eng_rate": 0,
-            "revenue": 0
-          },
-          {
-            "src": "canva.com",
-            "sessions": 1,
-            "eng_rate": 100,
-            "revenue": 0
-          },
-          {
-            "src": "gemini.google.com",
-            "sessions": 1,
-            "eng_rate": 0,
-            "revenue": 0
-          },
-          {
-            "src": "mono.wherewolf.co.nz",
-            "sessions": 1,
-            "eng_rate": 0,
-            "revenue": 0
-          }
-        ],
-        "note": "Cumulative period ? not weekly data"
+          { "src": "(direct)", "sessions": 370, "eng_rate": 37.84, "revenue": 0.0 },
+          { "src": "google", "sessions": 333, "eng_rate": 57.36, "revenue": 915.0 },
+          { "src": "alaska-org", "sessions": 42, "eng_rate": 47.62, "revenue": 0.0 },
+          { "src": "alaskawildlights.com", "sessions": 41, "eng_rate": 70.73, "revenue": 0.0 },
+          { "src": "facebook", "sessions": 15, "eng_rate": 26.67, "revenue": 0.0 },
+          { "src": "explorefairbanks.com", "sessions": 13, "eng_rate": 76.92, "revenue": 0.0 }
+        ]
       }
     },
     {
-      "week_label": "May 3 ? May 9",
+      "week_iso": "W19",
+      "week_label": "May 3–9",
       "week_start": "2026-05-03",
       "week_end": "2026-05-09",
       "ig": {
-        "reach": 0,
-        "views": 0,
-        "follows": 0,
-        "profile_visits": 0,
-        "interactions": 0,
-        "link_clicks": 0,
+        "reach": 1266,
+        "views": 2744,
+        "follows": 15,
+        "profile_visits": 76,
+        "interactions": 79,
+        "link_clicks": 4,
         "total_followers": 663,
-        "eng_rate": 0
+        "eng_rate": 0.062401
       },
       "fb": {
-        "missing": true,
-        "note": "Facebook file not submitted this week",
-        "views": 0,
-        "visits": 0,
-        "viewers": 0,
-        "follows": 0,
-        "interactions": 0,
-        "link_clicks": 0
+        "views": 2706,
+        "visits": 166,
+        "viewers": 1928,
+        "follows": 27,
+        "interactions": 71,
+        "link_clicks": 2
       },
       "tt": {
-        "video_views": 0,
-        "reached": 0,
-        "new_followers": 0,
-        "total_followers": 19,
-        "likes": 0,
-        "comments": 0,
-        "shares": 0,
-        "favorites": 0,
-        "daily": [
-          {
-            "date": "2026-05-09",
-            "views": 0,
-            "reached": 0,
-            "new_followers": 0,
-            "total_followers": 19,
-            "likes": 0,
-            "comments": 0,
-            "shares": 0
-          }
-        ]
+        "video_views": 1367,
+        "reached": 1313,
+        "new_followers": 18,
+        "total_followers": 18,
+        "likes": 74,
+        "comments": 5,
+        "shares": 2
       },
       "ga": {
-        "missing": true,
-        "note": "Google Analytics file not submitted this week",
-        "date_range": "May 3 ? May 9",
-        "sessions": 0,
-        "engaged_sessions": 0,
-        "revenue": 0,
-        "sources": []
+        "sessions": 3905,
+        "engaged_sessions": 2007,
+        "revenue": 8923.5,
+        "sources": [
+          { "src": "(direct)", "sessions": 1755, "eng_rate": 42.74, "revenue": 0.0 },
+          { "src": "google", "sessions": 1456, "eng_rate": 59.55, "revenue": 8423.5 },
+          { "src": "alaskawildlights.com", "sessions": 175, "eng_rate": 77.71, "revenue": 0.0 },
+          { "src": "alaska-org", "sessions": 148, "eng_rate": 53.38, "revenue": 500.0 },
+          { "src": "explorefairbanks.com", "sessions": 47, "eng_rate": 74.47, "revenue": 0.0 },
+          { "src": "facebook", "sessions": 36, "eng_rate": 30.56, "revenue": 0.0 }
+        ]
       }
     },
     {
-      "week_label": "May 10 ? May 16",
+      "week_iso": "W20",
+      "week_label": "May 10–16",
       "week_start": "2026-05-10",
       "week_end": "2026-05-16",
       "ig": {
-        "reach": 0,
-        "views": 0,
-        "follows": 0,
-        "profile_visits": 0,
-        "interactions": 0,
+        "reach": 1175,
+        "views": 2834,
+        "follows": 9,
+        "profile_visits": 60,
+        "interactions": 89,
         "link_clicks": 0,
         "total_followers": 667,
-        "eng_rate": 0
+        "eng_rate": 0.075745
       },
       "fb": {
-        "missing": true,
-        "note": "Facebook file not submitted this week",
-        "views": 0,
-        "visits": 0,
-        "viewers": 0,
-        "follows": 0,
-        "interactions": 0,
-        "link_clicks": 0
+        "views": 1576,
+        "visits": 169,
+        "viewers": 798,
+        "follows": 15,
+        "interactions": 64,
+        "link_clicks": 1
       },
       "tt": {
-        "video_views": 0,
-        "reached": 0,
-        "new_followers": 0,
-        "total_followers": 57,
-        "likes": 0,
-        "comments": 0,
-        "shares": 0,
-        "favorites": 0,
-        "daily": [
-          {
-            "date": "2026-05-16",
-            "views": 0,
-            "reached": 0,
-            "new_followers": 0,
-            "total_followers": 57,
-            "likes": 0,
-            "comments": 0,
-            "shares": 0
-          }
-        ]
+        "video_views": 6079,
+        "reached": 5863,
+        "new_followers": 32,
+        "total_followers": 50,
+        "likes": 470,
+        "comments": 14,
+        "shares": 39
       },
       "ga": {
-        "missing": true,
-        "note": "Google Analytics file not submitted this week",
-        "date_range": "May 10 ? May 16",
-        "sessions": 0,
-        "engaged_sessions": 0,
-        "revenue": 0,
-        "sources": []
+        "sessions": 3923,
+        "engaged_sessions": 2026,
+        "revenue": 8073.5,
+        "sources": [
+          { "src": "(direct)", "sessions": 1838, "eng_rate": 43.14, "revenue": 1005.0 },
+          { "src": "google / cpc", "sessions": 958, "eng_rate": 63.88, "revenue": 4310.0 },
+          { "src": "google / organic", "sessions": 388, "eng_rate": 50.0, "revenue": 1588.5 },
+          { "src": "alaskawildlights.com", "sessions": 191, "eng_rate": 83.77, "revenue": 670.0 },
+          { "src": "alaska-org", "sessions": 169, "eng_rate": 55.62, "revenue": 500.0 },
+          { "src": "facebook", "sessions": 41, "eng_rate": 31.71, "revenue": 0.0 }
+        ]
       }
     },
     {
-      "week_label": "May 17 ? May 23",
+      "week_iso": "W21",
+      "week_label": "May 17–23",
       "week_start": "2026-05-17",
       "week_end": "2026-05-23",
       "ig": {
-        "reach": 0,
-        "views": 0,
-        "follows": 0,
-        "profile_visits": 0,
-        "interactions": 0,
+        "reach": 1649,
+        "views": 4004,
+        "follows": 9,
+        "profile_visits": 60,
+        "interactions": 142,
         "link_clicks": 0,
-        "total_followers": 675,
-        "eng_rate": 0
+        "total_followers": 676,
+        "eng_rate": 0.086113
       },
       "fb": {
-        "missing": true,
-        "note": "Facebook file not submitted this week",
-        "views": 0,
-        "visits": 0,
-        "viewers": 0,
-        "follows": 0,
-        "interactions": 0,
+        "views": 2992,
+        "visits": 95,
+        "viewers": 2272,
+        "follows": 12,
+        "interactions": 76,
         "link_clicks": 0
       },
       "tt": {
-        "video_views": 0,
-        "reached": 0,
-        "new_followers": 0,
-        "total_followers": 97,
-        "likes": 0,
-        "comments": 0,
-        "shares": 0,
-        "favorites": 0,
-        "daily": [
-          {
-            "date": "2026-05-23",
-            "views": 0,
-            "reached": 0,
-            "new_followers": 0,
-            "total_followers": 97,
-            "likes": 0,
-            "comments": 0,
-            "shares": 0
-          }
-        ]
+        "video_views": 7696,
+        "reached": 7481,
+        "new_followers": 39,
+        "total_followers": 89,
+        "likes": 451,
+        "comments": 9,
+        "shares": 40
       },
       "ga": {
         "missing": true,
-        "note": "Google Analytics file not submitted this week",
-        "date_range": "May 17 ? May 23",
+        "note": "GA file not submitted this week",
         "sessions": 0,
         "engaged_sessions": 0,
         "revenue": 0,
@@ -584,130 +234,186 @@
       }
     },
     {
-      "week_label": "May 24 ? May 30",
+      "week_iso": "W22",
+      "week_label": "May 24–30",
       "week_start": "2026-05-24",
       "week_end": "2026-05-30",
       "ig": {
-        "reach": 0,
-        "views": 0,
-        "follows": 0,
-        "profile_visits": 0,
-        "interactions": 0,
-        "link_clicks": 0,
+        "reach": 2393,
+        "views": 4361,
+        "follows": 10,
+        "profile_visits": 57,
+        "interactions": 127,
+        "link_clicks": 2,
         "total_followers": 686,
-        "eng_rate": 0
+        "eng_rate": 0.053071
       },
       "fb": {
-        "missing": true,
-        "note": "Facebook file not submitted this week",
-        "views": 0,
-        "visits": 0,
-        "viewers": 0,
-        "follows": 0,
-        "interactions": 0,
-        "link_clicks": 0
+        "views": 2445,
+        "visits": 133,
+        "viewers": 1694,
+        "follows": 8,
+        "interactions": 104,
+        "link_clicks": 2
       },
       "tt": {
-        "video_views": 0,
-        "reached": 0,
-        "new_followers": 0,
-        "total_followers": 126,
-        "likes": 0,
-        "comments": 0,
-        "shares": 0,
-        "favorites": 0,
-        "daily": [
-          {
-            "date": "2026-05-30",
-            "views": 0,
-            "reached": 0,
-            "new_followers": 0,
-            "total_followers": 126,
-            "likes": 0,
-            "comments": 0,
-            "shares": 0
-          }
-        ]
+        "video_views": 4762,
+        "reached": 4242,
+        "new_followers": 32,
+        "total_followers": 121,
+        "likes": 226,
+        "comments": 4,
+        "shares": 27
       },
       "ga": {
-        "missing": true,
-        "note": "Google Analytics file not submitted this week",
-        "date_range": "May 24 ? May 30",
-        "sessions": 0,
-        "engaged_sessions": 0,
-        "revenue": 0,
-        "sources": []
+        "sessions": 800,
+        "engaged_sessions": 421,
+        "revenue": 3486.1,
+        "sources": [
+          { "src": "(direct)", "sessions": 318, "eng_rate": 42.14, "revenue": 0.0 },
+          { "src": "google / cpc", "sessions": 200, "eng_rate": 60.5, "revenue": 1742.0 },
+          { "src": "google / organic", "sessions": 132, "eng_rate": 53.79, "revenue": 1409.1 },
+          { "src": "alaskawildlights.com", "sessions": 49, "eng_rate": 83.67, "revenue": 335.0 },
+          { "src": "alaska-org", "sessions": 39, "eng_rate": 61.54, "revenue": 0.0 },
+          { "src": "bing", "sessions": 9, "eng_rate": 55.56, "revenue": 0.0 }
+        ]
       }
     },
     {
-      "week_label": "May 31 ? Jun 6",
+      "week_iso": "W23",
+      "week_label": "May 31–Jun 6",
       "week_start": "2026-05-31",
       "week_end": "2026-06-06",
       "ig": {
-        "reach": 0,
-        "views": 0,
-        "follows": 0,
-        "profile_visits": 0,
-        "interactions": 0,
+        "reach": 1887,
+        "views": 3624,
+        "follows": 8,
+        "profile_visits": 39,
+        "interactions": 188,
         "link_clicks": 0,
         "total_followers": 690,
-        "eng_rate": 0
+        "eng_rate": 0.099629
       },
       "fb": {
-        "missing": true,
-        "note": "Facebook file not submitted this week",
-        "views": 0,
-        "visits": 0,
-        "viewers": 0,
-        "follows": 0,
-        "interactions": 0,
+        "views": 2933,
+        "visits": 56,
+        "viewers": 2289,
+        "follows": 5,
+        "interactions": 111,
         "link_clicks": 0
       },
       "tt": {
-        "video_views": 0,
-        "reached": 0,
-        "new_followers": 0,
-        "total_followers": 168,
-        "likes": 0,
-        "comments": 0,
-        "shares": 0,
-        "favorites": 0,
-        "daily": [
-          {
-            "date": "2026-06-06",
-            "views": 0,
-            "reached": 0,
-            "new_followers": 0,
-            "total_followers": 168,
-            "likes": 0,
-            "comments": 0,
-            "shares": 0
-          }
-        ]
+        "video_views": 4192,
+        "reached": 3436,
+        "new_followers": 34,
+        "total_followers": 153,
+        "likes": 201,
+        "comments": 7,
+        "shares": 23
       },
       "ga": {
-        "missing": true,
-        "note": "Google Analytics file not submitted this week",
-        "date_range": "May 31 ? Jun 6",
-        "sessions": 0,
-        "engaged_sessions": 0,
-        "revenue": 0,
-        "sources": []
+        "sessions": 5201,
+        "engaged_sessions": 2515,
+        "revenue": 10655.1,
+        "sources": [
+          { "src": "(direct)", "sessions": 2865, "eng_rate": 41.47, "revenue": 2479.0 },
+          { "src": "google", "sessions": 1431, "eng_rate": 56.39, "revenue": 4014.1 },
+          { "src": "(not set)", "sessions": 252, "eng_rate": 41.27, "revenue": 0.0 },
+          { "src": "alaskawildlights.com", "sessions": 232, "eng_rate": 81.9, "revenue": 2105.0 },
+          { "src": "alaska-org", "sessions": 166, "eng_rate": 55.42, "revenue": 605.0 },
+          { "src": "facebook", "sessions": 45, "eng_rate": 31.11, "revenue": 0.0 }
+        ]
       }
     }
   ],
   "audience": {
     "ig": {
-      "age_gender": {},
-      "target_25_44_pct": 0,
-      "top_countries": [],
-      "top_cities": []
+      "age_gender": {
+        "18-24": { "women": 0.02, "men": 0.018 },
+        "25-34": { "women": 0.228, "men": 0.128 },
+        "35-44": { "women": 0.235, "men": 0.114 },
+        "45-54": { "women": 0.088, "men": 0.05 },
+        "55-64": { "women": 0.042, "men": 0.035 },
+        "65+":   { "women": 0.031, "men": 0.011 }
+      },
+      "target_25_44_pct": 0.705,
+      "top_countries": [
+        { "name": "United States",       "pct": 0.83 },
+        { "name": "Brazil",              "pct": 0.023 },
+        { "name": "Canada",              "pct": 0.018 },
+        { "name": "Germany",             "pct": 0.015 },
+        { "name": "India",               "pct": 0.013 },
+        { "name": "Mexico",              "pct": 0.013 },
+        { "name": "United Kingdom",      "pct": 0.01 },
+        { "name": "Costa Rica",          "pct": 0.007 },
+        { "name": "Australia",           "pct": 0.006 },
+        { "name": "United Arab Emirates","pct": 0.006 }
+      ],
+      "top_cities": [
+        { "name": "College, AK",     "pct": 0.095 },
+        { "name": "Anchorage, AK",   "pct": 0.081 },
+        { "name": "Palmer, AK",      "pct": 0.028 },
+        { "name": "North Pole, AK",  "pct": 0.025 },
+        { "name": "Juneau, AK",      "pct": 0.01 },
+        { "name": "Wasilla, AK",     "pct": 0.01 },
+        { "name": "Los Angeles, CA", "pct": 0.009 },
+        { "name": "Toledo, OH",      "pct": 0.007 },
+        { "name": "Seattle, WA",     "pct": 0.007 },
+        { "name": "New York, NY",    "pct": 0.006 }
+      ]
     },
     "fb": {
-      "age_gender": {},
-      "target_25_44_pct": 0,
-      "top_countries": [],
-      "top_cities": []
+      "age_gender": {
+        "18-24": { "women": 0.013, "men": 0.0 },
+        "25-34": { "women": 0.064, "men": 0.097 },
+        "35-44": { "women": 0.123, "men": 0.129 },
+        "45-54": { "women": 0.091, "men": 0.167 },
+        "55-64": { "women": 0.091, "men": 0.09 },
+        "65+":   { "women": 0.071, "men": 0.064 }
+      },
+      "target_25_44_pct": 0.413,
+      "top_countries": [
+        { "name": "United States", "pct": 0.659 },
+        { "name": "Canada",        "pct": 0.043 },
+        { "name": "South Africa",  "pct": 0.037 },
+        { "name": "Bangladesh",    "pct": 0.018 },
+        { "name": "Germany",       "pct": 0.018 },
+        { "name": "India",         "pct": 0.018 },
+        { "name": "Slovenia",      "pct": 0.012 },
+        { "name": "Sri Lanka",     "pct": 0.012 },
+        { "name": "Thailand",      "pct": 0.012 },
+        { "name": "United Kingdom","pct": 0.012 }
+      ],
+      "top_cities": [
+        { "name": "College, AK",     "pct": 0.095 },
+        { "name": "Anchorage, AK",   "pct": 0.081 },
+        { "name": "Palmer, AK",      "pct": 0.028 },
+        { "name": "North Pole, AK",  "pct": 0.025 },
+        { "name": "Juneau, AK",      "pct": 0.01 },
+        { "name": "Wasilla, AK",     "pct": 0.01 },
+        { "name": "Los Angeles, CA", "pct": 0.009 },
+        { "name": "Toledo, OH",      "pct": 0.007 },
+        { "name": "Seattle, WA",     "pct": 0.007 },
+        { "name": "New York, NY",    "pct": 0.006 }
+      ]
+    },
+    "tt": {
+      "snapshot": {
+        "date": "2026-05-31",
+        "total_followers": 128,
+        "new_followers": 6,
+        "reached": 245,
+        "engaged": 18
+      },
+      "daily": [
+        { "date": "2026-05-25", "new_followers": 6,  "total_followers": 96,  "reached": 802,  "engaged": 73 },
+        { "date": "2026-05-26", "new_followers": 8,  "total_followers": 102, "reached": 1243, "engaged": 88 },
+        { "date": "2026-05-27", "new_followers": 7,  "total_followers": 110, "reached": 1020, "engaged": 98 },
+        { "date": "2026-05-28", "new_followers": 2,  "total_followers": 117, "reached": 154,  "engaged": 13 },
+        { "date": "2026-05-29", "new_followers": 7,  "total_followers": 119, "reached": 764,  "engaged": 46 },
+        { "date": "2026-05-30", "new_followers": 2,  "total_followers": 126, "reached": 259,  "engaged": 20 },
+        { "date": "2026-05-31", "new_followers": 6,  "total_followers": 128, "reached": 245,  "engaged": 18 }
+      ]
     }
   }
 }

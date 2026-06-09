@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-09T04:38:06.255Z",
+  "generated": "2026-06-09T04:52:58.218Z",
   "goals": {
     "quarter": "Q2",
     "deadline": "2026-06-30",
@@ -320,15 +320,188 @@
   ],
   "audience": {
     "ig": {
-      "age_gender": {},
-      "target_25_44_pct": 0,
-      "top_countries": [],
-      "top_cities": []
+      "age_gender": {
+        "18-24": {
+          "women": 0.023,
+          "men": 0.017
+        },
+        "25-34": {
+          "women": 0.231,
+          "men": 0.127
+        },
+        "35-44": {
+          "women": 0.23399999999999999,
+          "men": 0.11599999999999999
+        },
+        "45-54": {
+          "women": 0.091,
+          "men": 0.046
+        },
+        "55-64": {
+          "women": 0.04,
+          "men": 0.036000000000000004
+        },
+        "65+": {
+          "women": 0.03,
+          "men": 0.009000000000000001
+        }
+      },
+      "target_25_44_pct": 0.708,
+      "top_countries": [
+        {
+          "name": "United States",
+          "pct": 0.809
+        },
+        {
+          "name": "Brazil",
+          "pct": 0.024
+        },
+        {
+          "name": "Canada",
+          "pct": 0.017
+        },
+        {
+          "name": "Mexico",
+          "pct": 0.013999999999999999
+        },
+        {
+          "name": "India",
+          "pct": 0.013999999999999999
+        },
+        {
+          "name": "Germany",
+          "pct": 0.013999999999999999
+        },
+        {
+          "name": "United Kingdom",
+          "pct": 0.011000000000000001
+        },
+        {
+          "name": "Costa Rica",
+          "pct": 0.008
+        },
+        {
+          "name": "Australia",
+          "pct": 0.006
+        },
+        {
+          "name": "United Arab Emirates",
+          "pct": 0.006
+        }
+      ],
+      "top_cities": [
+        {
+          "name": "College, AK",
+          "pct": 0.08900000000000001
+        },
+        {
+          "name": "Anchorage, AK",
+          "pct": 0.071
+        },
+        {
+          "name": "North Pole, AK",
+          "pct": 0.021
+        },
+        {
+          "name": "Palmer, AK",
+          "pct": 0.02
+        },
+        {
+          "name": "Wasilla, AK",
+          "pct": 0.013999999999999999
+        },
+        {
+          "name": "Los Angeles, CA",
+          "pct": 0.009000000000000001
+        },
+        {
+          "name": "Columbus, OH",
+          "pct": 0.009000000000000001
+        },
+        {
+          "name": "Seattle, WA",
+          "pct": 0.008
+        },
+        {
+          "name": "Toledo, OH",
+          "pct": 0.008
+        },
+        {
+          "name": "New York, NY",
+          "pct": 0.006
+        }
+      ]
     },
     "fb": {
-      "age_gender": {},
-      "target_25_44_pct": 0,
-      "top_countries": [],
+      "age_gender": {
+        "18-24": {
+          "men": 0,
+          "women": 0.015
+        },
+        "25-34": {
+          "men": 0.106,
+          "women": 0.045
+        },
+        "35-44": {
+          "men": 0.122,
+          "women": 0.098
+        },
+        "45-54": {
+          "men": 0.198,
+          "women": 0.083
+        },
+        "55-64": {
+          "men": 0.098,
+          "women": 0.083
+        },
+        "65+": {
+          "men": 0.076,
+          "women": 0.076
+        }
+      },
+      "target_25_44_pct": 0.371,
+      "top_countries": [
+        {
+          "name": "United States",
+          "pct": 0.605
+        },
+        {
+          "name": "South Africa",
+          "pct": 0.040999999999999995
+        },
+        {
+          "name": "Canada",
+          "pct": 0.027000000000000003
+        },
+        {
+          "name": "Germany",
+          "pct": 0.02
+        },
+        {
+          "name": "India",
+          "pct": 0.02
+        },
+        {
+          "name": "Bangladesh",
+          "pct": 0.013999999999999999
+        },
+        {
+          "name": "Philippines",
+          "pct": 0.013999999999999999
+        },
+        {
+          "name": "Sri Lanka",
+          "pct": 0.013999999999999999
+        },
+        {
+          "name": "Thailand",
+          "pct": 0.013999999999999999
+        },
+        {
+          "name": "United Kingdom",
+          "pct": 0.013999999999999999
+        }
+      ],
       "top_cities": []
     },
     "tt": {

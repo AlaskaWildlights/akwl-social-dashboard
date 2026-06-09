@@ -3,7 +3,7 @@
 // Pre-structured Google Sheets. One row per week. Week detected from CSV content.
 // ══════════════════════════════════════════════════════════════════════════════
 
-var SPREADSHEET_ID = "15QgxsImalEM_At3fOkZDag1G1C_6ueEy2OsL8Cw7GZQ";
+var SPREADSHEET_ID = "13t7k1P0NBj5xAtT-it9gKWmKsvvn1ZSCzTmvVotrizU";
 var FOLDER_ID      = "1G861p7ZUSpLhoFZjLDRPmUykN5QKXFEz";
 var PROCESSED_NAME = "Processed";
 var AKWL_EMAIL     = "info@alaskawildlights.com";

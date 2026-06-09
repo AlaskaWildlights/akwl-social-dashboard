@@ -1247,13 +1247,13 @@ function writeJSONToDrive(jsonStr) {
 
 // ─── buildAndSaveJSON ─────────────────────────────────────────────────────────
 // Reads JSON from Drive (source of truth for history), adds any NEW weeks from sheets,
-// merges fresh GA sources, and saves back to Drive.
+// and ALWAYS refreshes weeks that were just processed from CSVs this run.
 
 function buildAndSaveJSON(weekData) {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var cutoff = lastClosedSaturday();
 
-  // Read existing JSON from Drive — this is the historical source of truth
+  // Read existing JSON from Drive — historical source of truth
   var existing = readJSONFromDrive();
   var existingWeeks = {}; // weekISO → week object
   var weeks = [];
@@ -1262,10 +1262,10 @@ function buildAndSaveJSON(weekData) {
     existing.weeks.forEach(function(w) {
       existingWeeks[w.week_iso] = w;
     });
-    weeks = existing.weeks.slice(); // Start with all existing weeks
+    weeks = existing.weeks.slice();
   }
 
-  // Read sheets once (only for weeks not yet in JSON)
+  // Read sheets (needed for new weeks AND for weeks just processed this run)
   function sheetRows(name, firstDataRow) {
     var ws = ss.getSheetByName(name);
     if (!ws || ws.getLastRow() < firstDataRow) return {};
@@ -1280,14 +1280,7 @@ function buildAndSaveJSON(weekData) {
   var ttRows = sheetRows("TikTok",    3);
   var gaRows = sheetRows("Analytics", 3);
 
-  // Check for NEW weeks (not in existing JSON) and add them from sheets
-  var newWeeksCount = 0;
-  WEEK_CALENDAR.forEach(function(wk) {
-    if (new Date(wk.end + "T23:59:59Z") > cutoff) return;
-    var weekISO = wk.iso;
-    if (existingWeeks[weekISO]) return; // Already have this week in JSON
-
-    newWeeksCount++;
+  function buildWeekObj(weekISO, wk) {
     var weekLabel = weekISOtoLabel(weekISO);
 
     var igRow = igRows[weekISO];
@@ -1319,20 +1312,41 @@ function buildAndSaveJSON(weekData) {
     } else {
       gaObj = { sessions:gaRow[2]||0, engaged_sessions:gaRow[3]||0, revenue:gaRow[5]||0, sources:[] };
     }
-
-    // GA sources: fresh CSV data from this run
     if (weekData && weekData[weekISO] && weekData[weekISO].ga && weekData[weekISO].ga.sources && weekData[weekISO].ga.sources.length) {
       gaObj.sources = weekData[weekISO].ga.sources;
     }
 
-    weeks.push({
-      week_iso: weekISO, week_label: weekLabel,
-      week_start: wk.start, week_end: wk.end,
-      ig: igObj, fb: fbObj, tt: ttObj, ga: gaObj
-    });
+    return { week_iso:weekISO, week_label:weekLabel, week_start:wk.start, week_end:wk.end,
+             ig:igObj, fb:fbObj, tt:ttObj, ga:gaObj };
+  }
+
+  var newWeeksCount = 0, updatedWeeksCount = 0;
+  WEEK_CALENDAR.forEach(function(wk) {
+    if (new Date(wk.end + "T23:59:59Z") > cutoff) return;
+    var weekISO = wk.iso;
+    var justProcessed = weekData && weekData[weekISO];
+
+    if (justProcessed) {
+      // Always refresh weeks that were just processed from fresh CSVs
+      var newObj = buildWeekObj(weekISO, wk);
+      if (existingWeeks[weekISO]) {
+        // Replace in-place in weeks array
+        for (var i = 0; i < weeks.length; i++) {
+          if (weeks[i].week_iso === weekISO) { weeks[i] = newObj; break; }
+        }
+        updatedWeeksCount++;
+      } else {
+        weeks.push(newObj);
+        newWeeksCount++;
+      }
+    } else if (!existingWeeks[weekISO]) {
+      // Brand new week not in JSON and not processed this run — read from sheet
+      weeks.push(buildWeekObj(weekISO, wk));
+      newWeeksCount++;
+    }
+    // else: week exists in JSON and wasn't processed this run → keep as-is
   });
 
-  // Sort weeks in case new ones were added out of order
   weeks.sort(function(a, b) { return (a.week_iso||"").localeCompare(b.week_iso||""); });
 
   var lastWeek = weeks.length ? weeks[weeks.length-1].week_iso : "—";
@@ -1346,7 +1360,7 @@ function buildAndSaveJSON(weekData) {
 
   var jsonStr = JSON.stringify(output, null, 2);
   writeJSONToDrive(jsonStr);
-  log("✅ JSON saved: " + weeks.length + " week(s) (" + newWeeksCount + " new), through " + lastWeek);
+  log("✅ JSON saved: " + weeks.length + " week(s) (" + newWeeksCount + " new, " + updatedWeeksCount + " updated), through " + lastWeek);
   return jsonStr;
 }
 

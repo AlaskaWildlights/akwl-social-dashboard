@@ -1048,7 +1048,7 @@ function processAllCSVs() {
     log("Cutoff (last closed Saturday): " + Utilities.formatDate(cutoff,"UTC","yyyy-MM-dd"));
 
     var result = processAllFiles(cutoff);
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
     Object.keys(result.weekData).sort().forEach(function(weekISO) {
       var data = result.weekData[weekISO];
@@ -1071,13 +1071,12 @@ function processAllCSVs() {
       writeAudienceTab(ss, igLatest, fbLatest, ttLatest);
     }
 
-    var missingReport   = checkMissingFiles(result.foundFiles);
-    var jsonStr         = buildJSON();
-    pushToGitHub(jsonStr);
+    var missingReport = checkMissingFiles(result.foundFiles);
+    var jsonStr       = buildAndSaveJSON(result.weekData);
     sendWeeklyEmail(jsonStr, missingReport, result.unidentifiable);
 
     var secs = Math.round((new Date()-t0)/1000);
-    SpreadsheetApp.getActiveSpreadsheet().toast("Done in " + secs + "s", "AKWL v7", 8);
+    ss.toast("Done in " + secs + "s", "AKWL v7", 8);
     log("✅ processAllCSVs complete in " + secs + "s");
   } catch(err) {
     log("❌ FATAL: " + err.message + "\n" + (err.stack||""));
@@ -1106,7 +1105,7 @@ function testFiles() {
     var week  = (route !== "unknown") ? (detectWeekFromContent(file, route) || "? (no date in content)") : "—";
     log((idx+1) + ". [" + route.toUpperCase() + "] [" + week + "] " + fname);
   });
-  SpreadsheetApp.getActiveSpreadsheet().toast(files.length + " file(s) found — see Apps Script Logs.", "Test Files", 10);
+  SpreadsheetApp.openById(SPREADSHEET_ID).toast(files.length + " file(s) found — see Apps Script Logs.", "Test Files", 10);
 }
 
 // ─── clearAll (archive inbox only — NEVER touches sheet data rows) ─────────────
@@ -1123,7 +1122,7 @@ function clearAll() {
     if (!isInsideFolder(f, procFolder)) { f.moveTo(archiveFolder); count++; }
   }
   log("Archived " + count + " inbox file(s) to " + archiveName);
-  SpreadsheetApp.getActiveSpreadsheet().toast("Archived " + count + " file(s).", "AKWL v7", 8);
+  SpreadsheetApp.openById(SPREADSHEET_ID).toast("Archived " + count + " file(s).", "AKWL v7", 8);
 }
 
 // Read audience data from the Audience tab for JSON output
@@ -1207,11 +1206,47 @@ function readAudienceTab(ss) {
   };
 }
 
-// ─── buildJSON ────────────────────────────────────────────────────────────────
+// ─── Drive JSON storage (cumulative history) ──────────────────────────────────
+var JSON_FILENAME = "AKWL_data.json";
 
-function buildJSON() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+function readJSONFromDrive() {
+  var folder = DriveApp.getFolderById(FOLDER_ID);
+  var files = folder.getFilesByName(JSON_FILENAME);
+  if (!files.hasNext()) { log("ℹ️ No existing " + JSON_FILENAME + " in Drive — starting fresh"); return null; }
+  try {
+    var obj = JSON.parse(files.next().getBlob().getDataAsString("UTF-8"));
+    log("✅ Loaded existing JSON from Drive (" + (obj.weeks||[]).length + " weeks)");
+    return obj;
+  } catch(e) { log("⚠️ Could not parse existing JSON: " + e.message); return null; }
+}
+
+function writeJSONToDrive(jsonStr) {
+  var folder = DriveApp.getFolderById(FOLDER_ID);
+  var files = folder.getFilesByName(JSON_FILENAME);
+  if (files.hasNext()) {
+    files.next().setContent(jsonStr);
+  } else {
+    folder.createFile(JSON_FILENAME, jsonStr, MimeType.PLAIN_TEXT);
+  }
+  log("✅ " + JSON_FILENAME + " saved to Drive");
+}
+
+// ─── buildAndSaveJSON ─────────────────────────────────────────────────────────
+// Builds cumulative JSON from sheets + Drive history + fresh GA sources,
+// saves it to Drive, and returns the JSON string.
+
+function buildAndSaveJSON(weekData) {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var cutoff = lastClosedSaturday();
+
+  // Load existing Drive JSON to preserve GA sources from prior runs
+  var existing = readJSONFromDrive();
+  var oldSources = {}; // weekISO → sources[]
+  if (existing && existing.weeks) {
+    existing.weeks.forEach(function(w) {
+      if (w.ga && w.ga.sources && w.ga.sources.length) oldSources[w.week_iso] = w.ga.sources;
+    });
+  }
 
   function sheetRows(name, firstDataRow) {
     var ws = ss.getSheetByName(name);
@@ -1231,124 +1266,68 @@ function buildJSON() {
   var weeks = [];
 
   WEEK_CALENDAR.forEach(function(wk) {
-    // Only emit weeks up to last closed Saturday
     if (new Date(wk.end + "T23:59:59Z") > cutoff) return;
 
     var weekISO   = wk.iso;
     var weekLabel = weekISOtoLabel(weekISO);
 
-    // Instagram
     var igRow = igRows[weekISO];
     var igObj = igRow
-      ? { reach:        igRow[3]||0,
-          views:        igRow[4]||0,
-          follows:      igRow[5]||0,
-          profile_visits: igRow[6]||0,
-          interactions: igRow[7]||0,
-          link_clicks:  igRow[8]||0,
-          total_followers: igRow[2]||0,
-          eng_rate:     typeof igRow[9]==="number" ? igRow[9] : 0 }
+      ? { reach:igRow[3]||0, views:igRow[4]||0, follows:igRow[5]||0,
+          profile_visits:igRow[6]||0, interactions:igRow[7]||0, link_clicks:igRow[8]||0,
+          total_followers:igRow[2]||0, eng_rate:typeof igRow[9]==="number"?igRow[9]:0 }
       : { missing:true, note:"Instagram file not submitted this week",
-          reach:0,views:0,follows:0,profile_visits:0,interactions:0,
-          link_clicks:0,total_followers:0,eng_rate:0 };
+          reach:0,views:0,follows:0,profile_visits:0,interactions:0,link_clicks:0,total_followers:0,eng_rate:0 };
 
-    // Facebook
     var fbRow = fbRows[weekISO];
     var fbObj = fbRow
-      ? { views:        fbRow[2]||0,
-          visits:       fbRow[3]||0,
-          viewers:      fbRow[4]||0,
-          follows:      fbRow[5]||0,
-          interactions: fbRow[6]||0,
-          link_clicks:  fbRow[7]||0 }
+      ? { views:fbRow[2]||0, visits:fbRow[3]||0, viewers:fbRow[4]||0,
+          follows:fbRow[5]||0, interactions:fbRow[6]||0, link_clicks:fbRow[7]||0 }
       : { missing:true, note:"Facebook file not submitted this week",
           views:0,visits:0,viewers:0,follows:0,interactions:0,link_clicks:0 };
 
-    // TikTok
     var ttRow = ttRows[weekISO];
     var ttObj = ttRow
-      ? { video_views:     ttRow[3]||0,
-          reached:         ttRow[4]||0,
-          new_followers:   ttRow[5]||0,
-          total_followers: ttRow[2]||0,
-          likes:           ttRow[6]||0,
-          comments:        ttRow[7]||0,
-          shares:          ttRow[8]||0 }
-      : { video_views:0,reached:0,new_followers:0,total_followers:0,
-          likes:0,comments:0,shares:0 };
+      ? { video_views:ttRow[3]||0, reached:ttRow[4]||0, new_followers:ttRow[5]||0,
+          total_followers:ttRow[2]||0, likes:ttRow[6]||0, comments:ttRow[7]||0, shares:ttRow[8]||0 }
+      : { video_views:0, reached:0, new_followers:0, total_followers:0, likes:0, comments:0, shares:0 };
 
-    // Google Analytics
     var gaRow = gaRows[weekISO];
     var gaObj;
     if (!gaRow || gaRow[2] === "—" || gaRow[2] === "" || gaRow[2] === undefined) {
       gaObj = { missing:true, note:"Google Analytics file not submitted this week",
                 sessions:0, engaged_sessions:0, revenue:0, sources:[] };
     } else {
-      gaObj = { sessions: gaRow[2]||0, engaged_sessions: gaRow[3]||0,
-                revenue: gaRow[5]||0, sources:[] };
+      gaObj = { sessions:gaRow[2]||0, engaged_sessions:gaRow[3]||0, revenue:gaRow[5]||0, sources:[] };
+    }
+
+    // GA sources: fresh data from this run takes priority, then Drive history
+    if (weekData && weekData[weekISO] && weekData[weekISO].ga && weekData[weekISO].ga.sources && weekData[weekISO].ga.sources.length) {
+      gaObj.sources = weekData[weekISO].ga.sources;
+    } else if (oldSources[weekISO]) {
+      gaObj.sources = oldSources[weekISO];
     }
 
     weeks.push({
-      week_iso:   weekISO,
-      week_label: weekLabel,
-      week_start: wk.start,
-      week_end:   wk.end,
+      week_iso: weekISO, week_label: weekLabel,
+      week_start: wk.start, week_end: wk.end,
       ig: igObj, fb: fbObj, tt: ttObj, ga: gaObj
     });
   });
 
+  var lastWeek = weeks.length ? weeks[weeks.length-1].week_iso : "—";
   var output = {
-    generated: new Date().toISOString(),
-    goals: goals,
-    weeks: weeks,
-    audience: readAudienceTab(ss)
+    generated:    new Date().toISOString(),
+    last_updated: lastWeek,
+    goals:        goals,
+    weeks:        weeks,
+    audience:     readAudienceTab(ss)
   };
 
   var jsonStr = JSON.stringify(output, null, 2);
-  log("✅ JSON built: " + weeks.length + " week(s), " + jsonStr.length + " chars");
+  writeJSONToDrive(jsonStr);
+  log("✅ JSON built: " + weeks.length + " week(s) through " + lastWeek + " (" + jsonStr.length + " chars)");
   return jsonStr;
-}
-
-// ─── GitHub push ───────────────────────────────────────────────────────────────
-
-function pushToGitHub(jsonStr) {
-  var props  = PropertiesService.getScriptProperties();
-  var token  = props.getProperty("GITHUB_TOKEN");
-  var branch = props.getProperty("GITHUB_BRANCH") || "main";
-  if (!token) { log("⚠️ GITHUB_TOKEN not set in Script Properties — skipping push"); return; }
-
-  var owner = "alaskawildlights", repo = "akwl-social-dashboard", path = "data.json";
-  var apiBase = "https://api.github.com/repos/"+owner+"/"+repo+"/contents/"+path;
-  var sha = null;
-
-  try {
-    var getResp = UrlFetchApp.fetch(apiBase+"?ref="+branch, {
-      method:"get",
-      headers:{Authorization:"token "+token, Accept:"application/vnd.github.v3+json"},
-      muteHttpExceptions:true
-    });
-    if (getResp.getResponseCode() === 200) sha = JSON.parse(getResp.getContentText()).sha;
-  } catch(e) { log("⚠️ SHA fetch: "+e.message); }
-
-  var body = {
-    message: "data.json update — "+Utilities.formatDate(new Date(),"America/Anchorage","MMM dd, yyyy"),
-    content: Utilities.base64Encode(jsonStr),
-    branch:  branch
-  };
-  if (sha) body.sha = sha;
-
-  try {
-    var putResp = UrlFetchApp.fetch(apiBase, {
-      method:"put",
-      headers:{Authorization:"token "+token, Accept:"application/vnd.github.v3+json",
-               "Content-Type":"application/json"},
-      payload: JSON.stringify(body),
-      muteHttpExceptions:true
-    });
-    var code = putResp.getResponseCode();
-    if (code===200||code===201) log("✅ GitHub push OK ("+code+")");
-    else log("⚠️ GitHub push failed ("+code+"): "+putResp.getContentText().substring(0,300));
-  } catch(e) { log("⚠️ GitHub push error: "+e.message); }
 }
 
 // ─── Weekly email (Rule 3 — to info@alaskawildlights.com ONLY) ────────────────
@@ -1363,79 +1342,180 @@ function sendWeeklyEmail(jsonStr, missingReport, unidentifiable) {
   var ig = wk.ig||{}, fb = wk.fb||{}, tt = wk.tt||{}, ga = wk.ga||{};
 
   function n(v){ return (Math.round(v)||0).toLocaleString(); }
-  function pct(v){ return (parseFloat(v)*100).toFixed(2)+"%"; }
-
-  var body = "📅 Week: "+wk.week_label+" ("+wk.week_iso+")\n";
-  body += "━━━━━━━━━━━━━━━━━━━━━━━━\n\n";
-
-  body += "📸 INSTAGRAM\n";
-  if (ig.missing) { body += "• ⚠️ No file submitted\n"; }
-  else {
-    body += "• Reach: "+n(ig.reach)+"\n";
-    body += "• Views: "+n(ig.views)+"\n";
-    body += "• New Follows: "+n(ig.follows)+"\n";
-    body += "• Total Followers: "+n(ig.total_followers)+"\n";
-    body += "• Eng Rate: "+pct(ig.eng_rate)+"\n";
+  function engPct(v) {
+    var f = parseFloat(v)||0;
+    // stored as decimal (0.053); convert to display %
+    return (f < 1 ? (f*100) : f).toFixed(2) + "%";
   }
 
-  body += "\n📘 FACEBOOK\n";
-  if (fb.missing) { body += "• ⚠️ No file submitted\n"; }
-  else {
-    body += "• Views: "+n(fb.views)+"\n";
-    body += "• Viewers: "+n(fb.viewers)+"\n";
-    body += "• Visits: "+n(fb.visits)+"\n";
-    body += "• Follows: "+n(fb.follows)+"\n";
+  var C = {
+    bg:    "#f5f5f5",
+    card:  "#ffffff",
+    ig:    "#e1306c",
+    fb:    "#1877f2",
+    tt:    "#010101",
+    ga:    "#4285f4",
+    warn:  "#e8590c",
+    muted: "#888888",
+    text:  "#222222"
+  };
+
+  function card(color, emoji, title, rows) {
+    var inner = rows.map(function(r){
+      return '<tr>'
+        + '<td style="padding:4px 12px 4px 0;color:'+C.muted+';font-size:13px;">'+r[0]+'</td>'
+        + '<td style="padding:4px 0;font-size:13px;font-weight:600;color:'+C.text+';">'+r[1]+'</td>'
+        + '</tr>';
+    }).join("");
+    return '<div style="background:'+C.card+';border-radius:10px;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08);">'
+      + '<div style="background:'+color+';padding:10px 16px;">'
+      + '<span style="color:#fff;font-size:15px;font-weight:700;">'+emoji+' '+title+'</span>'
+      + '</div>'
+      + '<div style="padding:12px 16px;">'
+      + '<table style="border-collapse:collapse;width:100%;">'+inner+'</table>'
+      + '</div></div>';
   }
 
-  body += "\n🎵 TIKTOK\n";
-  if (!tt.video_views && !tt.total_followers) { body += "• ⚠️ No file submitted\n"; }
-  else {
-    body += "• Video Views: "+n(tt.video_views)+"\n";
-    body += "• Total Followers: "+n(tt.total_followers)+"\n";
-    body += "• New Followers: "+n(tt.new_followers)+"\n";
+  function missingCard(color, emoji, title) {
+    return '<div style="background:'+C.card+';border-radius:10px;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08);">'
+      + '<div style="background:'+color+';padding:10px 16px;">'
+      + '<span style="color:#fff;font-size:15px;font-weight:700;">'+emoji+' '+title+'</span>'
+      + '</div>'
+      + '<div style="padding:12px 16px;color:'+C.warn+';font-size:13px;">⚠️ No file submitted this week</div>'
+      + '</div>';
   }
 
-  body += "\n📊 GOOGLE ANALYTICS\n";
-  if (ga.missing) { body += "• ⚠️ No file submitted\n"; }
-  else {
-    body += "• Sessions: "+n(ga.sessions)+"\n";
-    body += "• Engaged Sessions: "+n(ga.engaged_sessions)+"\n";
-    body += "• Revenue: $"+(ga.revenue||0).toFixed(2)+"\n";
-  }
+  var igCard = ig.missing
+    ? missingCard(C.ig, "📸", "Instagram")
+    : card(C.ig, "📸", "Instagram", [
+        ["Reach",           n(ig.reach)],
+        ["Views",           n(ig.views)],
+        ["New Follows",     n(ig.follows)],
+        ["Total Followers", n(ig.total_followers)],
+        ["Engagement Rate", engPct(ig.eng_rate)]
+      ]);
 
-  var hasMissing = Object.keys(missingReport||{}).length>0 || (unidentifiable||[]).length>0;
+  var fbCard = fb.missing
+    ? missingCard(C.fb, "📘", "Facebook")
+    : card(C.fb, "📘", "Facebook", [
+        ["Views",   n(fb.views)],
+        ["Viewers", n(fb.viewers)],
+        ["Visits",  n(fb.visits)],
+        ["Follows", n(fb.follows)]
+      ]);
+
+  var ttMissing = !tt.video_views && !tt.total_followers;
+  var ttCard = ttMissing
+    ? missingCard(C.tt, "🎵", "TikTok")
+    : card(C.tt, "🎵", "TikTok", [
+        ["Video Views",     n(tt.video_views)],
+        ["Reached",         n(tt.reached)],
+        ["New Followers",   n(tt.new_followers)],
+        ["Total Followers", n(tt.total_followers)]
+      ]);
+
+  var gaCard = ga.missing
+    ? missingCard(C.ga, "📊", "Google Analytics")
+    : card(C.ga, "📊", "Google Analytics", [
+        ["Sessions",         n(ga.sessions)],
+        ["Engaged Sessions", n(ga.engaged_sessions)],
+        ["Revenue",          "$"+(ga.revenue||0).toFixed(2)]
+      ]);
+
+  // Warnings block
+  var hasMissing = Object.keys(missingReport||{}).length > 0 || (unidentifiable||[]).length > 0;
+  var warnBlock = "";
   if (hasMissing) {
-    body += "\n━━━━━━━━━━━━━━━━━━━━━━━━\n⚠️ MISSING / UNIDENTIFIABLE FILES\n\n";
+    var warnRows = [];
     Object.keys(missingReport||{}).forEach(function(w) {
       (missingReport[w]||[]).forEach(function(k) {
-        body += "• ⚠️ Missing: "+k+" ("+w+") — document not available\n";
+        warnRows.push('<li style="margin:4px 0;"><b>'+w+'</b> — missing: <code>'+k+'</code></li>');
       });
     });
     (unidentifiable||[]).forEach(function(fname) {
-      body += "• ❌ UNIDENTIFIABLE — cannot determine week from content: "+fname+"\n";
+      warnRows.push('<li style="margin:4px 0;">❌ Unidentifiable file: <code>'+fname+'</code></li>');
     });
+    warnBlock = '<div style="background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:14px 18px;margin-bottom:20px;">'
+      + '<p style="margin:0 0 8px;font-weight:700;color:#856404;">⚠️ Missing / Unidentifiable Files</p>'
+      + '<ul style="margin:0;padding-left:20px;color:#333;font-size:13px;">'+warnRows.join("")+'</ul>'
+      + '</div>';
   }
 
-  body += "\n━━━━━━━━━━━━━━━━━━━━━━━━\nAlaska Wild Lights · alaskawildlights.com\n";
+  // All-weeks summary table
+  var tableRows = parsed.weeks.map(function(w) {
+    var isMissing = w.ig && w.ig.missing;
+    var er = (w.ig && !isMissing) ? engPct(w.ig.eng_rate) : "—";
+    var reach = (w.ig && !isMissing) ? n(w.ig.reach) : "—";
+    var ttFol = (w.tt && (w.tt.total_followers||0)) ? n(w.tt.total_followers) : "—";
+    var rev   = (w.ga && !w.ga.missing && w.ga.revenue) ? "$"+w.ga.revenue.toFixed(0) : "—";
+    var isLast = w.week_iso === wk.week_iso;
+    var rowBg = isLast ? "#fff9e6" : "transparent";
+    return '<tr style="background:'+rowBg+';">'
+      + '<td style="padding:5px 10px;font-weight:'+(isLast?"700":"400")+';">'+w.week_label+'</td>'
+      + '<td style="padding:5px 10px;text-align:right;">'+reach+'</td>'
+      + '<td style="padding:5px 10px;text-align:right;">'+er+'</td>'
+      + '<td style="padding:5px 10px;text-align:right;">'+ttFol+'</td>'
+      + '<td style="padding:5px 10px;text-align:right;">'+rev+'</td>'
+      + '</tr>';
+  }).join("");
 
-  var subject = "AKWL Weekly Report — "+wk.week_label;
+  var summaryTable = '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px;">'
+    + '<thead><tr style="background:#eee;">'
+    + '<th style="padding:6px 10px;text-align:left;">Week</th>'
+    + '<th style="padding:6px 10px;text-align:right;">IG Reach</th>'
+    + '<th style="padding:6px 10px;text-align:right;">IG Eng%</th>'
+    + '<th style="padding:6px 10px;text-align:right;">TT Fol</th>'
+    + '<th style="padding:6px 10px;text-align:right;">Revenue</th>'
+    + '</tr></thead><tbody>'+tableRows+'</tbody></table>';
+
+  var html = '<!DOCTYPE html><html><body style="margin:0;padding:0;font-family:Arial,sans-serif;background:'+C.bg+';">'
+    + '<div style="max-width:600px;margin:0 auto;padding:24px 16px;">'
+    + '<div style="text-align:center;margin-bottom:24px;">'
+    + '<h1 style="margin:0;font-size:22px;color:#333;">Alaska Wild Lights</h1>'
+    + '<p style="margin:4px 0 0;color:'+C.muted+';font-size:14px;">Weekly Social Report · '+wk.week_label+' ('+wk.week_iso+')</p>'
+    + '</div>'
+    + warnBlock
+    + igCard + fbCard + ttCard + gaCard
+    + '<details style="margin-bottom:20px;">'
+    + '<summary style="cursor:pointer;font-size:13px;color:'+C.muted+';padding:8px 0;">All weeks summary</summary>'
+    + '<div style="margin-top:10px;overflow-x:auto;">'+summaryTable+'</div>'
+    + '</details>'
+    + '<p style="text-align:center;font-size:11px;color:'+C.muted+';margin-top:8px;">'
+    + 'AKWL_data.json attached · <a href="https://alaskawildlights.com" style="color:'+C.muted+';">alaskawildlights.com</a>'
+    + '</p></div></body></html>';
+
+  var plainFallback = "AKWL Weekly Report — " + wk.week_label + "\n\n"
+    + "Instagram — Reach: " + n(ig.reach) + " | Eng: " + engPct(ig.eng_rate) + " | Followers: " + n(ig.total_followers) + "\n"
+    + "Facebook  — Views: " + n(fb.views) + " | Follows: " + n(fb.follows) + "\n"
+    + "TikTok    — Views: " + n(tt.video_views) + " | Followers: " + n(tt.total_followers) + "\n"
+    + "Analytics — Sessions: " + n(ga.sessions) + " | Revenue: $" + (ga.revenue||0).toFixed(2) + "\n\n"
+    + "Full data in attached AKWL_data.json";
+
+  var subject = "AKWL Weekly Report — " + wk.week_label;
   try {
-    GmailApp.sendEmail(AKWL_EMAIL, subject, body, {
-      attachments: [Utilities.newBlob(jsonStr,"application/json","data.json")]
+    GmailApp.sendEmail(AKWL_EMAIL, subject, plainFallback, {
+      htmlBody:    html,
+      attachments: [Utilities.newBlob(jsonStr, "application/json", "AKWL_data.json")]
     });
-    log("✅ Email sent to "+AKWL_EMAIL);
+    log("✅ Email sent to " + AKWL_EMAIL);
   } catch(e) {
-    log("⚠️ Email send failed: "+e.message);
+    log("⚠️ Email send failed: " + e.message);
   }
 }
 
 // ─── Menu ──────────────────────────────────────────────────────────────────────
 
 function onOpen() {
-  SpreadsheetApp.getActiveSpreadsheet().addMenu("AKWL Tracker", [
+  SpreadsheetApp.openById(SPREADSHEET_ID).addMenu("AKWL Tracker", [
     {name:"▶ Run Now (process CSVs)", functionName:"processAllCSVs"},
-    {name:"📋 Build JSON only",       functionName:"buildJSON"},
+    {name:"📋 Build & save JSON",     functionName:"buildJSONOnly"},
     {name:"🔍 Test file scan",        functionName:"testFiles"},
     {name:"🗃 Archive inbox files",   functionName:"clearAll"}
   ]);
+}
+
+function buildJSONOnly() {
+  var jsonStr = buildAndSaveJSON({});
+  SpreadsheetApp.openById(SPREADSHEET_ID).toast(
+    "JSON saved to Drive (" + jsonStr.length + " chars)", "AKWL v7", 8);
 }

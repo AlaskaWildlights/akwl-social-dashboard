@@ -321,10 +321,24 @@ function detectWeekFromContent(file, route) {
     }
 
   } else if (route === "ga") {
+    // Try start date, then end date from header comments
     var lines = raw.replace(/\r/g,"").split("\n");
     for (var i = 0; i < lines.length; i++) {
-      var m = lines[i].match(/start\s*date[:\s]+(\d{4})(\d{2})(\d{2})/i);
-      if (m) { dateStr = m[1]+"-"+m[2]+"-"+m[3]; break; }
+      var ms = lines[i].match(/start\s*date[:\s]+(\d{4})(\d{2})(\d{2})/i);
+      if (ms) { var d = ms[1]+"-"+ms[2]+"-"+ms[3]; if (dateStrToWeekISO(d)) { dateStr = d; break; } }
+      var me = lines[i].match(/end\s*date[:\s]+(\d{4})(\d{2})(\d{2})/i);
+      if (me) { var d = me[1]+"-"+me[2]+"-"+me[3]; if (dateStrToWeekISO(d)) { dateStr = d; break; } }
+    }
+    // Fall back to W## in filename (GA exports often span wider date ranges)
+    if (!dateStr) {
+      var fnMatch = file.getName().match(/(?:^|[^A-Za-z0-9])(W\d{2})(?:[^A-Za-z0-9]|$)/i);
+      if (fnMatch) {
+        var wkISO = fnMatch[1].toUpperCase();
+        if (weekISOtoDates(wkISO)) {
+          log("  ↳ GA date range outside calendar — using filename week " + wkISO);
+          return wkISO;
+        }
+      }
     }
 
   } else if (route === "ig_audience" || route === "fb_audience") {

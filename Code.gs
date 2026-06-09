@@ -316,11 +316,23 @@ function detectWeekFromContent(file, route) {
     }
 
   } else if (route === "ig_audience" || route === "fb_audience") {
-    // Audience files may not have a "Date" column — scan the whole file for any YYYY-MM-DD
+    // Audience files are lifetime/cumulative snapshots — no date in content by design.
+    // Scan content first just in case, then fall back to W## in the filename.
     var allLines = raw.replace(/\r/g,"").split("\n");
     for (var i = 0; i < allLines.length; i++) {
       var m = allLines[i].match(/(\d{4}-\d{2}-\d{2})/);
       if (m && dateStrToWeekISO(m[1])) { dateStr = m[1]; break; }
+    }
+    if (!dateStr) {
+      // Lifetime data — use W## from filename to know which submission week to archive under
+      var fnMatch = file.getName().match(/\b(W\d{2})\b/i);
+      if (fnMatch) {
+        var wkISO = fnMatch[1].toUpperCase();
+        if (weekISOtoDates(wkISO)) {
+          log("  ↳ Audience file (lifetime data) — archiving under submission week " + wkISO);
+          return wkISO;
+        }
+      }
     }
   }
 

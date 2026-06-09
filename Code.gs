@@ -1232,22 +1232,26 @@ function writeJSONToDrive(jsonStr) {
 }
 
 // ─── buildAndSaveJSON ─────────────────────────────────────────────────────────
-// Builds cumulative JSON from sheets + Drive history + fresh GA sources,
-// saves it to Drive, and returns the JSON string.
+// Reads JSON from Drive (source of truth for history), adds any NEW weeks from sheets,
+// merges fresh GA sources, and saves back to Drive.
 
 function buildAndSaveJSON(weekData) {
   var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   var cutoff = lastClosedSaturday();
 
-  // Load existing Drive JSON to preserve GA sources from prior runs
+  // Read existing JSON from Drive — this is the historical source of truth
   var existing = readJSONFromDrive();
-  var oldSources = {}; // weekISO → sources[]
+  var existingWeeks = {}; // weekISO → week object
+  var weeks = [];
+
   if (existing && existing.weeks) {
     existing.weeks.forEach(function(w) {
-      if (w.ga && w.ga.sources && w.ga.sources.length) oldSources[w.week_iso] = w.ga.sources;
+      existingWeeks[w.week_iso] = w;
     });
+    weeks = existing.weeks.slice(); // Start with all existing weeks
   }
 
+  // Read sheets once (only for weeks not yet in JSON)
   function sheetRows(name, firstDataRow) {
     var ws = ss.getSheetByName(name);
     if (!ws || ws.getLastRow() < firstDataRow) return {};
@@ -1262,13 +1266,14 @@ function buildAndSaveJSON(weekData) {
   var ttRows = sheetRows("TikTok",    3);
   var gaRows = sheetRows("Analytics", 3);
 
-  var goals = {quarter:"Q2",deadline:"2026-06-30",ig_followers:1500,ig_eng_rate:6,tt_followers:100};
-  var weeks = [];
-
+  // Check for NEW weeks (not in existing JSON) and add them from sheets
+  var newWeeksCount = 0;
   WEEK_CALENDAR.forEach(function(wk) {
     if (new Date(wk.end + "T23:59:59Z") > cutoff) return;
+    var weekISO = wk.iso;
+    if (existingWeeks[weekISO]) return; // Already have this week in JSON
 
-    var weekISO   = wk.iso;
+    newWeeksCount++;
     var weekLabel = weekISOtoLabel(weekISO);
 
     var igRow = igRows[weekISO];
@@ -1301,11 +1306,9 @@ function buildAndSaveJSON(weekData) {
       gaObj = { sessions:gaRow[2]||0, engaged_sessions:gaRow[3]||0, revenue:gaRow[5]||0, sources:[] };
     }
 
-    // GA sources: fresh data from this run takes priority, then Drive history
+    // GA sources: fresh CSV data from this run
     if (weekData && weekData[weekISO] && weekData[weekISO].ga && weekData[weekISO].ga.sources && weekData[weekISO].ga.sources.length) {
       gaObj.sources = weekData[weekISO].ga.sources;
-    } else if (oldSources[weekISO]) {
-      gaObj.sources = oldSources[weekISO];
     }
 
     weeks.push({
@@ -1315,18 +1318,21 @@ function buildAndSaveJSON(weekData) {
     });
   });
 
+  // Sort weeks in case new ones were added out of order
+  weeks.sort(function(a, b) { return (a.week_iso||"").localeCompare(b.week_iso||""); });
+
   var lastWeek = weeks.length ? weeks[weeks.length-1].week_iso : "—";
   var output = {
     generated:    new Date().toISOString(),
     last_updated: lastWeek,
-    goals:        goals,
+    goals:        {quarter:"Q2",deadline:"2026-06-30",ig_followers:1500,ig_eng_rate:6,tt_followers:100},
     weeks:        weeks,
     audience:     readAudienceTab(ss)
   };
 
   var jsonStr = JSON.stringify(output, null, 2);
   writeJSONToDrive(jsonStr);
-  log("✅ JSON built: " + weeks.length + " week(s) through " + lastWeek + " (" + jsonStr.length + " chars)");
+  log("✅ JSON saved: " + weeks.length + " week(s) (" + newWeeksCount + " new), through " + lastWeek);
   return jsonStr;
 }
 

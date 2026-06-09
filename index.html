@@ -512,12 +512,69 @@ function showToast(msg, type) {
   setTimeout(() => { t.className = 'upload-toast'; }, 3500);
 }
 
+// Normalize decimal pcts (0.0131) → percentage form (1.31) that the dashboard expects.
+// Detection: if max eng_rate < 0.5 or max country pct < 1.0 → values are decimal format.
+function normalizePcts(data) {
+  const engRates = data.weeks.filter(w => w.ig && w.ig.eng_rate).map(w => w.ig.eng_rate);
+  if (engRates.length && Math.max(...engRates) < 0.5) {
+    data.weeks.forEach(w => {
+      if (w.ig && typeof w.ig.eng_rate === 'number')
+        w.ig.eng_rate = Math.round(w.ig.eng_rate * 10000) / 100;
+    });
+  }
+  if (data.audience) {
+    ['ig','fb'].forEach(p => {
+      const aud = data.audience[p]; if (!aud) return;
+      const cPcts = [...(aud.top_countries||[]),...(aud.top_cities||[])].map(x=>x.pct);
+      const pctDecimal = cPcts.length && Math.max(...cPcts) < 1.0;
+      if (pctDecimal) {
+        if (typeof aud.target_25_44_pct === 'number')
+          aud.target_25_44_pct = Math.round(aud.target_25_44_pct * 10000) / 100;
+        (aud.top_countries||[]).forEach(c => { c.pct = Math.round(c.pct*10000)/100; });
+        (aud.top_cities||[]).forEach(c => { c.pct = Math.round(c.pct*10000)/100; });
+        if (aud.age_gender) Object.values(aud.age_gender).forEach(v => {
+          if (typeof v.women === 'number' && v.women < 1) v.women = Math.round(v.women*10000)/100;
+          if (typeof v.men   === 'number' && v.men   < 1) v.men   = Math.round(v.men*10000)/100;
+        });
+      }
+    });
+  }
+  return data;
+}
+
+// Pre-fetch the clean page source so downloadDeployHTML can replace INITIAL_DATA.
+let _srcHtml = null;
+(async function() {
+  try {
+    if (location.protocol === 'file:') return;
+    const r = await fetch(location.href);
+    _srcHtml = await r.text();
+  } catch(e) {}
+})();
+
+// Build and download a self-contained index.html with newData baked in.
+async function downloadDeployHTML(newData) {
+  let html = _srcHtml;
+  if (!html) { showToast('⚠ Open from Netlify URL to download deploy file', 'err'); return; }
+  const marker = 'const INITIAL_DATA = ';
+  const s = html.indexOf(marker);
+  const e = html.indexOf(';\n', s + marker.length);
+  if (s === -1 || e === -1) { showToast('⚠ Could not generate deploy HTML', 'err'); return; }
+  html = html.slice(0, s) + marker + JSON.stringify(newData) + html.slice(e);
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'index.html';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
 function loadData(data) {
   if (!data.weeks || !Array.isArray(data.weeks) || data.weeks.length === 0) {
     showToast('Invalid data.json — missing weeks array', 'err');
     return;
   }
-  DATA = data;
+  DATA = normalizePcts(data);
   // Destroy all existing charts before re-init
   Object.keys(CHARTS).forEach(k => { if (CHARTS[k]) { CHARTS[k].destroy(); CHARTS[k] = null; } });
   initDashboard();
@@ -536,7 +593,8 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const data = JSON.parse(ev.target.result);
         loadData(data);
-        showToast('✓ Loaded ' + file.name + ' (' + data.weeks.length + ' weeks)', 'ok');
+        downloadDeployHTML(DATA); // DATA is already normalized at this point
+        showToast('✓ ' + DATA.weeks.length + ' weeks · downloading index.html for Netlify…', 'ok');
       } catch(err) {
         showToast('JSON parse error: ' + err.message, 'err');
       }

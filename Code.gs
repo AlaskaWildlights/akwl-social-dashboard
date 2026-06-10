@@ -321,24 +321,24 @@ function detectWeekFromContent(file, route) {
     }
 
   } else if (route === "ga") {
-    // Try start date, then end date from header comments
+    // GA exports cover wide date ranges (e.g. Apr 13–May 10 for a W19 weekly export).
+    // The end date can fall in the WRONG week, so filename W## is the reliable identifier.
+    // Check filename FIRST; fall back to content dates only when filename has no W##.
+    var fnMatch = file.getName().match(/(?:^|[^A-Za-z0-9])(W\d{2})(?:[^A-Za-z0-9]|$)/i);
+    if (fnMatch) {
+      var wkISO = fnMatch[1].toUpperCase();
+      if (weekISOtoDates(wkISO)) {
+        log("  ↳ GA: filename identifies week " + wkISO);
+        return wkISO;
+      }
+    }
+    // Fallback: try start date then end date from header comments
     var lines = raw.replace(/\r/g,"").split("\n");
     for (var i = 0; i < lines.length; i++) {
       var ms = lines[i].match(/start\s*date[:\s]+(\d{4})(\d{2})(\d{2})/i);
       if (ms) { var d = ms[1]+"-"+ms[2]+"-"+ms[3]; if (dateStrToWeekISO(d)) { dateStr = d; break; } }
       var me = lines[i].match(/end\s*date[:\s]+(\d{4})(\d{2})(\d{2})/i);
       if (me) { var d = me[1]+"-"+me[2]+"-"+me[3]; if (dateStrToWeekISO(d)) { dateStr = d; break; } }
-    }
-    // Fall back to W## in filename (GA exports often span wider date ranges)
-    if (!dateStr) {
-      var fnMatch = file.getName().match(/(?:^|[^A-Za-z0-9])(W\d{2})(?:[^A-Za-z0-9]|$)/i);
-      if (fnMatch) {
-        var wkISO = fnMatch[1].toUpperCase();
-        if (weekISOtoDates(wkISO)) {
-          log("  ↳ GA date range outside calendar — using filename week " + wkISO);
-          return wkISO;
-        }
-      }
     }
 
   } else if (route === "ig_audience" || route === "fb_audience") {
@@ -1541,11 +1541,12 @@ function sendWeeklyEmail(jsonStr, missingReport, unidentifiable) {
 
 function onOpen() {
   SpreadsheetApp.openById(SPREADSHEET_ID).addMenu("AKWL Tracker", [
-    {name:"▶ Run Now (process CSVs)", functionName:"processAllCSVs"},
-    {name:"📋 Build & save JSON",     functionName:"buildJSONOnly"},
-    {name:"📊 Fix Dashboard formulas",functionName:"setDashboardFormulas"},
-    {name:"🔍 Test file scan",        functionName:"testFiles"},
-    {name:"🗃 Archive inbox files",   functionName:"clearAll"}
+    {name:"▶ Run Now (process CSVs)",    functionName:"processAllCSVs"},
+    {name:"🔄 Re-process all (fix data)",functionName:"reprocessAllProcessed"},
+    {name:"📋 Build & save JSON",        functionName:"buildJSONOnly"},
+    {name:"📊 Fix Dashboard formulas",   functionName:"setDashboardFormulas"},
+    {name:"🔍 Test file scan",           functionName:"testFiles"},
+    {name:"🗃 Archive inbox files",      functionName:"clearAll"}
   ]);
 }
 
@@ -1553,6 +1554,26 @@ function buildJSONOnly() {
   var jsonStr = buildAndSaveJSON({});
   SpreadsheetApp.openById(SPREADSHEET_ID).toast(
     "JSON saved to Drive (" + jsonStr.length + " chars)", "AKWL v7", 8);
+}
+
+// Move all files from /Processed/W##/ back to inbox, then re-process everything.
+// Use this to correct sheet data after a detection bug is fixed.
+function reprocessAllProcessed() {
+  var folder = DriveApp.getFolderById(FOLDER_ID);
+  var procFolder = getOrCreateSubfolder(folder, PROCESSED_NAME);
+  var moved = 0;
+  var wkFolders = procFolder.getFolders();
+  while (wkFolders.hasNext()) {
+    var wf = wkFolders.next();
+    if (/^W\d{2}$/i.test(wf.getName())) {
+      var csvIter = wf.getFilesByType(MimeType.CSV);
+      while (csvIter.hasNext()) { csvIter.next().moveTo(folder); moved++; }
+    }
+  }
+  log("↩ Restored " + moved + " file(s) to inbox — running processAllCSVs...");
+  SpreadsheetApp.openById(SPREADSHEET_ID).toast(
+    "Restored " + moved + " file(s) to inbox — processing now...", "AKWL v7", 6);
+  processAllCSVs();
 }
 
 // ─── Set Dashboard Formulas ────────────────────────────────────────────────────

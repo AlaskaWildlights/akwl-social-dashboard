@@ -1543,6 +1543,7 @@ function onOpen() {
   SpreadsheetApp.openById(SPREADSHEET_ID).addMenu("AKWL Tracker", [
     {name:"▶ Run Now (process CSVs)", functionName:"processAllCSVs"},
     {name:"📋 Build & save JSON",     functionName:"buildJSONOnly"},
+    {name:"📊 Fix Dashboard formulas",functionName:"setDashboardFormulas"},
     {name:"🔍 Test file scan",        functionName:"testFiles"},
     {name:"🗃 Archive inbox files",   functionName:"clearAll"}
   ]);
@@ -1552,4 +1553,76 @@ function buildJSONOnly() {
   var jsonStr = buildAndSaveJSON({});
   SpreadsheetApp.openById(SPREADSHEET_ID).toast(
     "JSON saved to Drive (" + jsonStr.length + " chars)", "AKWL v7", 8);
+}
+
+// ─── Set Dashboard Formulas ────────────────────────────────────────────────────
+// Run once (or any time formulas break) to rebuild all Dashboard formula cells.
+
+function setDashboardFormulas() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ws = ss.getSheetByName("Dashboard");
+  if (!ws) { log("❌ Dashboard sheet not found"); return; }
+
+  function igLatest(col)  { return '=IFERROR(INDEX(Instagram!'  +col+'3:'+col+'9999,COUNTA(Instagram!A3:A9999)),"")'; }
+  function fbLatest(col)  { return '=IFERROR(INDEX(Facebook!'   +col+'3:'+col+'9999,COUNTA(Facebook!A3:A9999)),"")'; }
+  function ttLatest(col)  { return '=IFERROR(INDEX(TikTok!'     +col+'3:'+col+'9999,COUNTA(TikTok!A3:A9999)),"")'; }
+  function gaLatest(col)  { return '=IFERROR(INDEX(Analytics!'  +col+'3:'+col+'9999,COUNTA(Analytics!A3:A9999)),"")'; }
+
+  function igPrev(col) { return '=IFERROR(IF(COUNTA(Instagram!A3:A9999)<2,"",INDEX(Instagram!'+col+'3:'+col+'9999,COUNTA(Instagram!A3:A9999)-1)),"")'; }
+  function fbPrev(col) { return '=IFERROR(IF(COUNTA(Facebook!A3:A9999)<2,"",INDEX(Facebook!'  +col+'3:'+col+'9999,COUNTA(Facebook!A3:A9999)-1)),"")'; }
+  function ttPrev(col) { return '=IFERROR(IF(COUNTA(TikTok!A3:A9999)<2,"",INDEX(TikTok!'     +col+'3:'+col+'9999,COUNTA(TikTok!A3:A9999)-1)),"")'; }
+  function gaPrev(col) {
+    return '=IFERROR(IF(COUNTA(Analytics!A3:A9999)<2,"",IFERROR(LOOKUP(2,1/(Analytics!'
+      +col+'3:INDEX(Analytics!'+col+'3:'+col+'9999,COUNTA(Analytics!A3:A9999)-1)<>"—"),Analytics!'
+      +col+'3:INDEX(Analytics!'+col+'3:'+col+'9999,COUNTA(Analytics!A3:A9999)-1)),"")),"")';
+  }
+
+  function igSum(col) { return '=IFERROR(SUM(Instagram!'  +col+'3:'+col+'9999),0)'; }
+  function fbSum(col) { return '=IFERROR(SUM(Facebook!'   +col+'3:'+col+'9999),0)'; }
+  function ttSum(col) { return '=IFERROR(SUM(TikTok!'     +col+'3:'+col+'9999),0)'; }
+  function gaSum(col) { return '=IFERROR(SUMIF(Analytics!'+col+'3:'+col+'9999,"<>—"),0)'; }
+  function wow(r)     { return '=IFERROR(IF(OR(B'+r+'="",C'+r+'="",B'+r+'=0),"",C'+r+'/B'+r+'-1),"")'; }
+
+  // [row, prevFormula, latestFormula, wowFormula, seasonFormula]
+  var rows = [
+    // INSTAGRAM (rows 7-13)
+    [7,  igPrev("C"), igLatest("C"), wow(7),  igLatest("C")],   // Total Followers (cumulative)
+    [8,  igPrev("D"), igLatest("D"), wow(8),  igSum("D")],       // Reach
+    [9,  igPrev("E"), igLatest("E"), wow(9),  igSum("E")],       // Views
+    [10, igPrev("F"), igLatest("F"), wow(10), igSum("F")],       // Follows
+    [11, igPrev("H"), igLatest("H"), wow(11), igSum("H")],       // Interactions (col H, G=Profile Visits)
+    [12, igPrev("I"), igLatest("I"), wow(12), igSum("I")],       // Link Clicks
+    [13, igPrev("J"), igLatest("J"), wow(13), '=IFERROR(Instagram!J1,"")'], // Eng Rate
+
+    // FACEBOOK (rows 16-21)
+    [16, fbPrev("C"), fbLatest("C"), wow(16), fbSum("C")],  // Views
+    [17, fbPrev("D"), fbLatest("D"), wow(17), fbSum("D")],  // Visits
+    [18, fbPrev("E"), fbLatest("E"), wow(18), fbSum("E")],  // Viewers
+    [19, fbPrev("F"), fbLatest("F"), wow(19), fbSum("F")],  // Follows
+    [20, fbPrev("G"), fbLatest("G"), wow(20), fbSum("G")],  // Interactions
+    [21, fbPrev("H"), fbLatest("H"), wow(21), fbSum("H")],  // Link Clicks
+
+    // TIKTOK (rows 24-28)
+    [24, ttPrev("C"), ttLatest("C"), wow(24), ttLatest("C")],  // Total Followers (cumulative)
+    [25, ttPrev("D"), ttLatest("D"), wow(25), ttSum("D")],     // Video Views
+    [26, ttPrev("E"), ttLatest("E"), wow(26), ttSum("E")],     // Reached
+    [27, ttPrev("F"), ttLatest("F"), wow(27), ttSum("F")],     // New Followers
+    [28, ttPrev("G"), ttLatest("G"), wow(28), ttSum("G")],     // Likes
+
+    // ANALYTICS (rows 31-34) — may have "—" for missing weeks
+    [31, gaPrev("C"), gaLatest("C"), wow(31), gaSum("C")],   // Sessions
+    [32, gaPrev("D"), gaLatest("D"), wow(32), gaSum("D")],   // Engaged Sessions
+    [33, '=IFERROR(Analytics!E1,"")', '=IFERROR(Analytics!E1,"")', '', '=IFERROR(Analytics!E1,"")'], // Eng Rate
+    [34, gaPrev("F"), gaLatest("F"), wow(34), gaSum("F")]    // Revenue
+  ];
+
+  rows.forEach(function(r) {
+    ws.getRange(r[0], 2).setFormula(r[1]);
+    ws.getRange(r[0], 3).setFormula(r[2]);
+    if (r[3]) ws.getRange(r[0], 4).setFormula(r[3]);
+    ws.getRange(r[0], 5).setFormula(r[4]);
+  });
+
+  log("✅ Dashboard formulas set (" + rows.length + " rows)");
+  ss.toast("✅ Dashboard formulas updated", "AKWL v7", 6);
 }

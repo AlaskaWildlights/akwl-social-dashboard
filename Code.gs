@@ -87,8 +87,8 @@ function weekISOtoLabel(weekISO) {
   var e = new Date(wk.end   + "T12:00:00Z");
   var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   var sm = months[s.getUTCMonth()], em = months[e.getUTCMonth()];
-  if (sm === em) return sm + " " + s.getUTCDate() + "–" + e.getUTCDate();
-  return sm + " " + s.getUTCDate() + "–" + em + " " + e.getUTCDate();
+  if (sm === em) return sm + " " + s.getUTCDate() + "-" + e.getUTCDate();
+  return sm + " " + s.getUTCDate() + "-" + em + " " + e.getUTCDate();
 }
 
 // ─── Utilities ─────────────────────────────────────────────────────────────────
@@ -461,7 +461,61 @@ function parseTikTokOverview(file, weekISO) {
   return sums;
 }
 
-// Google Analytics — returns { sessions, engaged_sessions, revenue, sources[] } or null
+// TikTok Videos — returns top_videos array sorted by views DESC
+function parseTikTokVideos(file, weekISO) {
+  var raw = readFile(file);
+  var lines = raw.replace(/\r/g,"").replace(/﻿/g,"").split("\n")
+                 .filter(function(l){ return l.trim(); });
+  if (lines.length < 2) return [];
+
+  var headers = lines[0].split(",").map(function(h){ return h.trim().toLowerCase(); });
+  function hi(terms) {
+    for (var t = 0; t < terms.length; t++) {
+      for (var h = 0; h < headers.length; h++) {
+        if (headers[h].indexOf(terms[t]) > -1) return h;
+      }
+    }
+    return -1;
+  }
+  var titleIdx  = hi(["video title","title"]);
+  var urlIdx    = hi(["video link","link url","url"]);
+  var timeIdx   = hi(["post time","posted"]);
+  var viewsIdx  = hi(["video views","views"]);
+  var likesIdx  = hi(["likes"]);
+  var comIdx    = hi(["comments"]);
+  var sharesIdx = hi(["shares"]);
+  var favIdx    = hi(["favorites","saved"]);
+
+  var wk = weekISOtoDates(weekISO);
+  var videos = [];
+
+  for (var i = 1; i < lines.length; i++) {
+    var parts = parseCSVLine(lines[i]);
+    if (!parts.length) continue;
+    var posted = "";
+    if (timeIdx > -1 && parts[timeIdx]) {
+      var m = parts[timeIdx].trim().match(/^(\d{4})\/(\d{2})\/(\d{2})/);
+      if (m) posted = m[1]+"-"+m[2]+"-"+m[3];
+    }
+    // Only include videos within this week's date range
+    if (wk && posted && (posted < wk.start || posted > wk.end)) continue;
+    var views = viewsIdx > -1 ? (parseInt(parts[viewsIdx])||0) : 0;
+    if (!views) continue;
+    videos.push({
+      title:     titleIdx  > -1 ? (parts[titleIdx]||"").trim()    : "",
+      url:       urlIdx    > -1 ? (parts[urlIdx]||"").trim()      : "",
+      posted:    posted,
+      views:     views,
+      likes:     likesIdx  > -1 ? (parseInt(parts[likesIdx])||0)  : 0,
+      comments:  comIdx    > -1 ? (parseInt(parts[comIdx])||0)    : 0,
+      shares:    sharesIdx > -1 ? (parseInt(parts[sharesIdx])||0) : 0,
+      favorites: favIdx    > -1 ? (parseInt(parts[favIdx])||0)    : 0
+    });
+  }
+  return videos.sort(function(a,b){ return b.views - a.views; });
+}
+
+// Google Analytics — returns { sessions, engaged_sessions, eng_rate, avg_eng_time, key_events, revenue, sources[] } or null
 function parseGoogleAnalyticsCSV(file) {
   var raw = readFile(file);
   var lines = raw.replace(/\r/g,"").split("\n").map(function(l){ return l.trim(); });
@@ -479,33 +533,44 @@ function parseGoogleAnalyticsCSV(file) {
       return (h+"").toLowerCase().replace(/[^a-z]/g," ").trim().indexOf(p) > -1;
     });
   }
-  var sessIdx = hi("sessions"), engIdx = hi("engaged session"),
-      revIdx  = hi("revenue"),  srcIdx = hi("session source");
+  var sessIdx = hi("sessions"),       engIdx  = hi("engaged session"),
+      revIdx  = hi("revenue"),        srcIdx  = hi("session source"),
+      erIdx   = hi("engagement rate"), atIdx  = hi("average engagement time"),
+      keIdx   = hi("key event");
 
-  var totalSessions = 0, totalEngaged = 0, totalRevenue = 0, sources = [];
+  var totalSessions=0, totalEngaged=0, totalRevenue=0;
+  var wEngRate=0, wAvgTime=0, totalKeyEvents=0;
+  var sources = [];
+
   for (var i = headerLine+1; i < lines.length; i++) {
     if (!lines[i] || lines[i].startsWith("#")) continue;
     var parts = parseCSVLine(lines[i]);
     if (!parts[0]) continue;
-    var sess = sessIdx > -1 ? (parseInt(parts[sessIdx])||0)   : 0;
-    var eng  = engIdx  > -1 ? (parseInt(parts[engIdx])||0)    : 0;
-    var rev  = revIdx  > -1 ? (parseFloat(parts[revIdx])||0)  : 0;
-    var src  = srcIdx  > -1 ? (parts[srcIdx]||"").trim()      : "";
-    totalSessions += sess;
-    totalEngaged  += eng;
-    totalRevenue  += rev;
-    if (src) sources.push({
-      src: src, sessions: sess,
-      eng_rate: sess > 0 ? Math.round(eng/sess*10000)/100 : 0,
-      revenue: Math.round(rev*100)/100
-    });
+    var sess = sessIdx > -1 ? (parseInt(parts[sessIdx])||0)    : 0;
+    var eng  = engIdx  > -1 ? (parseInt(parts[engIdx])||0)     : 0;
+    var rev  = revIdx  > -1 ? (parseFloat(parts[revIdx])||0)   : 0;
+    var src  = srcIdx  > -1 ? (parts[srcIdx]||"").trim()       : "";
+    var er   = erIdx   > -1 ? (parseFloat(parts[erIdx])||0)    : 0;
+    var at   = atIdx   > -1 ? (parseFloat(parts[atIdx])||0)    : 0;
+    var ke   = keIdx   > -1 ? (parseInt(parts[keIdx])||0)      : 0;
+    totalSessions  += sess;
+    totalEngaged   += eng;
+    totalRevenue   += rev;
+    wEngRate       += er * sess;
+    wAvgTime       += at * sess;
+    totalKeyEvents += ke;
+    if (src) sources.push({ src: src, sessions: sess, revenue: Math.round(rev*100)/100 });
   }
   if (!totalSessions && !totalEngaged) return null;
   return {
-    sessions: totalSessions,
+    sessions:        totalSessions,
     engaged_sessions: totalEngaged,
-    revenue: Math.round(totalRevenue*100)/100,
-    sources: sources.sort(function(a,b){ return b.sessions-a.sessions; })
+    eng_rate:        totalSessions > 0 ? Math.round(wEngRate/totalSessions*10000)/10000 : 0,
+    avg_eng_time:    totalSessions > 0 ? Math.round(wAvgTime/totalSessions*10)/10 : 0,
+    key_events:      totalKeyEvents,
+    revenue:         Math.round(totalRevenue*100)/100,
+    sources:         sources.filter(function(s){ return s.src; })
+                            .sort(function(a,b){ return b.sessions-a.sessions; })
   };
 }
 
@@ -731,26 +796,13 @@ function writeTikTok(ss, weekISO, data) {
   var tt = data.tt;
   var targetRow = findOrAppendWeekRow(ws, weekISO, 3);
 
-  // Prior total = last written value in col C before this row
-  var priorTotal = 0;
-  var lastRow = ws.getLastRow();
-  if (lastRow >= 3) {
-    var colC = ws.getRange(3, 3, Math.max(1, lastRow-2), 1).getValues();
-    for (var i = colC.length-1; i >= 0; i--) {
-      if (typeof colC[i][0] === "number" && colC[i][0] !== 0) {
-        priorTotal = colC[i][0]; break;
-      }
-    }
-  }
-  var ttTotalFollowers = priorTotal + (tt.netGrowth || 0);
-
   ws.getRange(targetRow, 1, 1, 9).setValues([[
     weekISO, weekISOtoLabel(weekISO),
-    ttTotalFollowers,
+    tt.totalFollowers,
     tt.videoViews, tt.reached, tt.newFollowers,
     tt.likes, tt.comments, tt.shares
   ]]);
-  log("✅ TikTok " + weekISO + " row " + targetRow + " totalFollowers=" + ttTotalFollowers);
+  log("✅ TikTok " + weekISO + " row " + targetRow + " totalFollowers=" + tt.totalFollowers);
 }
 
 function writeAnalytics(ss, weekISO, data) {
@@ -867,8 +919,8 @@ function writeWeeklyLog(ss, weekISO, data) {
   if (targetRow === -1) { log("⚠️ " + weekISO + " not found in Weekly Log"); return; }
 
   var ig = data.ig, fb = data.fb, tt = data.tt, ga = data.ga;
-  var igFollowers    = readManualFollowers(ss, weekISO);
-  var ttTotalFlw     = readTikTokTotalFromSheet(ss, weekISO);
+  var igFollowers = data.ig.followers || readManualFollowers(ss, weekISO);
+  var ttTotalFlw  = data.tt.totalFollowers || 0;
   var engRate        = ig.reach > 0 ? ig.interactions / ig.reach : 0;
   var gaS = ga ? ga.sessions          : "—";
   var gaE = ga ? ga.engaged_sessions  : "—";
@@ -969,9 +1021,11 @@ function processAllFiles(cutoff) {
       // Init accumulators
       if (!weekData[weekISO]) {
         weekData[weekISO] = {
-          ig: {reach:0,views:0,follows:0,visits:0,interactions:0,link_clicks:0},
+          ig: {reach:0,views:0,follows:0,visits:0,interactions:0,link_clicks:0,followers:0},
           fb: {views:0,visits:0,viewers:0,follows:0,interactions:0,link_clicks:0},
-          tt: {videoViews:0,reached:0,newFollowers:0,netGrowth:0,likes:0,comments:0,shares:0},
+          tt: {videoViews:0,reached:0,profileViews:0,newFollowers:0,lostFollowers:0,
+               netGrowth:0,likes:0,comments:0,shares:0,websiteClicks:0,
+               totalFollowers:0,topVideos:[]},
           ga: null
         };
         foundFiles[weekISO] = {};
@@ -996,18 +1050,25 @@ function processAllFiles(cutoff) {
         var r = parseTikTokOverview(file, weekISO);
         if (r) {
           var tt = weekData[weekISO].tt;
-          tt.videoViews   += r.videoViews;
-          tt.reached      += r.reached;
-          tt.newFollowers += r.newFollowers;
-          tt.netGrowth    += r.netGrowth;
-          tt.likes        += r.likes;
-          tt.comments     += r.comments;
-          tt.shares       += r.shares;
+          tt.videoViews    += r.videoViews;
+          tt.reached       += r.reached;
+          tt.profileViews  += r.profileViews  || 0;
+          tt.newFollowers  += r.newFollowers;
+          tt.lostFollowers += r.lostFollowers  || 0;
+          tt.netGrowth     += r.netGrowth;
+          tt.likes         += r.likes;
+          tt.comments      += r.comments;
+          tt.shares        += r.shares;
+          tt.websiteClicks += r.websiteClicks  || 0;
           foundFiles[weekISO]["tt_overview"] = true;
         }
 
       } else if (route === "tt_videos") {
-        foundFiles[weekISO]["tt_video"] = true; // archive only
+        var vids = parseTikTokVideos(file, weekISO);
+        if (vids.length) {
+          weekData[weekISO].tt.topVideos = weekData[weekISO].tt.topVideos.concat(vids);
+        }
+        foundFiles[weekISO]["tt_video"] = true;
 
       } else if (route === "tt_audience") {
         var ttAud = parseTTAudienceCSV(file);
@@ -1064,11 +1125,45 @@ function processAllCSVs() {
     var result = processAllFiles(cutoff);
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
+    // ── Pre-compute ig_followers and tt_totalFollowers ────────────────────────
+    // ig_followers comes from Manual Data sheet; tt_totalFollowers from TT Audience
+    // snapshot (actual count) or cumulative netGrowth fallback.
+    var weekISOsSorted = Object.keys(result.weekData).sort();
+
+    // Find last TT total BEFORE the earliest week we're processing (for cumulative fallback)
+    var ttRunning = 0;
+    if (weekISOsSorted.length) {
+      var firstISO = weekISOsSorted[0];
+      var ttSheet = ss.getSheetByName("TikTok");
+      if (ttSheet && ttSheet.getLastRow() >= 3) {
+        var ttData = ttSheet.getRange(3, 1, ttSheet.getLastRow()-2, 3).getValues();
+        for (var ri = ttData.length-1; ri >= 0; ri--) {
+          var rowISO = ttData[ri][0];
+          if (rowISO && String(rowISO) < firstISO && typeof ttData[ri][2]==="number" && ttData[ri][2]>0) {
+            ttRunning = ttData[ri][2]; break;
+          }
+        }
+      }
+    }
+
+    weekISOsSorted.forEach(function(weekISO) {
+      result.weekData[weekISO].ig.followers = readManualFollowers(ss, weekISO);
+      // Use TT Audience snapshot (actual total) if available, else cumulative
+      var ttAud = result.audienceData[weekISO] && result.audienceData[weekISO].tt;
+      if (ttAud && ttAud.snapshot && ttAud.snapshot.total_followers > 0) {
+        ttRunning = ttAud.snapshot.total_followers;
+      } else {
+        ttRunning += result.weekData[weekISO].tt.netGrowth || 0;
+      }
+      result.weekData[weekISO].tt.totalFollowers = ttRunning;
+    });
+
+    // ── Write to Google Sheets ────────────────────────────────────────────────
     Object.keys(result.weekData).sort().forEach(function(weekISO) {
       var data = result.weekData[weekISO];
       writeInstagram(ss, weekISO, data);
       writeFacebook(ss, weekISO, data);
-      writeTikTok(ss, weekISO, data);    // must run before writeWeeklyLog reads TT col C
+      writeTikTok(ss, weekISO, data);
       writeAnalytics(ss, weekISO, data);
       writeWeeklyLog(ss, weekISO, data);
     });
@@ -1086,7 +1181,7 @@ function processAllCSVs() {
     }
 
     var missingReport = checkMissingFiles(result.foundFiles);
-    var jsonStr       = buildAndSaveJSON(result.weekData);
+    var jsonStr       = buildAndSaveJSON(result.weekData, result.audienceData);
     sendWeeklyEmail(jsonStr, missingReport, result.unidentifiable);
 
     var secs = Math.round((new Date()-t0)/1000);
@@ -1246,122 +1341,157 @@ function writeJSONToDrive(jsonStr) {
 }
 
 // ─── buildAndSaveJSON ─────────────────────────────────────────────────────────
-// Reads JSON from Drive (source of truth for history), adds any NEW weeks from sheets,
-// and ALWAYS refreshes weeks that were just processed from CSVs this run.
+// Produces flat JSON matching akwl-dashboard-v6.html spec.
+// weekData  = { weekISO: { ig, fb, tt, ga } } from processAllFiles (this run)
+// audienceData = { weekISO: { ig, fb, tt } }  from processAllFiles (this run)
 
-function buildAndSaveJSON(weekData) {
-  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+function buildAndSaveJSON(weekData, audienceData) {
   var cutoff = lastClosedSaturday();
 
-  // Read existing JSON from Drive — historical source of truth
+  // Load existing flat JSON from Drive
   var existing = readJSONFromDrive();
-  var existingWeeks = {}; // weekISO → week object
-  var weeks = [];
-
+  var existingWeeks = {};
   if (existing && existing.weeks) {
     existing.weeks.forEach(function(w) {
-      existingWeeks[w.week_iso] = w;
+      var key = w.iso || w.week_iso; // support old nested format keys too
+      if (key) existingWeeks[key] = w;
     });
-    weeks = existing.weeks.slice();
   }
 
-  // Read sheets (needed for new weeks AND for weeks just processed this run)
-  function sheetRows(name, firstDataRow) {
-    var ws = ss.getSheetByName(name);
-    if (!ws || ws.getLastRow() < firstDataRow) return {};
-    var data = ws.getRange(firstDataRow, 1, ws.getLastRow()-firstDataRow+1, ws.getLastColumn()).getValues();
-    var m = {};
-    data.forEach(function(r){ if (r[0]) m[r[0]] = r; });
-    return m;
-  }
+  var weeks = [];
+  var newCount = 0, updatedCount = 0;
 
-  var igRows = sheetRows("Instagram", 3);
-  var fbRows = sheetRows("Facebook",  3);
-  var ttRows = sheetRows("TikTok",    3);
-  var gaRows = sheetRows("Analytics", 3);
-
-  function buildWeekObj(weekISO, wk) {
-    var weekLabel = weekISOtoLabel(weekISO);
-
-    var igRow = igRows[weekISO];
-    var igObj = igRow
-      ? { reach:igRow[3]||0, views:igRow[4]||0, follows:igRow[5]||0,
-          profile_visits:igRow[6]||0, interactions:igRow[7]||0, link_clicks:igRow[8]||0,
-          total_followers:igRow[2]||0, eng_rate:typeof igRow[9]==="number"?igRow[9]:0 }
-      : { missing:true, note:"Instagram file not submitted this week",
-          reach:0,views:0,follows:0,profile_visits:0,interactions:0,link_clicks:0,total_followers:0,eng_rate:0 };
-
-    var fbRow = fbRows[weekISO];
-    var fbObj = fbRow
-      ? { views:fbRow[2]||0, visits:fbRow[3]||0, viewers:fbRow[4]||0,
-          follows:fbRow[5]||0, interactions:fbRow[6]||0, link_clicks:fbRow[7]||0 }
-      : { missing:true, note:"Facebook file not submitted this week",
-          views:0,visits:0,viewers:0,follows:0,interactions:0,link_clicks:0 };
-
-    var ttRow = ttRows[weekISO];
-    var ttObj = ttRow
-      ? { video_views:ttRow[3]||0, reached:ttRow[4]||0, new_followers:ttRow[5]||0,
-          total_followers:ttRow[2]||0, likes:ttRow[6]||0, comments:ttRow[7]||0, shares:ttRow[8]||0 }
-      : { video_views:0, reached:0, new_followers:0, total_followers:0, likes:0, comments:0, shares:0 };
-
-    var gaRow = gaRows[weekISO];
-    var gaObj;
-    if (!gaRow || gaRow[2] === "—" || gaRow[2] === "" || gaRow[2] === undefined) {
-      gaObj = { missing:true, note:"Google Analytics file not submitted this week",
-                sessions:0, engaged_sessions:0, revenue:0, sources:[] };
-    } else {
-      gaObj = { sessions:gaRow[2]||0, engaged_sessions:gaRow[3]||0, revenue:gaRow[5]||0, sources:[] };
-    }
-    if (weekData && weekData[weekISO] && weekData[weekISO].ga && weekData[weekISO].ga.sources && weekData[weekISO].ga.sources.length) {
-      gaObj.sources = weekData[weekISO].ga.sources;
-    }
-
-    return { week_iso:weekISO, week_label:weekLabel, week_start:wk.start, week_end:wk.end,
-             ig:igObj, fb:fbObj, tt:ttObj, ga:gaObj };
-  }
-
-  var newWeeksCount = 0, updatedWeeksCount = 0;
   WEEK_CALENDAR.forEach(function(wk) {
     if (new Date(wk.end + "T23:59:59Z") > cutoff) return;
     var weekISO = wk.iso;
-    var justProcessed = weekData && weekData[weekISO];
+    var wd = weekData && weekData[weekISO];
 
-    if (justProcessed) {
-      // Always refresh weeks that were just processed from fresh CSVs
-      var newObj = buildWeekObj(weekISO, wk);
+    if (wd) {
+      // Build flat week object directly from weekData (no sheet re-reading)
+      var wObj = buildWeekObjFlat(weekISO, wk, wd);
       if (existingWeeks[weekISO]) {
-        // Replace in-place in weeks array
-        for (var i = 0; i < weeks.length; i++) {
-          if (weeks[i].week_iso === weekISO) { weeks[i] = newObj; break; }
-        }
-        updatedWeeksCount++;
+        weeks.push(wObj); updatedCount++;
       } else {
-        weeks.push(newObj);
-        newWeeksCount++;
+        weeks.push(wObj); newCount++;
       }
-    } else if (!existingWeeks[weekISO]) {
-      // Brand new week not in JSON and not processed this run — read from sheet
-      weeks.push(buildWeekObj(weekISO, wk));
-      newWeeksCount++;
+    } else if (existingWeeks[weekISO] && existingWeeks[weekISO].iso) {
+      // Flat format entry — keep as-is
+      weeks.push(existingWeeks[weekISO]);
     }
-    // else: week exists in JSON and wasn't processed this run → keep as-is
+    // Old nested format or genuinely absent → skip until re-processed
   });
 
-  weeks.sort(function(a, b) { return (a.week_iso||"").localeCompare(b.week_iso||""); });
+  weeks.sort(function(a,b){ return (a.iso||"").localeCompare(b.iso||""); });
 
-  var lastWeek = weeks.length ? weeks[weeks.length-1].week_iso : "—";
+  // Audience: use parsed CSV data if available, else keep from Drive JSON
+  var audienceOut = buildAudienceForJSON(audienceData);
+  if (!audienceOut && existing && existing.audience && existing.audience.ig) {
+    audienceOut = existing.audience;
+  }
+
+  var lastWeek = weeks.length ? weeks[weeks.length-1].iso : "—";
   var output = {
-    generated:    new Date().toISOString(),
-    last_updated: lastWeek,
-    goals:        {quarter:"Q2",deadline:"2026-06-30",ig_followers:1500,ig_eng_rate:6,tt_followers:100},
-    weeks:        weeks,
-    audience:     readAudienceTab(ss)
+    generated: new Date().toISOString(),
+    goals:     { ig_followers:1500, ig_eng_rate:6, tt_followers:100 },
+    weeks:     weeks,
+    audience:  audienceOut || { ig:{}, fb:{}, tt:{} }
   };
 
   var jsonStr = JSON.stringify(output, null, 2);
   writeJSONToDrive(jsonStr);
-  log("✅ JSON saved: " + weeks.length + " week(s) (" + newWeeksCount + " new, " + updatedWeeksCount + " updated), through " + lastWeek);
+  log("✅ JSON saved: " + weeks.length + " week(s) (" + newCount + " new, " + updatedCount + " updated), through " + lastWeek);
   return jsonStr;
+}
+
+// Build a single flat WeekObject matching the HTML dashboard spec
+function buildWeekObjFlat(weekISO, wk, wd) {
+  var ig = wd.ig || {}, fb = wd.fb || {}, tt = wd.tt || {}, ga = wd.ga;
+  var igEng = (ig.reach||0) > 0 ? ig.interactions / ig.reach : 0;
+  return {
+    iso:   weekISO,
+    label: weekISOtoLabel(weekISO),
+    start: wk.start,
+    end:   wk.end,
+
+    ig_reach:     ig.reach        || 0,
+    ig_views:     ig.views        || 0,
+    ig_follows:   ig.follows      || 0,
+    ig_visits:    ig.visits       || 0,
+    ig_inter:     ig.interactions || 0,
+    ig_clicks:    ig.link_clicks  || 0,
+    ig_eng:       Math.round(igEng * 1000000) / 1000000,
+    ig_followers: ig.followers    || 0,
+
+    fb_views:   fb.views        || 0,
+    fb_visits:  fb.visits       || 0,
+    fb_viewers: fb.viewers      || 0,
+    fb_follows: fb.follows      || 0,
+    fb_inter:   fb.interactions || 0,
+    fb_clicks:  fb.link_clicks  || 0,
+
+    tt_views:          tt.videoViews    || 0,
+    tt_reach:          tt.reached       || 0,
+    tt_profile_views:  tt.profileViews  || 0,
+    tt_new_flw:        tt.newFollowers  || 0,
+    tt_lost_flw:       tt.lostFollowers || 0,
+    tt_net_growth:     tt.netGrowth     || 0,
+    tt_likes:          tt.likes         || 0,
+    tt_comments:       tt.comments      || 0,
+    tt_shares:         tt.shares        || 0,
+    tt_website_clicks: tt.websiteClicks || 0,
+    tt_followers:      tt.totalFollowers || 0,
+    tt_top_videos:     (tt.topVideos || []).sort(function(a,b){ return b.views-a.views; }),
+
+    ga_sessions:     ga ? (ga.sessions||0)          : null,
+    ga_eng_sessions: ga ? (ga.engaged_sessions||0)  : null,
+    ga_eng_rate:     ga ? (ga.eng_rate||0)           : null,
+    ga_avg_eng_time: ga ? (ga.avg_eng_time||0)       : null,
+    ga_key_events:   ga ? (ga.key_events||0)         : null,
+    ga_revenue:      ga ? (ga.revenue||0)            : null,
+    ga_missing:      !ga,
+    ga_sources:      ga ? (ga.sources||[])           : []
+  };
+}
+
+// Build audience object for JSON from parsed CSV audienceData
+function buildAudienceForJSON(audienceData) {
+  if (!audienceData || !Object.keys(audienceData).length) return null;
+  var igAud = null, fbAud = null, ttAud = null;
+  Object.keys(audienceData).sort().reverse().forEach(function(weekISO) {
+    var a = audienceData[weekISO];
+    if (!igAud && a.ig) igAud = a.ig;
+    if (!fbAud && a.fb) fbAud = a.fb;
+    if (!ttAud && a.tt) ttAud = a.tt;
+  });
+  if (!igAud && !fbAud && !ttAud) return null;
+
+  function toAgeArray(rows, v1field, v2field) {
+    return rows.map(function(r){ return { band:r.band, v1:r[v1field]||0, v2:r[v2field]||0 }; });
+  }
+
+  return {
+    ig: igAud ? {
+      gender_order:  ["Women","Men"],
+      age_gender:    toAgeArray(igAud.age_gender, "women_pct", "men_pct"),
+      top_countries: igAud.top_countries || [],
+      top_cities:    igAud.top_cities    || []
+    } : {},
+    fb: fbAud ? {
+      gender_order:  ["Men","Women"],
+      age_gender:    toAgeArray(fbAud.age_gender, "men_pct", "women_pct"),
+      top_countries: fbAud.top_countries || [],
+      top_cities:    fbAud.top_cities    || []
+    } : {},
+    tt: ttAud ? {
+      daily: (ttAud.daily||[]).map(function(d){ return {
+        date:      d.date,
+        new_flw:   d.new_followers   || 0,
+        total_flw: d.total_followers || 0,
+        reached:   d.reached         || 0,
+        engaged:   d.engaged         || 0
+      }; })
+    } : {}
+  };
 }
 
 // ─── Weekly email (Rule 3 — to info@alaskawildlights.com ONLY) ────────────────
@@ -1373,7 +1503,6 @@ function sendWeeklyEmail(jsonStr, missingReport, unidentifiable) {
   if (!parsed.weeks || !parsed.weeks.length) { log("⚠️ Email: no weeks in JSON"); return; }
 
   var wk = parsed.weeks[parsed.weeks.length-1];
-  var ig = wk.ig||{}, fb = wk.fb||{}, tt = wk.tt||{}, ga = wk.ga||{};
 
   function n(v){ return (Math.round(v)||0).toLocaleString(); }
   function engPct(v) {
@@ -1419,41 +1548,40 @@ function sendWeeklyEmail(jsonStr, missingReport, unidentifiable) {
       + '</div>';
   }
 
-  var igCard = ig.missing
+  var igCard = (!wk.ig_reach && !wk.ig_followers)
     ? missingCard(C.ig, "📸", "Instagram")
     : card(C.ig, "📸", "Instagram", [
-        ["Reach",           n(ig.reach)],
-        ["Views",           n(ig.views)],
-        ["New Follows",     n(ig.follows)],
-        ["Total Followers", n(ig.total_followers)],
-        ["Engagement Rate", engPct(ig.eng_rate)]
+        ["Reach",           n(wk.ig_reach)],
+        ["Views",           n(wk.ig_views)],
+        ["New Follows",     n(wk.ig_follows)],
+        ["Total Followers", n(wk.ig_followers)],
+        ["Engagement Rate", engPct(wk.ig_eng)]
       ]);
 
-  var fbCard = fb.missing
+  var fbCard = (!wk.fb_views && !wk.fb_viewers)
     ? missingCard(C.fb, "📘", "Facebook")
     : card(C.fb, "📘", "Facebook", [
-        ["Views",   n(fb.views)],
-        ["Viewers", n(fb.viewers)],
-        ["Visits",  n(fb.visits)],
-        ["Follows", n(fb.follows)]
+        ["Views",   n(wk.fb_views)],
+        ["Viewers", n(wk.fb_viewers)],
+        ["Visits",  n(wk.fb_visits)],
+        ["Follows", n(wk.fb_follows)]
       ]);
 
-  var ttMissing = !tt.video_views && !tt.total_followers;
-  var ttCard = ttMissing
+  var ttCard = (!wk.tt_views && !wk.tt_followers)
     ? missingCard(C.tt, "🎵", "TikTok")
     : card(C.tt, "🎵", "TikTok", [
-        ["Video Views",     n(tt.video_views)],
-        ["Reached",         n(tt.reached)],
-        ["New Followers",   n(tt.new_followers)],
-        ["Total Followers", n(tt.total_followers)]
+        ["Video Views",     n(wk.tt_views)],
+        ["Reached",         n(wk.tt_reach)],
+        ["New Followers",   n(wk.tt_new_flw)],
+        ["Total Followers", n(wk.tt_followers)]
       ]);
 
-  var gaCard = ga.missing
+  var gaCard = wk.ga_missing
     ? missingCard(C.ga, "📊", "Google Analytics")
     : card(C.ga, "📊", "Google Analytics", [
-        ["Sessions",         n(ga.sessions)],
-        ["Engaged Sessions", n(ga.engaged_sessions)],
-        ["Revenue",          "$"+(ga.revenue||0).toFixed(2)]
+        ["Sessions",         n(wk.ga_sessions)],
+        ["Engaged Sessions", n(wk.ga_eng_sessions)],
+        ["Revenue",          "$"+(wk.ga_revenue||0).toFixed(2)]
       ]);
 
   // Warnings block
@@ -1477,15 +1605,14 @@ function sendWeeklyEmail(jsonStr, missingReport, unidentifiable) {
 
   // All-weeks summary table
   var tableRows = parsed.weeks.map(function(w) {
-    var isMissing = w.ig && w.ig.missing;
-    var er = (w.ig && !isMissing) ? engPct(w.ig.eng_rate) : "—";
-    var reach = (w.ig && !isMissing) ? n(w.ig.reach) : "—";
-    var ttFol = (w.tt && (w.tt.total_followers||0)) ? n(w.tt.total_followers) : "—";
-    var rev   = (w.ga && !w.ga.missing && w.ga.revenue) ? "$"+w.ga.revenue.toFixed(0) : "—";
-    var isLast = w.week_iso === wk.week_iso;
+    var er    = w.ig_reach ? engPct(w.ig_eng) : "—";
+    var reach = w.ig_reach ? n(w.ig_reach) : "—";
+    var ttFol = w.tt_followers ? n(w.tt_followers) : "—";
+    var rev   = (!w.ga_missing && w.ga_revenue) ? "$"+(w.ga_revenue||0).toFixed(0) : "—";
+    var isLast = w.iso === wk.iso;
     var rowBg = isLast ? "#fff9e6" : "transparent";
     return '<tr style="background:'+rowBg+';">'
-      + '<td style="padding:5px 10px;font-weight:'+(isLast?"700":"400")+';">'+w.week_label+'</td>'
+      + '<td style="padding:5px 10px;font-weight:'+(isLast?"700":"400")+';">'+w.label+'</td>'
       + '<td style="padding:5px 10px;text-align:right;">'+reach+'</td>'
       + '<td style="padding:5px 10px;text-align:right;">'+er+'</td>'
       + '<td style="padding:5px 10px;text-align:right;">'+ttFol+'</td>'
@@ -1506,7 +1633,7 @@ function sendWeeklyEmail(jsonStr, missingReport, unidentifiable) {
     + '<div style="max-width:600px;margin:0 auto;padding:24px 16px;">'
     + '<div style="text-align:center;margin-bottom:24px;">'
     + '<h1 style="margin:0;font-size:22px;color:#333;">Alaska Wild Lights</h1>'
-    + '<p style="margin:4px 0 0;color:'+C.muted+';font-size:14px;">Weekly Social Report · '+wk.week_label+' ('+wk.week_iso+')</p>'
+    + '<p style="margin:4px 0 0;color:'+C.muted+';font-size:14px;">Weekly Social Report · '+wk.label+' ('+wk.iso+')</p>'
     + '</div>'
     + warnBlock
     + igCard + fbCard + ttCard + gaCard
@@ -1518,14 +1645,14 @@ function sendWeeklyEmail(jsonStr, missingReport, unidentifiable) {
     + 'AKWL_data.json attached · <a href="https://alaskawildlights.com" style="color:'+C.muted+';">alaskawildlights.com</a>'
     + '</p></div></body></html>';
 
-  var plainFallback = "AKWL Weekly Report — " + wk.week_label + "\n\n"
-    + "Instagram — Reach: " + n(ig.reach) + " | Eng: " + engPct(ig.eng_rate) + " | Followers: " + n(ig.total_followers) + "\n"
-    + "Facebook  — Views: " + n(fb.views) + " | Follows: " + n(fb.follows) + "\n"
-    + "TikTok    — Views: " + n(tt.video_views) + " | Followers: " + n(tt.total_followers) + "\n"
-    + "Analytics — Sessions: " + n(ga.sessions) + " | Revenue: $" + (ga.revenue||0).toFixed(2) + "\n\n"
+  var plainFallback = "AKWL Weekly Report — " + wk.label + "\n\n"
+    + "Instagram — Reach: " + n(wk.ig_reach) + " | Eng: " + engPct(wk.ig_eng) + " | Followers: " + n(wk.ig_followers) + "\n"
+    + "Facebook  — Views: " + n(wk.fb_views) + " | Follows: " + n(wk.fb_follows) + "\n"
+    + "TikTok    — Views: " + n(wk.tt_views) + " | Followers: " + n(wk.tt_followers) + "\n"
+    + "Analytics — Sessions: " + n(wk.ga_sessions) + " | Revenue: $" + (wk.ga_revenue||0).toFixed(2) + "\n\n"
     + "Full data in attached AKWL_data.json";
 
-  var subject = "AKWL Weekly Report — " + wk.week_label;
+  var subject = "AKWL Weekly Report — " + wk.label;
   try {
     GmailApp.sendEmail(AKWL_EMAIL, subject, plainFallback, {
       htmlBody:    html,
@@ -1551,7 +1678,7 @@ function onOpen() {
 }
 
 function buildJSONOnly() {
-  var jsonStr = buildAndSaveJSON({});
+  var jsonStr = buildAndSaveJSON({}, {});
   SpreadsheetApp.openById(SPREADSHEET_ID).toast(
     "JSON saved to Drive (" + jsonStr.length + " chars)", "AKWL v7", 8);
 }

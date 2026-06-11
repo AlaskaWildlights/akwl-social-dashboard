@@ -3,7 +3,7 @@
 // Pre-structured Google Sheets. One row per week. Week detected from CSV content.
 // ══════════════════════════════════════════════════════════════════════════════
 
-var SPREADSHEET_ID = "13t7k1P0NBj5xAtT-it9gKWmKsvvn1ZSCzTmvVotrizU";
+var SPREADSHEET_ID = "15QgxsImalEM_At3fOkZDag1G1C_6ueEy2OsL8Cw7GZQ";
 var FOLDER_ID      = "1G861p7ZUSpLhoFZjLDRPmUykN5QKXFEz";
 var PROCESSED_NAME = "Processed";
 var AKWL_EMAIL     = "info@alaskawildlights.com";
@@ -816,13 +816,13 @@ function writeAnalytics(ss, weekISO, data) {
   if (!ga) {
     ws.getRange(targetRow, 3).setValue("—");
     ws.getRange(targetRow, 4).setValue("—");
-    // col E = formula — skip
+    ws.getRange(targetRow, 5).setValue("—"); // col E = Eng Rate
     ws.getRange(targetRow, 6).setValue("—");
     log("⚠️ Analytics " + weekISO + " — GA missing");
   } else {
     ws.getRange(targetRow, 3).setValue(ga.sessions);
     ws.getRange(targetRow, 4).setValue(ga.engaged_sessions);
-    // col E = =IFERROR(D/C,"—") formula — do NOT write
+    ws.getRange(targetRow, 5).setValue(ga.eng_rate); // col E = Eng Rate
     ws.getRange(targetRow, 6).setValue(ga.revenue);
     log("✅ Analytics " + weekISO + " row " + targetRow);
   }
@@ -943,8 +943,8 @@ function writeWeeklyLog(ss, weekISO, data) {
     tt.likes, tt.comments, tt.shares,
     gaS, gaE
   ]]);
-  // Col Z (index 26) = formula — skip
-  ws.getRange(targetRow, 27).setValue(gaR); // col AA
+  ws.getRange(targetRow, 26).setValue(ga ? ga.eng_rate : "—"); // col Z = GA Eng%
+  ws.getRange(targetRow, 27).setValue(gaR); // col AA = GA Revenue
   log("✅ Weekly Log " + weekISO + " row " + targetRow);
 }
 
@@ -1711,18 +1711,18 @@ function setDashboardFormulas() {
   var ws = ss.getSheetByName("Dashboard");
   if (!ws) { log("❌ Dashboard sheet not found"); return; }
 
-  function igLatest(col)  { return '=IFERROR(INDEX(Instagram!'  +col+'3:'+col+'9999,COUNTA(Instagram!A3:A9999)),"")'; }
-  function fbLatest(col)  { return '=IFERROR(INDEX(Facebook!'   +col+'3:'+col+'9999,COUNTA(Facebook!A3:A9999)),"")'; }
-  function ttLatest(col)  { return '=IFERROR(INDEX(TikTok!'     +col+'3:'+col+'9999,COUNTA(TikTok!A3:A9999)),"")'; }
-  function gaLatest(col)  { return '=IFERROR(INDEX(Analytics!'  +col+'3:'+col+'9999,COUNTA(Analytics!A3:A9999)),"")'; }
+  function igLatest(col)  { return '=IFERROR(INDEX(Instagram!'  +col+'3:'+col+'9999,COUNTA(Instagram!C3:C9999)),"")'; }
+  function fbLatest(col)  { return '=IFERROR(INDEX(Facebook!'   +col+'3:'+col+'9999,COUNTA(Facebook!C3:C9999)),"")'; }
+  function ttLatest(col)  { return '=IFERROR(INDEX(TikTok!'     +col+'3:'+col+'9999,COUNTA(TikTok!C3:C9999)),"")'; }
+  function gaLatest(col)  { return '=IFERROR(INDEX(Analytics!'  +col+'3:'+col+'9999,COUNTA(Analytics!C3:C9999)),"")'; }
 
-  function igPrev(col) { return '=IFERROR(IF(COUNTA(Instagram!A3:A9999)<2,"",INDEX(Instagram!'+col+'3:'+col+'9999,COUNTA(Instagram!A3:A9999)-1)),"")'; }
-  function fbPrev(col) { return '=IFERROR(IF(COUNTA(Facebook!A3:A9999)<2,"",INDEX(Facebook!'  +col+'3:'+col+'9999,COUNTA(Facebook!A3:A9999)-1)),"")'; }
-  function ttPrev(col) { return '=IFERROR(IF(COUNTA(TikTok!A3:A9999)<2,"",INDEX(TikTok!'     +col+'3:'+col+'9999,COUNTA(TikTok!A3:A9999)-1)),"")'; }
+  function igPrev(col) { return '=IFERROR(IF(COUNTA(Instagram!C3:C9999)<2,"",INDEX(Instagram!'+col+'3:'+col+'9999,COUNTA(Instagram!C3:C9999)-1)),"")'; }
+  function fbPrev(col) { return '=IFERROR(IF(COUNTA(Facebook!C3:C9999)<2,"",INDEX(Facebook!'  +col+'3:'+col+'9999,COUNTA(Facebook!C3:C9999)-1)),"")'; }
+  function ttPrev(col) { return '=IFERROR(IF(COUNTA(TikTok!C3:C9999)<2,"",INDEX(TikTok!'     +col+'3:'+col+'9999,COUNTA(TikTok!C3:C9999)-1)),"")'; }
   function gaPrev(col) {
-    return '=IFERROR(IF(COUNTA(Analytics!A3:A9999)<2,"",IFERROR(LOOKUP(2,1/(Analytics!'
-      +col+'3:INDEX(Analytics!'+col+'3:'+col+'9999,COUNTA(Analytics!A3:A9999)-1)<>"—"),Analytics!'
-      +col+'3:INDEX(Analytics!'+col+'3:'+col+'9999,COUNTA(Analytics!A3:A9999)-1)),"")),"")';
+    return '=IFERROR(IF(COUNTA(Analytics!C3:C9999)<2,"",IFERROR(LOOKUP(2,1/(Analytics!'
+      +col+'3:INDEX(Analytics!'+col+'3:'+col+'9999,COUNTA(Analytics!C3:C9999)-1)<>"—"),Analytics!'
+      +col+'3:INDEX(Analytics!'+col+'3:'+col+'9999,COUNTA(Analytics!C3:C9999)-1)),"")),"")';
   }
 
   function igSum(col) { return '=IFERROR(SUM(Instagram!'  +col+'3:'+col+'9999),0)'; }
@@ -1760,7 +1760,7 @@ function setDashboardFormulas() {
     // ANALYTICS (rows 31-34) — may have "—" for missing weeks
     [31, gaPrev("C"), gaLatest("C"), wow(31), gaSum("C")],   // Sessions
     [32, gaPrev("D"), gaLatest("D"), wow(32), gaSum("D")],   // Engaged Sessions
-    [33, '=IFERROR(Analytics!E1,"")', '=IFERROR(Analytics!E1,"")', '', '=IFERROR(Analytics!E1,"")'], // Eng Rate
+    [33, gaPrev("E"), gaLatest("E"), wow(33), gaSum("E")],   // Eng Rate
     [34, gaPrev("F"), gaLatest("F"), wow(34), gaSum("F")]    // Revenue
   ];
 

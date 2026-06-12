@@ -1230,14 +1230,14 @@ function clearSheetData() {
   );
   if (ans !== ui.Button.YES) { log("clearSheetData cancelled"); return; }
 
-  // [tabName, firstDataRow, firstDataCol (1-based), numColsToWipe]
-  // Col A (weekISO) is always preserved — start wipe from col B (2)
+  // Platform tabs: col A NOT pre-populated — script appends rows, so wipe everything.
+  // Weekly Log: col A = weekISO, col B = label — both pre-populated W17-W53. Wipe from C.
   var tabs = [
-    ["Instagram",  3, 2, 29],  // B–AD (covers cols B-J in use)
-    ["Facebook",   3, 2, 29],
-    ["TikTok",     3, 2, 29],
-    ["Analytics",  3, 2, 29],
-    ["Weekly Log", 2, 2, 29]   // row 2 = first data row; col A pre-populated W17-W53
+    ["Instagram",  3, 1, 10],  // A–J (script writes all 10 cols)
+    ["Facebook",   3, 1,  8],  // A–H
+    ["TikTok",     3, 1,  9],  // A–I
+    ["Analytics",  3, 1,  6],  // A–F
+    ["Weekly Log", 2, 3, 25]   // C–AA (cols A+B pre-populated with W17-W53 + labels — keep)
   ];
 
   tabs.forEach(function(t) {

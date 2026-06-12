@@ -1787,7 +1787,7 @@ function setDashboardFormulas() {
     [10, igPrev("F"), igLatest("F"), wow(10), igSum("F")],       // Follows
     [11, igPrev("H"), igLatest("H"), wow(11), igSum("H")],       // Interactions (col H, G=Profile Visits)
     [12, igPrev("I"), igLatest("I"), wow(12), igSum("I")],       // Link Clicks
-    [13, igPrev("J"), igLatest("J"), wow(13), '=IFERROR(Instagram!J1,"")'], // Eng Rate
+    [13, igPrev("J"), igLatest("J"), wow(13), '=IFERROR(IF(SUM(Instagram!D3:D9999)=0,"",SUM(Instagram!H3:H9999)/SUM(Instagram!D3:D9999)),"")'], // Eng Rate (interactions/reach)
 
     // FACEBOOK (rows 16-21)
     [16, fbPrev("C"), fbLatest("C"), wow(16), fbSum("C")],  // Views
@@ -1807,7 +1807,7 @@ function setDashboardFormulas() {
     // ANALYTICS (rows 31-34) — may have "—" for missing weeks
     [31, gaPrev("C"), gaLatest("C"), wow(31), gaSum("C")],   // Sessions
     [32, gaPrev("D"), gaLatest("D"), wow(32), gaSum("D")],   // Engaged Sessions
-    [33, gaPrev("E"), gaLatest("E"), wow(33), gaSum("E")],   // Eng Rate
+    [33, gaPrev("E"), gaLatest("E"), wow(33), '=IFERROR(IF(SUMIF(Analytics!C3:C9999,"<>—")=0,"",SUMIF(Analytics!D3:D9999,"<>—")/SUMIF(Analytics!C3:C9999,"<>—")),"")'], // Eng Rate (engaged/sessions)
     [34, gaPrev("F"), gaLatest("F"), wow(34), gaSum("F")]    // Revenue
   ];
 

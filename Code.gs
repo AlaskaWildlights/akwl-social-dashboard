@@ -1217,6 +1217,52 @@ function testFiles() {
   SpreadsheetApp.openById(SPREADSHEET_ID).toast(files.length + " file(s) found — see Apps Script Logs.", "Test Files", 10);
 }
 
+// ─── clearSheetData (wipe data rows, preserve col A week ISOs) ────────────────
+
+function clearSheetData() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ui = SpreadsheetApp.getUi();
+  var ans = ui.alert(
+    "Clear all sheet data?",
+    "Clears data rows from Instagram, Facebook, TikTok, Analytics, Weekly Log, and Audience tabs.\n\n" +
+    "Week ISOs in col A are preserved. This cannot be undone.\n\nContinue?",
+    ui.ButtonSet.YES_NO
+  );
+  if (ans !== ui.Button.YES) { log("clearSheetData cancelled"); return; }
+
+  // [tabName, firstDataRow, firstDataCol (1-based), numColsToWipe]
+  // Col A (weekISO) is always preserved — start wipe from col B (2)
+  var tabs = [
+    ["Instagram",  3, 2, 29],  // B–AD (covers cols B-J in use)
+    ["Facebook",   3, 2, 29],
+    ["TikTok",     3, 2, 29],
+    ["Analytics",  3, 2, 29],
+    ["Weekly Log", 2, 2, 29]   // row 2 = first data row; col A pre-populated W17-W53
+  ];
+
+  tabs.forEach(function(t) {
+    var ws = ss.getSheetByName(t[0]);
+    if (!ws) { log("⚠️ " + t[0] + " not found — skipped"); return; }
+    // Wipe from firstDataRow through at least row 39 (covers W17-W53 = 37 rows)
+    var lastRow = Math.max(ws.getLastRow(), t[1] + 36);
+    ws.getRange(t[1], t[2], lastRow - t[1] + 1, t[3]).clearContent();
+    log("✅ Cleared " + t[0]);
+  });
+
+  // Audience tab: wipe all data zones (same ranges as writeAudienceTab clears)
+  var aud = ss.getSheetByName("Audience");
+  if (aud) {
+    [[7,1,10,3],[7,5,10,3],[20,1,15,2],[20,5,15,2],[38,1,15,2],[38,5,15,2],
+     [59,2,5,1],[66,1,10,5]].forEach(function(r){
+      aud.getRange(r[0],r[1],r[2],r[3]).clearContent();
+    });
+    log("✅ Cleared Audience");
+  }
+
+  ss.toast("✅ Sheet data cleared — ready for fresh run", "AKWL v7", 6);
+  log("✅ clearSheetData complete");
+}
+
 // ─── clearAll (archive inbox only — NEVER touches sheet data rows) ─────────────
 
 function clearAll() {
@@ -1672,6 +1718,7 @@ function onOpen() {
     {name:"🔄 Re-process all (fix data)",functionName:"reprocessAllProcessed"},
     {name:"📋 Build & save JSON",        functionName:"buildJSONOnly"},
     {name:"📊 Fix Dashboard formulas",   functionName:"setDashboardFormulas"},
+    {name:"🧹 Clear sheet data rows",    functionName:"clearSheetData"},
     {name:"🔍 Test file scan",           functionName:"testFiles"},
     {name:"🗃 Archive inbox files",      functionName:"clearAll"}
   ]);

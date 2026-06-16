@@ -1766,15 +1766,15 @@ function setMonthlyMoMFormulas() {
       ws.getRange(r, 13).setFormula(wkFormula(w, "Analytics", "F")); // GA Revenue
 
       // WoW GA Rev = (this week revenue / prev week revenue) - 1
-      if (prevWeekISO) {
-        ws.getRange(r, 14).setFormula(
-          '=IFERROR(IF(OR(M'+r+'="",M'+r+'="—",' +
-          'IFERROR(INDEX(Analytics!F:F,MATCH("'+prevWeekISO+'",Analytics!A:A,0)),"")="",""),' +
+      // Written to both col N (14) and col O (15) — template may have either
+      var wowFormula = prevWeekISO
+        ? '=IFERROR(IF(OR(M'+r+'="",M'+r+'="—",' +
+          'IFERROR(INDEX(Analytics!F:F,MATCH("'+prevWeekISO+'",Analytics!A:A,0)),"")=""),"",'+
           '(INDEX(Analytics!F:F,MATCH("'+w+'",Analytics!A:A,0))/' +
-          'INDEX(Analytics!F:F,MATCH("'+prevWeekISO+'",Analytics!A:A,0)))-1,"")');
-      } else {
-        ws.getRange(r, 14).setValue("");
-      }
+          'INDEX(Analytics!F:F,MATCH("'+prevWeekISO+'",Analytics!A:A,0)))-1),"")'
+        : null;
+      ws.getRange(r, 14).setFormula(wowFormula || "");
+      ws.getRange(r, 15).setFormula(wowFormula || "");
 
       prevWeekISO = w;
       count++;
@@ -1796,6 +1796,7 @@ function setMonthlyMoMFormulas() {
       ws.getRange(r, 12).setFormula('=IFERROR(SUMIF(L'+f+':L'+l+',"<>—"),"")');
       ws.getRange(r, 13).setFormula('=IFERROR(SUMIF(M'+f+':M'+l+',"<>—"),"")');
       ws.getRange(r, 14).setValue("");
+      ws.getRange(r, 15).setValue("");
 
       monthWeekRows = [];
 

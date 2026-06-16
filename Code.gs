@@ -1811,6 +1811,26 @@ function setMonthlyMoMFormulas() {
   ss.toast("✅ Monthly MoM formulas updated", "AKWL v7", 6);
 }
 
+// ─── Goals & KPIs formulas ────────────────────────────────────────────────────
+
+function setGoalsKPIsFormulas() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ws = ss.getSheetByName("Goals & KPIs");
+  if (!ws) { log("❌ Goals & KPIs sheet not found"); return; }
+
+  var igFlw = '=IFERROR(INDEX(Instagram!C3:C9999,COUNTA(Instagram!C3:C9999)),0)';
+  var igEng = '=IFERROR(INDEX(Instagram!J3:J9999,COUNTA(Instagram!C3:C9999)),0)';
+
+  // Rows with IG Followers (rows 3, 5, 7) and IG Eng Rate (rows 4, 6, 8)
+  [[3, igFlw], [4, igEng], [5, igFlw], [6, igEng], [7, igFlw], [8, igEng]]
+    .forEach(function(pair) {
+      ws.getRange(pair[0], 5).setFormula(pair[1]);
+    });
+
+  log("✅ Goals & KPIs formulas fixed");
+  ss.toast("✅ Goals & KPIs formulas updated", "AKWL v7", 4);
+}
+
 // ─── Menu ──────────────────────────────────────────────────────────────────────
 
 function onOpen() {
@@ -1820,6 +1840,7 @@ function onOpen() {
     {name:"📋 Build & save JSON",        functionName:"buildJSONOnly"},
     {name:"📊 Fix Dashboard formulas",   functionName:"setDashboardFormulas"},
     {name:"📅 Fix Monthly MoM formulas", functionName:"setMonthlyMoMFormulas"},
+    {name:"🎯 Fix Goals & KPIs formulas",functionName:"setGoalsKPIsFormulas"},
     {name:"🧹 Clear sheet data rows",    functionName:"clearSheetData"},
     {name:"🔍 Test file scan",           functionName:"testFiles"},
     {name:"🗃 Archive inbox files",      functionName:"clearAll"}

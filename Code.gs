@@ -1710,6 +1710,97 @@ function sendWeeklyEmail(jsonStr, missingReport, unidentifiable) {
   }
 }
 
+// ─── Set Monthly MoM Formulas ─────────────────────────────────────────────────
+// Fills every W## row in "Monthly MoM" with INDEX/MATCH formulas that pull
+// from the platform tabs. Monthly Total rows get SUM / weighted-avg formulas.
+// Safe to re-run any time — just overwrites the formula cells.
+
+function setMonthlyMoMFormulas() {
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var ws = ss.getSheetByName("Monthly MoM");
+  if (!ws) { log("❌ Monthly MoM sheet not found"); return; }
+
+  var lastRow = Math.max(ws.getLastRow(), 80);
+  var colA = ws.getRange(3, 1, lastRow - 2, 1).getValues();
+
+  // Column mapping (Monthly MoM → platform tabs):
+  // C=IG Followers(IG-C)  D=IG Reach(IG-D)   E=IG Interactions(IG-H)  F=IG Eng%(IG-J)
+  // G=TT Followers(TT-C)  H=TT Views(TT-D)   I=TT New Flw(TT-F)
+  // J=FB Views(FB-C)      K=FB Interactions(FB-G)
+  // L=GA Sessions(AN-C)   M=GA Revenue(AN-F)  N=WoW GA Rev (calculated)
+
+  function wkFormula(w, tab, col) {
+    return '=IFERROR(INDEX('+tab+'!'+col+':'+col+',MATCH("'+w+'",'+tab+'!A:A,0)),"")';
+  }
+
+  var prevWeekISO = null;
+  var monthWeekRows = [];
+  var count = 0;
+
+  for (var i = 0; i < colA.length; i++) {
+    var val = String(colA[i][0] || "").trim();
+    var r = i + 3;
+
+    if (/^W\d{2}$/i.test(val)) {
+      var w = val.toUpperCase();
+      monthWeekRows.push(r);
+
+      ws.getRange(r,  3).setFormula(wkFormula(w, "Instagram", "C")); // IG Followers
+      ws.getRange(r,  4).setFormula(wkFormula(w, "Instagram", "D")); // IG Reach
+      ws.getRange(r,  5).setFormula(wkFormula(w, "Instagram", "H")); // IG Interactions
+      ws.getRange(r,  6).setFormula(wkFormula(w, "Instagram", "J")); // IG Eng%
+      ws.getRange(r,  7).setFormula(wkFormula(w, "TikTok",    "C")); // TT Followers
+      ws.getRange(r,  8).setFormula(wkFormula(w, "TikTok",    "D")); // TT Video Views
+      ws.getRange(r,  9).setFormula(wkFormula(w, "TikTok",    "F")); // TT New Flw
+      ws.getRange(r, 10).setFormula(wkFormula(w, "Facebook",  "C")); // FB Views
+      ws.getRange(r, 11).setFormula(wkFormula(w, "Facebook",  "G")); // FB Interactions
+      ws.getRange(r, 12).setFormula(wkFormula(w, "Analytics", "C")); // GA Sessions
+      ws.getRange(r, 13).setFormula(wkFormula(w, "Analytics", "F")); // GA Revenue
+
+      // WoW GA Rev = (this week revenue / prev week revenue) - 1
+      if (prevWeekISO) {
+        ws.getRange(r, 14).setFormula(
+          '=IFERROR(IF(OR(M'+r+'="",M'+r+'="—",' +
+          'IFERROR(INDEX(Analytics!F:F,MATCH("'+prevWeekISO+'",Analytics!A:A,0)),"")="",""),' +
+          '(INDEX(Analytics!F:F,MATCH("'+w+'",Analytics!A:A,0))/' +
+          'INDEX(Analytics!F:F,MATCH("'+prevWeekISO+'",Analytics!A:A,0)))-1,"")');
+      } else {
+        ws.getRange(r, 14).setValue("");
+      }
+
+      prevWeekISO = w;
+      count++;
+
+    } else if (/total/i.test(val) && monthWeekRows.length > 0) {
+      var f = monthWeekRows[0], l = monthWeekRows[monthWeekRows.length - 1];
+
+      // Followers = latest non-empty (snapshot, not sum)
+      ws.getRange(r,  3).setFormula('=IFERROR(LOOKUP(2,1/(C'+f+':C'+l+'<>""),C'+f+':C'+l+'),"")');
+      ws.getRange(r,  4).setFormula('=IFERROR(SUM(D'+f+':D'+l+'),"")');
+      ws.getRange(r,  5).setFormula('=IFERROR(SUM(E'+f+':E'+l+'),"")');
+      // IG Eng% total = total interactions / total reach
+      ws.getRange(r,  6).setFormula('=IFERROR(IF(SUM(D'+f+':D'+l+')=0,"",SUM(E'+f+':E'+l+')/SUM(D'+f+':D'+l+')),"")');
+      ws.getRange(r,  7).setFormula('=IFERROR(LOOKUP(2,1/(G'+f+':G'+l+'<>""),G'+f+':G'+l+'),"")');
+      ws.getRange(r,  8).setFormula('=IFERROR(SUM(H'+f+':H'+l+'),"")');
+      ws.getRange(r,  9).setFormula('=IFERROR(SUM(I'+f+':I'+l+'),"")');
+      ws.getRange(r, 10).setFormula('=IFERROR(SUM(J'+f+':J'+l+'),"")');
+      ws.getRange(r, 11).setFormula('=IFERROR(SUM(K'+f+':K'+l+'),"")');
+      ws.getRange(r, 12).setFormula('=IFERROR(SUMIF(L'+f+':L'+l+',"<>—"),"")');
+      ws.getRange(r, 13).setFormula('=IFERROR(SUMIF(M'+f+':M'+l+',"<>—"),"")');
+      ws.getRange(r, 14).setValue("");
+
+      monthWeekRows = [];
+
+    } else if (/\d{4}/.test(val)) {
+      // Month header row (e.g. "April 2026") — reset week tracking
+      monthWeekRows = [];
+    }
+  }
+
+  log("✅ Monthly MoM formulas set (" + count + " week rows)");
+  ss.toast("✅ Monthly MoM formulas updated", "AKWL v7", 6);
+}
+
 // ─── Menu ──────────────────────────────────────────────────────────────────────
 
 function onOpen() {
@@ -1718,6 +1809,7 @@ function onOpen() {
     {name:"🔄 Re-process all (fix data)",functionName:"reprocessAllProcessed"},
     {name:"📋 Build & save JSON",        functionName:"buildJSONOnly"},
     {name:"📊 Fix Dashboard formulas",   functionName:"setDashboardFormulas"},
+    {name:"📅 Fix Monthly MoM formulas", functionName:"setMonthlyMoMFormulas"},
     {name:"🧹 Clear sheet data rows",    functionName:"clearSheetData"},
     {name:"🔍 Test file scan",           functionName:"testFiles"},
     {name:"🗃 Archive inbox files",      functionName:"clearAll"}

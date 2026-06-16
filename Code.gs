@@ -851,36 +851,42 @@ function writeAudienceTab(ss, igAud, fbAud, ttAud) {
   if (igAud && igAud.age_gender.length) {
     var d = igAud.age_gender.map(function(r){ return [r.band, r.women_pct, r.men_pct]; });
     ws.getRange(7, 1, d.length, 3).setValues(d);
+    ws.getRange(7, 2, d.length, 2).setNumberFormat("0.0%"); // B-C = pct cols
   }
 
   // FB Age & Gender: col E=age band, F=Men%, G=Women% (Men first — spec requirement)
   if (fbAud && fbAud.age_gender.length) {
     var d = fbAud.age_gender.map(function(r){ return [r.band, r.men_pct, r.women_pct]; });
     ws.getRange(7, 5, d.length, 3).setValues(d);
+    ws.getRange(7, 6, d.length, 2).setNumberFormat("0.0%"); // F-G = pct cols
   }
 
   // IG Top Countries: col A=name, B=%
   if (igAud && igAud.top_countries.length) {
     var d = igAud.top_countries.map(function(r){ return [r.name, r.pct]; });
     ws.getRange(20, 1, d.length, 2).setValues(d);
+    ws.getRange(20, 2, d.length, 1).setNumberFormat("0.0%");
   }
 
   // FB Top Countries: col E=name, F=%
   if (fbAud && fbAud.top_countries.length) {
     var d = fbAud.top_countries.map(function(r){ return [r.name, r.pct]; });
     ws.getRange(20, 5, d.length, 2).setValues(d);
+    ws.getRange(20, 6, d.length, 1).setNumberFormat("0.0%");
   }
 
   // IG Top Cities: col A=name, B=%
   if (igAud && igAud.top_cities.length) {
     var d = igAud.top_cities.map(function(r){ return [r.name, r.pct]; });
     ws.getRange(38, 1, d.length, 2).setValues(d);
+    ws.getRange(38, 2, d.length, 1).setNumberFormat("0.0%");
   }
 
   // FB Top Cities: col E=name, F=%
   if (fbAud && fbAud.top_cities.length) {
     var d = fbAud.top_cities.map(function(r){ return [r.name, r.pct]; });
     ws.getRange(38, 5, d.length, 2).setValues(d);
+    ws.getRange(38, 6, d.length, 1).setNumberFormat("0.0%");
   }
 
   // TikTok Snapshot (rows 59-63, col B)

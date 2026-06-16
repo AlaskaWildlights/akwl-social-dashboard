@@ -484,7 +484,7 @@ function parseTikTokVideos(file, weekISO) {
   var likesIdx  = hi(["likes"]);
   var comIdx    = hi(["comments"]);
   var sharesIdx = hi(["shares"]);
-  var favIdx    = hi(["favorites","saved"]);
+  var favIdx    = hi(["add to favorites","favorites","saved"]);
 
   var wk = weekISOtoDates(weekISO);
   var videos = [];
@@ -517,7 +517,8 @@ function parseTikTokVideos(file, weekISO) {
 
 // Google Analytics — returns { sessions, engaged_sessions, eng_rate, avg_eng_time, key_events, revenue, sources[] } or null
 function parseGoogleAnalyticsCSV(file) {
-  var raw = readFile(file);
+  // GA exports are always UTF-8 (no BOM) — never UTF-16. Force UTF-8 directly.
+  var raw = file.getBlob().getDataAsString("UTF-8").replace(/﻿/g,"");
   var lines = raw.replace(/\r/g,"").split("\n").map(function(l){ return l.trim(); });
   var headerLine = -1;
   for (var i = 0; i < lines.length; i++) {

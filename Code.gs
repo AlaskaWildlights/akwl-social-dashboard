@@ -155,7 +155,7 @@ function parseTwoRowSection(namesLine, valuesLine) {
   var result = [];
   for (var j = 0; j < names.length; j++) {
     var name = names[j].replace(/"/g,"").trim();
-    var pct  = (parseFloat((vals[j]||"").replace(/"/g,"")) || 0) / 100;
+    var pct  = Math.round((parseFloat((vals[j]||"").replace(/"/g,"")) || 0) * 100) / 10000;
     if (name) result.push({ name: name, pct: pct });
   }
   return result;
@@ -616,8 +616,8 @@ function parseIGAudienceCSV(file) {
         // IG col order: Women(1), Men(2)
         result.age_gender.push({
           band:      band,
-          women_pct: (parseFloat((parts[1]||"").replace(/"/g,"")) || 0) / 100,
-          men_pct:   (parseFloat((parts[2]||"").replace(/"/g,"")) || 0) / 100
+          women_pct: Math.round((parseFloat((parts[1]||"").replace(/"/g,"")) || 0) * 100) / 10000,
+          men_pct:   Math.round((parseFloat((parts[2]||"").replace(/"/g,"")) || 0) * 100) / 10000
         });
       }
     }
@@ -667,8 +667,8 @@ function parseFBAudienceCSV(file) {
         // FB col order: Men(1), Women(2) — opposite of IG
         result.age_gender.push({
           band:      band,
-          men_pct:   (parseFloat((parts[1]||"").replace(/"/g,"")) || 0) / 100,
-          women_pct: (parseFloat((parts[2]||"").replace(/"/g,"")) || 0) / 100
+          men_pct:   Math.round((parseFloat((parts[1]||"").replace(/"/g,"")) || 0) * 100) / 10000,
+          women_pct: Math.round((parseFloat((parts[2]||"").replace(/"/g,"")) || 0) * 100) / 10000
         });
       }
     }
@@ -772,6 +772,7 @@ function writeInstagram(ss, weekISO, data) {
     ig.reach, ig.views, ig.follows, ig.visits,
     ig.interactions, ig.link_clicks, engRate
   ]]);
+  ws.getRange(targetRow, 10).setNumberFormat("0.00%"); // col J = Eng Rate
   log("✅ Instagram " + weekISO + " row " + targetRow);
 }
 
@@ -823,6 +824,7 @@ function writeAnalytics(ss, weekISO, data) {
     ws.getRange(targetRow, 3).setValue(ga.sessions);
     ws.getRange(targetRow, 4).setValue(ga.engaged_sessions);
     ws.getRange(targetRow, 5).setValue(ga.eng_rate); // col E = Eng Rate
+    ws.getRange(targetRow, 5).setNumberFormat("0.00%");
     ws.getRange(targetRow, 6).setValue(ga.revenue);
     log("✅ Analytics " + weekISO + " row " + targetRow);
   }
@@ -1908,6 +1910,11 @@ function setDashboardFormulas() {
     ws.getRange(r[0], 3).setFormula(r[2]);
     if (r[3]) ws.getRange(r[0], 4).setFormula(r[3]);
     ws.getRange(r[0], 5).setFormula(r[4]);
+  });
+
+  // Eng Rate rows show as percentage
+  [13, 33].forEach(function(r) {
+    ws.getRange(r, 2, 1, 4).setNumberFormat("0.00%"); // cols B-E
   });
 
   log("✅ Dashboard formulas set (" + rows.length + " rows)");

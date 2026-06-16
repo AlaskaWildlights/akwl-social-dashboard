@@ -1868,9 +1868,7 @@ function setDashboardFormulas() {
   function fbPrev(col) { return '=IFERROR(IF(COUNTA(Facebook!C3:C9999)<2,"",INDEX(Facebook!'  +col+'3:'+col+'9999,COUNTA(Facebook!C3:C9999)-1)),"")'; }
   function ttPrev(col) { return '=IFERROR(IF(COUNTA(TikTok!C3:C9999)<2,"",INDEX(TikTok!'     +col+'3:'+col+'9999,COUNTA(TikTok!C3:C9999)-1)),"")'; }
   function gaPrev(col) {
-    return '=IFERROR(IF(COUNTA(Analytics!C3:C9999)<2,"",IFERROR(LOOKUP(2,1/(Analytics!'
-      +col+'3:INDEX(Analytics!'+col+'3:'+col+'9999,COUNTA(Analytics!C3:C9999)-1)<>"—"),Analytics!'
-      +col+'3:INDEX(Analytics!'+col+'3:'+col+'9999,COUNTA(Analytics!C3:C9999)-1)),"")),"")';
+    return '=IFERROR(IF(COUNTA(Analytics!C3:C9999)<2,"",INDEX(Analytics!'+col+'3:'+col+'9999,COUNTA(Analytics!C3:C9999)-1)),"")';
   }
 
   function igSum(col) { return '=IFERROR(SUM(Instagram!'  +col+'3:'+col+'9999),0)'; }

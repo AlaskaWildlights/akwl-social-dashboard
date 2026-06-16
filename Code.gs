@@ -546,13 +546,14 @@ function parseGoogleAnalyticsCSV(file) {
     if (!lines[i] || lines[i].startsWith("#")) continue;
     var parts = parseCSVLine(lines[i]);
     if (!parts[0]) continue;
-    var sess = sessIdx > -1 ? (parseInt(parts[sessIdx])||0)    : 0;
-    var eng  = engIdx  > -1 ? (parseInt(parts[engIdx])||0)     : 0;
-    var rev  = revIdx  > -1 ? (parseFloat(parts[revIdx])||0)   : 0;
-    var src  = srcIdx  > -1 ? (parts[srcIdx]||"").trim()       : "";
-    var er   = erIdx   > -1 ? (parseFloat(parts[erIdx])||0)    : 0;
-    var at   = atIdx   > -1 ? (parseFloat(parts[atIdx])||0)    : 0;
-    var ke   = keIdx   > -1 ? (parseInt(parts[keIdx])||0)      : 0;
+    function numStr(v){ return (v||"").toString().replace(/,/g,""); }
+    var sess = sessIdx > -1 ? (Math.round(parseFloat(numStr(parts[sessIdx]))||0)) : 0;
+    var eng  = engIdx  > -1 ? (Math.round(parseFloat(numStr(parts[engIdx] ))||0)) : 0;
+    var rev  = revIdx  > -1 ? (parseFloat(numStr(parts[revIdx]))||0)              : 0;
+    var src  = srcIdx  > -1 ? (parts[srcIdx]||"").trim()                          : "";
+    var er   = erIdx   > -1 ? (parseFloat(numStr(parts[erIdx] ))||0)              : 0;
+    var at   = atIdx   > -1 ? (parseFloat(numStr(parts[atIdx] ))||0)              : 0;
+    var ke   = keIdx   > -1 ? (Math.round(parseFloat(numStr(parts[keIdx] ))||0))  : 0;
     totalSessions  += sess;
     totalEngaged   += eng;
     totalRevenue   += rev;

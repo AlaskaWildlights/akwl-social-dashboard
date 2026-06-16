@@ -512,6 +512,80 @@ function showToast(msg, type) {
   setTimeout(() => { t.className = 'upload-toast'; }, 3500);
 }
 
+// Convert flat Code.gs format (ig_reach, ga_sessions) → nested HTML format (ig.reach, ga.sessions).
+// Detection: first week has no 'ig' object but has 'ig_reach' key.
+function normalizeFlat(data) {
+  if (!data.weeks || !data.weeks.length) return data;
+  const w0 = data.weeks[0];
+  if (w0.ig && typeof w0.ig === 'object') return data; // already nested
+  data.weeks = data.weeks.map(w => {
+    const gaMissing = w.ga_missing || (w.ga_sessions == null);
+    return {
+      week_iso:   w.iso   || w.week_iso,
+      week_label: w.label || w.week_label,
+      week_start: w.start || w.week_start,
+      week_end:   w.end   || w.week_end,
+      ig: {
+        reach:           w.ig_reach    || 0,
+        views:           w.ig_views    || 0,
+        follows:         w.ig_follows  || 0,
+        profile_visits:  w.ig_visits   || 0,
+        interactions:    w.ig_inter    || 0,
+        link_clicks:     w.ig_clicks   || 0,
+        total_followers: w.ig_followers || 0,
+        eng_rate: (w.ig_eng != null) ? Math.round(w.ig_eng * 10000) / 100 : 0
+      },
+      fb: {
+        views:        w.fb_views    || 0,
+        visits:       w.fb_visits   || 0,
+        viewers:      w.fb_viewers  || 0,
+        follows:      w.fb_follows  || 0,
+        interactions: w.fb_inter    || 0,
+        link_clicks:  w.fb_clicks   || 0
+      },
+      tt: {
+        video_views:     w.tt_views      || 0,
+        reached:         w.tt_reach      || 0,
+        new_followers:   w.tt_new_flw    || 0,
+        total_followers: w.tt_followers  || 0,
+        likes:           w.tt_likes      || 0,
+        comments:        w.tt_comments   || 0,
+        shares:          w.tt_shares     || 0
+      },
+      ga: gaMissing ? {
+        missing: true, note: 'GA file not submitted this week',
+        sessions: 0, engaged_sessions: 0, revenue: 0, sources: []
+      } : {
+        sessions:         w.ga_sessions     || 0,
+        engaged_sessions: w.ga_eng_sessions || 0,
+        revenue:          w.ga_revenue      || 0,
+        sources: (w.ga_sources || []).map(s => ({ src: s.src, sessions: s.sessions, revenue: s.revenue || 0 }))
+      }
+    };
+  });
+  // Convert audience array format → object format, decimal pcts → percentage
+  if (data.audience) {
+    ['ig','fb'].forEach(p => {
+      const aud = data.audience[p]; if (!aud) return;
+      if (Array.isArray(aud.age_gender)) {
+        const ag = {};
+        aud.age_gender.forEach(row => {
+          ag[row.band] = (p === 'ig')
+            ? { women: Math.round(row.v1 * 10000) / 100, men: Math.round(row.v2 * 10000) / 100 }
+            : { men:   Math.round(row.v1 * 10000) / 100, women: Math.round(row.v2 * 10000) / 100 };
+        });
+        aud.age_gender = ag;
+      }
+      const allPcts = [...(aud.top_countries||[]),...(aud.top_cities||[])].map(x=>x.pct);
+      if (allPcts.length && Math.max(...allPcts) < 1.0) {
+        (aud.top_countries||[]).forEach(c => { c.pct = Math.round(c.pct*10000)/100; });
+        (aud.top_cities||[]).forEach(c    => { c.pct = Math.round(c.pct*10000)/100; });
+      }
+    });
+  }
+  return data;
+}
+
 // Normalize decimal pcts (0.0131) → percentage form (1.31) that the dashboard expects.
 // Detection: if max eng_rate < 0.5 or max country pct < 1.0 → values are decimal format.
 function normalizePcts(data) {
@@ -574,7 +648,7 @@ function loadData(data) {
     showToast('Invalid data.json — missing weeks array', 'err');
     return;
   }
-  DATA = normalizePcts(data);
+  DATA = normalizePcts(normalizeFlat(data));
   // Destroy all existing charts before re-init
   Object.keys(CHARTS).forEach(k => { if (CHARTS[k]) { CHARTS[k].destroy(); CHARTS[k] = null; } });
   initDashboard();

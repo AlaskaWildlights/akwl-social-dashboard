@@ -1832,19 +1832,121 @@ function setGoalsKPIsFormulas() {
   ss.toast("✅ Goals & KPIs formulas updated", "AKWL v7", 4);
 }
 
+// ─── Repopulate all platform tabs from AKWL_data.json in Drive ────────────────
+// Use this when sheet tabs are empty but the JSON history is intact.
+
+function repopulateSheetsFromJSON() {
+  var ss  = SpreadsheetApp.openById(SPREADSHEET_ID);
+  var obj = readJSONFromDrive();
+  if (!obj || !obj.weeks || !obj.weeks.length) {
+    log("❌ No JSON data found in Drive");
+    ss.toast("❌ No JSON found in Drive", "AKWL v7", 4);
+    return;
+  }
+
+  var igWs = ss.getSheetByName("Instagram");
+  var fbWs = ss.getSheetByName("Facebook");
+  var ttWs = ss.getSheetByName("TikTok");
+  var gaWs = ss.getSheetByName("Analytics");
+  var wlWs = ss.getSheetByName("Weekly Log");
+
+  // Clear platform tabs rows 3+
+  [[igWs,10],[fbWs,8],[ttWs,9],[gaWs,6]].forEach(function(p){
+    if (!p[0]) return;
+    var lr = Math.max(p[0].getLastRow(), 39);
+    p[0].getRange(3, 1, lr - 2, p[1]).clearContent();
+  });
+  // Weekly Log: clear data cols C-AA (cols 3-27), rows 2-38 (pre-populated A-B stay)
+  if (wlWs) wlWs.getRange(2, 3, 37, 25).clearContent();
+
+  // Read Weekly Log col A once for fast lookup
+  var wlColA = wlWs ? wlWs.getRange("A2:A38").getValues() : [];
+
+  var weeks = obj.weeks.slice().sort(function(a,b){
+    return a.iso < b.iso ? -1 : a.iso > b.iso ? 1 : 0;
+  });
+
+  weeks.forEach(function(w, i) {
+    var r   = i + 3;
+    var lbl = weekISOtoLabel(w.iso);
+    var mis = w.ga_missing;
+    var gaS  = mis ? "—" : (w.ga_sessions     || 0);
+    var gaE  = mis ? "—" : (w.ga_eng_sessions  || 0);
+    var gaER = mis ? "—" : (w.ga_eng_rate      || 0);
+    var gaRv = mis ? "—" : (w.ga_revenue       || 0);
+
+    // Instagram: A-J
+    if (igWs) {
+      igWs.getRange(r, 1, 1, 10).setValues([[
+        w.iso, lbl, w.ig_followers||0,
+        w.ig_reach||0, w.ig_views||0, w.ig_follows||0, w.ig_visits||0,
+        w.ig_inter||0, w.ig_clicks||0, w.ig_eng||0
+      ]]);
+      igWs.getRange(r, 10).setNumberFormat("0.00%");
+    }
+
+    // Facebook: A-H
+    if (fbWs) {
+      fbWs.getRange(r, 1, 1, 8).setValues([[
+        w.iso, lbl,
+        w.fb_views||0, w.fb_visits||0, w.fb_viewers||0,
+        w.fb_follows||0, w.fb_inter||0, w.fb_clicks||0
+      ]]);
+    }
+
+    // TikTok: A-I
+    if (ttWs) {
+      ttWs.getRange(r, 1, 1, 9).setValues([[
+        w.iso, lbl, w.tt_followers||0,
+        w.tt_views||0, w.tt_reach||0, w.tt_new_flw||0,
+        w.tt_likes||0, w.tt_comments||0, w.tt_shares||0
+      ]]);
+    }
+
+    // Analytics: A-F
+    if (gaWs) {
+      gaWs.getRange(r, 1, 1, 6).setValues([[w.iso, lbl, gaS, gaE, gaER, gaRv]]);
+      if (!mis) gaWs.getRange(r, 5).setNumberFormat("0.00%");
+    }
+
+    // Weekly Log: find pre-populated row by ISO in col A
+    for (var j = 0; j < wlColA.length; j++) {
+      if (wlColA[j][0] === w.iso) {
+        var wr = j + 2;
+        wlWs.getRange(wr, 3, 1, 23).setValues([[
+          w.ig_reach||0, w.ig_views||0, w.ig_follows||0, w.ig_visits||0,
+          w.ig_inter||0, w.ig_clicks||0, w.ig_eng||0, w.ig_followers||0,
+          w.fb_views||0, w.fb_visits||0, w.fb_viewers||0,
+          w.fb_follows||0, w.fb_inter||0, w.fb_clicks||0,
+          w.tt_views||0, w.tt_reach||0, w.tt_new_flw||0, w.tt_followers||0,
+          w.tt_likes||0, w.tt_comments||0, w.tt_shares||0,
+          gaS, gaE
+        ]]);
+        wlWs.getRange(wr, 26).setValue(gaER); // col Z
+        wlWs.getRange(wr, 27).setValue(gaRv); // col AA
+        break;
+      }
+    }
+  });
+
+  log("✅ repopulateSheetsFromJSON: " + weeks.length + " weeks written");
+  ss.toast("✅ Sheets repopulated from JSON (" + weeks.length + " weeks)", "AKWL v7", 6);
+}
+
 // ─── Menu ──────────────────────────────────────────────────────────────────────
 
 function onOpen() {
   SpreadsheetApp.openById(SPREADSHEET_ID).addMenu("AKWL Tracker", [
-    {name:"▶ Run Now (process CSVs)",    functionName:"processAllCSVs"},
-    {name:"🔄 Re-process all (fix data)",functionName:"reprocessAllProcessed"},
-    {name:"📋 Build & save JSON",        functionName:"buildJSONOnly"},
-    {name:"📊 Fix Dashboard formulas",   functionName:"setDashboardFormulas"},
-    {name:"📅 Fix Monthly MoM formulas", functionName:"setMonthlyMoMFormulas"},
-    {name:"🎯 Fix Goals & KPIs formulas",functionName:"setGoalsKPIsFormulas"},
-    {name:"🧹 Clear sheet data rows",    functionName:"clearSheetData"},
-    {name:"🔍 Test file scan",           functionName:"testFiles"},
-    {name:"🗃 Archive inbox files",      functionName:"clearAll"}
+    {name:"▶ Run Now (process CSVs)",        functionName:"processAllCSVs"},
+    {name:"🔄 Re-process all (fix data)",    functionName:"reprocessAllProcessed"},
+    {name:"📥 Re-populate sheets from JSON", functionName:"repopulateSheetsFromJSON"},
+    {name:"📋 Build & save JSON",            functionName:"buildJSONOnly"},
+    {name:"📊 Fix Dashboard formulas",       functionName:"setDashboardFormulas"},
+    {name:"📅 Fix Monthly MoM formulas",     functionName:"setMonthlyMoMFormulas"},
+    {name:"🎯 Fix Goals & KPIs formulas",    functionName:"setGoalsKPIsFormulas"},
+    {name:"🧹 Clear sheet data rows",        functionName:"clearSheetData"},
+    {name:"🔍 Test file scan",               functionName:"testFiles"},
+    {name:"🗃 Archive inbox files",          functionName:"clearAll"}
   ]);
 }
 

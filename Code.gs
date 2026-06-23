@@ -289,6 +289,16 @@ function detectWeekFromContent(file, route) {
     }
 
   } else if (route === "tt_overview" || route === "tt_audience") {
+    // TT overview CSVs often span week boundaries — prefer filename W## like GA
+    var fnMatch = file.getName().match(/(?:^|[^A-Za-z0-9])(W\d{2})(?:[^A-Za-z0-9]|$)/i);
+    if (fnMatch) {
+      var wkISO = fnMatch[1].toUpperCase();
+      if (weekISOtoDates(wkISO)) {
+        log("  ↳ TT: filename identifies week " + wkISO);
+        return wkISO;
+      }
+    }
+    // Fallback: content-based date detection
     var lines = raw.replace(/\r/g,"").replace(/﻿/g,"").split("\n")
                    .filter(function(l){ return l.trim(); });
     if (lines.length >= 2) {

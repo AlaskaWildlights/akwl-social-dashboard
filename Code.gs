@@ -109,6 +109,25 @@ function getOrCreateSubfolder(parent, name) {
   return ex.hasNext() ? ex.next() : parent.createFolder(name);
 }
 
+// Collect all inbox CSVs from the top-level folder AND one level of subfolders,
+// excluding anything inside procFolder (Processed).
+function collectInboxCSVs(folder, procFolder) {
+  var files = [];
+  var iter = folder.getFilesByType(MimeType.CSV);
+  while (iter.hasNext()) {
+    var f = iter.next();
+    if (!isInsideFolder(f, procFolder)) files.push(f);
+  }
+  var sfIter = folder.getFolders();
+  while (sfIter.hasNext()) {
+    var sf = sfIter.next();
+    if (sf.getId() === procFolder.getId()) continue; // skip Processed
+    var csvIter = sf.getFilesByType(MimeType.CSV);
+    while (csvIter.hasNext()) files.push(csvIter.next());
+  }
+  return files;
+}
+
 function lastClosedSaturday() {
   var now = new Date();
   var akOffsetMs = -8 * 60 * 60 * 1000;
@@ -719,6 +738,9 @@ function parseTTAudienceCSV(file) {
   if (!daily.length) return null;
 
   var last = daily[daily.length - 1];
+  if (!last.total_followers) {
+    log("⚠️ TT Audience: total_followers is '--' or 0 on " + last.date + " — will use cumulative netGrowth fallback");
+  }
   return {
     snapshot: {
       date:            last.date,
@@ -999,13 +1021,8 @@ function processAllFiles(cutoff) {
   var audienceData = {}; // weekISO → { ig, fb, tt } parsed audience objects
   var unidentifiable = [];
 
-  // Collect unprocessed CSVs
-  var files = [];
-  var iter = folder.getFilesByType(MimeType.CSV);
-  while (iter.hasNext()) {
-    var f = iter.next();
-    if (!isInsideFolder(f, procFolder)) files.push(f);
-  }
+  // Collect unprocessed CSVs (top-level inbox + immediate week subfolders)
+  var files = collectInboxCSVs(folder, procFolder);
   log("Found " + files.length + " unprocessed CSV(s)");
   files.sort(function(a,b){ return fileSortPriority(a)-fileSortPriority(b); });
 
@@ -1219,12 +1236,7 @@ function processAllCSVs() {
 function testFiles() {
   var folder = DriveApp.getFolderById(FOLDER_ID);
   var procFolder = getOrCreateSubfolder(folder, PROCESSED_NAME);
-  var files = [];
-  var iter = folder.getFilesByType(MimeType.CSV);
-  while (iter.hasNext()) {
-    var f = iter.next();
-    if (!isInsideFolder(f, procFolder)) files.push(f);
-  }
+  var files = collectInboxCSVs(folder, procFolder);
   if (!files.length) { log("✅ No unprocessed files in inbox."); return; }
   files.forEach(function(file, idx) {
     var fname = file.getName();
@@ -1291,11 +1303,8 @@ function clearAll() {
   var archiveFolder = getOrCreateSubfolder(folder, archiveName);
   var procFolder    = getOrCreateSubfolder(folder, PROCESSED_NAME);
   var count = 0;
-  var iter = folder.getFilesByType(MimeType.CSV);
-  while (iter.hasNext()) {
-    var f = iter.next();
-    if (!isInsideFolder(f, procFolder)) { f.moveTo(archiveFolder); count++; }
-  }
+  var toArchive = collectInboxCSVs(folder, procFolder);
+  toArchive.forEach(function(f) { f.moveTo(archiveFolder); count++; });
   log("Archived " + count + " inbox file(s) to " + archiveName);
   SpreadsheetApp.openById(SPREADSHEET_ID).toast("Archived " + count + " file(s).", "AKWL v7", 8);
 }

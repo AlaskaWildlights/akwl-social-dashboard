@@ -566,7 +566,7 @@ function parseGoogleAnalyticsCSV(file) {
   var sessIdx = hi("sessions"),       engIdx  = hi("engaged session"),
       revIdx  = hi("revenue"),        srcIdx  = hi("session source"),
       erIdx   = hi("engagement rate"), atIdx  = hi("average engagement time"),
-      keIdx   = hi("key event");
+      keIdx   = hi("key events");
 
   var totalSessions=0, totalEngaged=0, totalRevenue=0;
   var wEngRate=0, wAvgTime=0, totalKeyEvents=0;

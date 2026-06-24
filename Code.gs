@@ -727,19 +727,21 @@ function parseTTAudienceCSV(file) {
   for (var i = 1; i < lines.length; i++) {
     var parts = lines[i].split(",").map(function(p){ return p.trim(); });
     if (!parts[dateIdx]) continue;
+    var totRaw = totFlwIdx > -1 ? parts[totFlwIdx] : "--";
     daily.push({
-      date:            parts[dateIdx].replace(/\//g,"-"),
-      new_followers:   parseInt(parts[newFlwIdx])  || 0,
-      total_followers: parseInt(parts[totFlwIdx])  || 0,
-      reached:         parseInt(parts[reachedIdx]) || 0,
-      engaged:         parseInt(parts[engIdx])     || 0
+      date:                 parts[dateIdx].replace(/\//g,"-"),
+      new_followers:        parseInt(parts[newFlwIdx]) || 0,
+      total_followers:      parseInt(totRaw) || 0,
+      total_followers_real: /^\d+$/.test(totRaw.trim()),
+      reached:              parseInt(parts[reachedIdx]) || 0,
+      engaged:              parseInt(parts[engIdx])     || 0
     });
   }
   if (!daily.length) return null;
 
-  var last = daily[daily.length - 1];
-  if (!last.total_followers) {
-    log("⚠️ TT Audience: total_followers is '--' or 0 on " + last.date + " — will use cumulative netGrowth fallback");
+  var hasRealTotal = daily.some(function(d){ return d.total_followers_real; });
+  if (!hasRealTotal) {
+    log("⚠️ TT Audience: all total_followers are '--' — will chain from last known count + new_followers");
   }
   return {
     snapshot: {
@@ -1163,21 +1165,26 @@ function processAllCSVs() {
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
 
     // ── Pre-compute ig_followers and tt_totalFollowers ────────────────────────
-    // ig_followers comes from Manual Data sheet; tt_totalFollowers from TT Audience
-    // snapshot (actual count) or cumulative netGrowth fallback.
+    // ig_followers: Manual Data sheet.
+    // tt_totalFollowers: last real total_followers within week from TT Audience daily rows,
+    // or chain = last known real total + sum(new_followers) when all rows show "--".
     var weekISOsSorted = Object.keys(result.weekData).sort();
 
-    // Find last TT total BEFORE the earliest week we're processing (for cumulative fallback)
+    // Seed chain from pre-existing TikTok sheet rows before the first week we're processing
     var ttRunning = 0;
+    var ttRunningDate = "";
     if (weekISOsSorted.length) {
       var firstISO = weekISOsSorted[0];
       var ttSheet = ss.getSheetByName("TikTok");
       if (ttSheet && ttSheet.getLastRow() >= 3) {
         var ttData = ttSheet.getRange(3, 1, ttSheet.getLastRow()-2, 3).getValues();
         for (var ri = ttData.length-1; ri >= 0; ri--) {
-          var rowISO = ttData[ri][0];
-          if (rowISO && String(rowISO) < firstISO && typeof ttData[ri][2]==="number" && ttData[ri][2]>0) {
-            ttRunning = ttData[ri][2]; break;
+          var rowISO = String(ttData[ri][0]);
+          if (rowISO && rowISO < firstISO && typeof ttData[ri][2]==="number" && ttData[ri][2]>0) {
+            ttRunning = ttData[ri][2];
+            var prevDates = weekISOtoDates(rowISO);
+            ttRunningDate = prevDates ? prevDates.end : "";
+            break;
           }
         }
       }
@@ -1185,14 +1192,55 @@ function processAllCSVs() {
 
     weekISOsSorted.forEach(function(weekISO) {
       result.weekData[weekISO].ig.followers = readManualFollowers(ss, weekISO);
-      // Use TT Audience snapshot (actual total) if available, else cumulative
+
       var ttAud = result.audienceData[weekISO] && result.audienceData[weekISO].tt;
-      if (ttAud && ttAud.snapshot && ttAud.snapshot.total_followers > 0) {
-        ttRunning = ttAud.snapshot.total_followers;
+      var wkDates = weekISOtoDates(weekISO);
+      var weekStart = wkDates ? wkDates.start : "";
+      var weekEnd   = wkDates ? wkDates.end   : "";
+      var thisWeekTotal = ttRunning;
+
+      if (ttAud && ttAud.daily && ttAud.daily.length) {
+        // Find last real total_followers within this week's date range
+        var lastRealInRange = null;
+        ttAud.daily.forEach(function(dr) {
+          if (dr.total_followers_real && dr.date >= weekStart && dr.date <= weekEnd) {
+            lastRealInRange = dr;
+          }
+        });
+
+        if (lastRealInRange) {
+          // Direct: TikTok provided a real count — use it
+          thisWeekTotal = lastRealInRange.total_followers;
+          ttRunning     = lastRealInRange.total_followers;
+          ttRunningDate = lastRealInRange.date;
+          // Some files (TikTok Mon-Sun export) contain one extra row past weekEnd with a real total;
+          // use it as the chain base for the next week without changing this week's value.
+          ttAud.daily.forEach(function(dr) {
+            if (dr.total_followers_real && dr.date > weekEnd) {
+              ttRunning     = dr.total_followers;
+              ttRunningDate = dr.date;
+            }
+          });
+        } else {
+          // Chain: no real totals — add new_followers from rows after last known date
+          var newFromAudience = 0;
+          ttAud.daily.forEach(function(dr) {
+            if (dr.date > ttRunningDate && dr.date <= weekEnd) {
+              newFromAudience += dr.new_followers;
+            }
+          });
+          ttRunning     += newFromAudience;
+          ttRunningDate  = weekEnd;
+          thisWeekTotal  = ttRunning;
+        }
       } else {
-        ttRunning += result.weekData[weekISO].tt.netGrowth || 0;
+        // No TT Audience file for this week — fall back to netGrowth from Overview
+        ttRunning     += result.weekData[weekISO].tt.netGrowth || 0;
+        ttRunningDate  = weekEnd;
+        thisWeekTotal  = ttRunning;
       }
-      result.weekData[weekISO].tt.totalFollowers = ttRunning;
+
+      result.weekData[weekISO].tt.totalFollowers = thisWeekTotal;
     });
 
     // ── Write to Google Sheets ────────────────────────────────────────────────

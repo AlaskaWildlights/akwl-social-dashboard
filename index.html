@@ -1225,12 +1225,32 @@ function handleMultiFile(files){
     })(file);
   }
 }
+// Apps Script may emit iso as "W27" while embedded data uses "2026-W27".
+// Normalize so uploads MERGE into the same week instead of duplicating it.
+function normIso(w){
+  var iso=String(w.iso||'');
+  if(/^W\d+$/.test(iso)) iso=(w.start?w.start.slice(0,4):'2026')+'-'+iso;
+  return iso;
+}
+function isEmptyVal(v){return v===null||v===undefined||v===0||v===''||(Array.isArray(v)&&v.length===0);}
+// Field-level merge: uploaded values win, EXCEPT an empty/zero upload never
+// wipes existing real data (protects ig_followers, tt_top_videos, audience-fed fields).
+function mergeWeek(ex,nw){
+  var out={},k;
+  for(k in ex)out[k]=ex[k];
+  for(k in nw){
+    if(isEmptyVal(nw[k])&&!isEmptyVal(ex[k]))continue;
+    out[k]=nw[k];
+  }
+  out.iso=normIso(out);
+  return out;
+}
 function finalizeMerge(allWeeks,latestAudience,errors){
   if(!allWeeks.length){setSt('No valid weeks found','err');return;}
   // Use audience from uploaded file if it has data, otherwise keep existing
   var aud=(latestAudience&&(latestAudience.ig||latestAudience.fb||latestAudience.tt))?latestAudience:D.audience;
   pendJSON={weeks:allWeeks,audience:aud,generated:new Date().toISOString()};
-  var newCount=allWeeks.filter(function(w){return !D.weeks.find(function(ew){return ew.iso===w.iso;});}).length;
+  var newCount=allWeeks.filter(function(w){var ni=normIso(w);return !D.weeks.find(function(ew){return ew.iso===ni;});}).length;
   setSt('Ready - '+allWeeks.length+' weeks, '+newCount+' new'+(errors.length?' ('+errors.length+' skipped)':''),'ok');
   document.getElementById('apbtn').disabled=false;
 }
@@ -1239,8 +1259,10 @@ function applyUpload(){
   if(!pendJSON) return;
   for(var i=0;i<pendJSON.weeks.length;i++){
     var nw=pendJSON.weeks[i];
-    var idx=D.weeks.findIndex(function(ew){return ew.iso===nw.iso;});
-    if(idx>=0) D.weeks[idx]=nw; else D.weeks.push(nw);
+    var ni=normIso(nw);
+    var idx=D.weeks.findIndex(function(ew){return ew.iso===ni;});
+    if(idx>=0) D.weeks[idx]=mergeWeek(D.weeks[idx],nw);
+    else{nw.iso=ni;D.weeks.push(nw);}
   }
   D.weeks.sort(function(a,b){return a.iso.localeCompare(b.iso);});
   if(pendJSON.audience) D.audience=pendJSON.audience;

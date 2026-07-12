@@ -613,7 +613,7 @@ function parseIGAudienceCSV(file) {
     return l.replace(/^sep=.*$/i,"").trim();
   }).filter(function(l){ return l.length > 0; });
 
-  var result = { age_gender: [], top_countries: [], top_cities: [] };
+  var result = { age_gender: [], top_countries: [], top_cities: [], follows_daily: [] };
   var section = "";
   var i = 0;
   while (i < lines.length) {
@@ -621,6 +621,23 @@ function parseIGAudienceCSV(file) {
     var stripped = line.replace(/^"(.*)"$/, "$1").trim();
 
     if (stripped === "Age & gender") { section = "age"; i++; continue; }
+
+    // "Follows" section = daily NET follower change (new minus unfollows).
+    // Only CSV source for total ig_followers: chain = last known total + net in range.
+    if (stripped === "Follows") { section = "follows"; i++; continue; }
+    if (section === "follows") {
+      var fparts = parseCSVLine(line);
+      var fdate  = (fparts[0]||"").replace(/"/g,"").trim();
+      if (/^\d{4}-\d{2}-\d{2}/.test(fdate)) {
+        result.follows_daily.push({
+          date: fdate.slice(0,10),
+          net:  parseInt((fparts[1]||"0").replace(/"/g,"")) || 0
+        });
+        i++; continue;
+      } else if (fdate.toLowerCase() === "date") { i++; continue; }
+      section = ""; // section ended — reprocess this line as a new header
+      continue;
+    }
 
     if (stripped === "Top cities") {
       if (i + 2 < lines.length) {
@@ -799,7 +816,8 @@ function writeInstagram(ss, weekISO, data) {
   if (!ws) { log("❌ Instagram sheet not found"); return; }
 
   var ig = data.ig;
-  var igFollowers = readManualFollowers(ss, weekISO);
+  // Pre-computed in processAllCSVs (Manual Data, or derived from Audience CSV chain)
+  var igFollowers = ig.followers || readManualFollowers(ss, weekISO);
   var engRate = ig.reach > 0 ? ig.interactions / ig.reach : 0;
   var targetRow = findOrAppendWeekRow(ws, weekISO, 3);
 
@@ -1190,8 +1208,54 @@ function processAllCSVs() {
       }
     }
 
+    // Seed ig_followers chain from the Instagram sheet (col C) before the first
+    // processed week, so weeks without a Manual Data row can be derived from the
+    // IG Audience CSV "Follows" section (daily net change).
+    var igRunning = 0;
+    if (weekISOsSorted.length) {
+      var igSheet = ss.getSheetByName("Instagram");
+      if (igSheet && igSheet.getLastRow() >= 3) {
+        var igRows = igSheet.getRange(3, 1, igSheet.getLastRow()-2, 3).getValues();
+        for (var gi = igRows.length-1; gi >= 0; gi--) {
+          var gISO = String(igRows[gi][0]);
+          if (gISO && gISO < weekISOsSorted[0] && typeof igRows[gi][2] === "number" && igRows[gi][2] > 0) {
+            igRunning = igRows[gi][2];
+            break;
+          }
+        }
+      }
+    }
+    // Collect all IG net-follows days from every audience file in this run
+    // (lifetime exports span multiple weeks).
+    var igNetByDate = {};
+    Object.keys(result.audienceData).forEach(function(wISO) {
+      var iga = result.audienceData[wISO] && result.audienceData[wISO].ig;
+      if (iga && iga.follows_daily) {
+        iga.follows_daily.forEach(function(d) { igNetByDate[d.date] = d.net; });
+      }
+    });
+
     weekISOsSorted.forEach(function(weekISO) {
-      result.weekData[weekISO].ig.followers = readManualFollowers(ss, weekISO);
+      var manual = readManualFollowers(ss, weekISO);
+      if (manual > 0) {
+        // Manual Data sheet always wins when present
+        result.weekData[weekISO].ig.followers = manual;
+        igRunning = manual;
+      } else if (igRunning > 0) {
+        // Derive: last known total + net follows within this week's dates
+        var igDates = weekISOtoDates(weekISO);
+        var netSum = 0, haveDays = false;
+        if (igDates) {
+          Object.keys(igNetByDate).forEach(function(d) {
+            if (d >= igDates.start && d <= igDates.end) { netSum += igNetByDate[d]; haveDays = true; }
+          });
+        }
+        if (haveDays) igRunning += netSum;
+        // No audience data for this week → carry last known total (never inflate)
+        result.weekData[weekISO].ig.followers = igRunning;
+      } else {
+        result.weekData[weekISO].ig.followers = 0;
+      }
 
       var ttAud = result.audienceData[weekISO] && result.audienceData[weekISO].tt;
       var wkDates = weekISOtoDates(weekISO);
@@ -1277,6 +1341,26 @@ function processAllCSVs() {
     try { GmailApp.sendEmail(AKWL_EMAIL, "⚠️ AKWL Tracker v7 error", err.message+"\n\n"+(err.stack||"")); } catch(e){}
     throw err;
   }
+}
+
+// ─── setupWeeklyTrigger (run ONCE from the editor to automate everything) ─────
+// Installs a time-driven trigger: processAllCSVs runs every Monday 6-7am.
+// Safe to re-run — removes any existing trigger for the same function first.
+
+function setupWeeklyTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function(t) {
+    if (t.getHandlerFunction() === "processAllCSVs") ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger("processAllCSVs")
+    .timeBased()
+    .onWeekDay(ScriptApp.WeekDay.MONDAY)
+    .atHour(6)
+    .create();
+  log("✅ Weekly trigger installed: processAllCSVs — Mondays 6-7am");
+  try {
+    SpreadsheetApp.openById(SPREADSHEET_ID)
+      .toast("Trigger instalado: cada lunes 6-7am se procesa todo lo que haya en Drive y llega el email.", "AKWL v7", 10);
+  } catch(e){}
 }
 
 // ─── testFiles (preview only, no writes) ──────────────────────────────────────
@@ -1472,12 +1556,13 @@ function buildAndSaveJSON(weekData, audienceData) {
   var cutoff = lastClosedSaturday();
 
   // Load existing flat JSON from Drive
+  // Keys are normalized to short form ("W27") so "2026-W27" and "W27" never duplicate.
   var existing = readJSONFromDrive();
   var existingWeeks = {};
   if (existing && existing.weeks) {
     existing.weeks.forEach(function(w) {
       var key = w.iso || w.week_iso; // support old nested format keys too
-      if (key) existingWeeks[key] = w;
+      if (key) existingWeeks[String(key).replace(/^\d{4}-/,"")] = w;
     });
   }
 
@@ -1531,7 +1616,9 @@ function buildWeekObjFlat(weekISO, wk, wd) {
   var ig = wd.ig || {}, fb = wd.fb || {}, tt = wd.tt || {}, ga = wd.ga;
   var igEng = (ig.reach||0) > 0 ? ig.interactions / ig.reach : 0;
   return {
-    iso:   weekISO,
+    // Dashboard HTML keys weeks by "2026-Wnn" — emit the same form so
+    // the Update-data merge matches instead of duplicating.
+    iso:   wk.start.slice(0,4) + "-" + weekISO,
     label: weekISOtoLabel(weekISO),
     start: wk.start,
     end:   wk.end,

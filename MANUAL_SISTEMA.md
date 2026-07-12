@@ -183,8 +183,9 @@ El JSON que consume el HTML (el que genera el script y el que se hardcodea) tien
   var EMBEDDED_DATA = { ...todo el JSON... };
   // == DATA_END ===
   ```
-- **Botón "Update data":** sube un JSON semanal y lo FUSIONA con lo embebido. ⚠️ **PELIGRO:** si el JSON subido tiene semanas que ya existen, las **reemplaza**. Así se perdieron los `ig_followers` de W17–W19 una vez (se subió un JSON "flat" sin esos campos y pisó los datos ricos).
-- **Regla de seguridad:** el JSON que subas al botón debe contener SOLO las semanas nuevas, con TODOS los campos del contrato (sección 6).
+- **Botón "Update data" (BLINDADO desde jul 2026):** sube un JSON semanal y lo fusiona con lo embebido, **campo por campo**:
+  - Un valor en 0 o vacío en el JSON subido **nunca pisa** un valor real ya existente (protege `ig_followers`, `tt_top_videos`, etc.). Esto arregla de raíz el accidente que borró los ig_followers de W17–W19.
+  - Los ISO `"W27"` y `"2026-W27"` se reconocen como la misma semana (no más duplicados).
 - Para hardcodear con Claude: reemplazar el contenido entre los marcadores con el JSON completo actualizado (así se hizo W20–W27).
 
 ---
@@ -210,8 +211,11 @@ Container-bound al Google Sheet. 1,102 líneas. Está respaldado en este repo (`
 - `ga_key_events` usa `"key events"` (con s) para no confundirse con "Session key event rate".
 - `parseTikTokOverview` filtra filas fuera del rango de la semana (arregla el desfase Lun–Dom de TikTok).
 - Archivos "Audience lifetime data" tienen excepción en la detección de semana.
+- **JSON emite `iso: "2026-Wnn"`** — mismo formato que el HTML (antes emitía "Wnn" y el botón duplicaba semanas).
+- **`ig_followers` se deriva automáticamente** del CSV IG_Audience si tiene la sección "Follows" (net diario): `total_anterior + net_semana`. El Manual Data sheet sigue teniendo prioridad si tiene la fila. Verificado: reproduce exactamente el 721 de W27.
 
-**Funciones útiles para debugging:**
+**Funciones útiles:**
+- `setupWeeklyTrigger()` — **correr UNA VEZ** desde el editor: instala el trigger de los lunes 6am. Re-correrla es seguro (reemplaza el trigger anterior).
 - `testFiles()` — lista qué archivos ve y cómo los clasifica, SIN escribir nada.
 - `clearSheetData()` — limpia las pestañas de datos.
 - `clearAll()` — limpia todo incluyendo la carpeta procesados.
@@ -230,8 +234,9 @@ Container-bound al Google Sheet. 1,102 líneas. Está respaldado en este repo (`
 | Audience | Demographics más recientes | Script |
 | **Manual Data** | col A=`2026-Wnn`, col C=`ig_followers` total | **TÚ (manual)** |
 
-**El único dato manual del sistema es `ig_followers`** (Meta no lo exporta bien en CSV). Cada sábado/domingo: mirar el total en el perfil de IG y anotarlo en Manual Data.
-*Alternativa descubierta en este chat:* el CSV "Audience" con sección "Follows" (net diario) permite derivarlo: `total_anterior + net_semana`.
+**`ig_followers` ya NO requiere entrada manual** (desde jul 2026): si el CSV `IG_Audience` incluye la sección "Follows" (el gráfico de followers net diario), el script lo deriva solo: `total_anterior + net_semana`. El Manual Data sheet sigue funcionando y **tiene prioridad** si la fila existe — úsalo para corregir manualmente cualquier semana.
+
+⚠️ Para que funcione: al exportar el Audience de IG en Meta, incluye la métrica **Follows** en la vista antes de exportar (así salió en `Audience_1.csv`, que tenía Top countries + Age & gender + Follows + Top cities).
 
 ---
 
@@ -263,13 +268,13 @@ Container-bound al Google Sheet. 1,102 líneas. Está respaldado en este repo (`
 ## 11. WORKFLOW SEMANAL (el proceso ideal, automatizado al máximo)
 
 ### Lo que haces TÚ (10 minutos, una vez por semana — domingo o lunes):
-1. Exportar los 18 CSVs (checklist sección 4) con rango **Dom–Sáb** de la semana cerrada.
+1. Exportar los 18 CSVs (checklist sección 4) con rango **Dom–Sáb** de la semana cerrada. En el IG_Audience, incluir la métrica **Follows** en la vista.
 2. Subirlos a la carpeta de Drive (`1G861p7ZUSpLhoFZjLDRPmUykN5QKXFEz`). Arrastrar y soltar, sin renombrar, sin ZIP.
-3. Anotar el total de IG followers en la pestaña "Manual Data" (o exportar el CSV Audience con la sección Follows).
+3. (Opcional) Anotar el total de IG followers en "Manual Data" — solo si quieres forzar un valor exacto; si no, el script lo deriva del CSV Audience.
 
 ### Lo que hace el SCRIPT automáticamente:
-4. **Trigger semanal** (configurar una vez): Apps Script → Triggers (⏰) → `processAllCSVs` → Time-driven → Week timer → Lunes 6–7am.
-   - Procesa todo lo que haya en la carpeta, escribe el Sheet, genera el JSON, **te manda el email** con el resumen y el JSON adjunto.
+4. **Trigger semanal** (configurar una vez): abrir el editor de Apps Script → seleccionar la función `setupWeeklyTrigger` → Run. Eso instala el trigger de los lunes 6–7am automáticamente.
+   - Cada lunes: procesa todo lo que haya en la carpeta, escribe el Sheet, genera el JSON, **te manda el email** con el resumen y el JSON adjunto.
    - Si falla, te llega email con el error.
 5. Alternativa manual: abrir el Sheet → menú del script → correr `processAllCSVs` (o desde el editor de Apps Script).
 

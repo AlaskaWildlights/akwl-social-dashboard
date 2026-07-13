@@ -1,0 +1,97 @@
+{
+  "weekLabel": "Jul 5 - Jul 11, 2026",
+  "startDate": "2026-07-05",
+  "endDate": "2026-07-11",
+  "generatedAt": "2026-07-13T00:00:00.000Z",
+  "platforms": {
+    "googleMaps": {
+      "count": 5,
+      "avg": 5.0,
+      "fiveStar": 5,
+      "reviews": [
+        {
+          "date": "2026-07-11",
+          "reviewer": "Jane Lubker",
+          "stars": 5,
+          "guide": "Dylan Berggren",
+          "text": "Dillion our guide was wonderful. He was so helpful on explaining things and showing us a wonderful and memorable day."
+        },
+        {
+          "date": "2026-07-10",
+          "reviewer": "Shari Clark",
+          "stars": 5,
+          "guide": "Pepper Burrel",
+          "text": "Pepper was a great tour host. The Springs were great, restaurant had great food and service and the ice bar was a must see"
+        },
+        {
+          "date": "2026-07-10",
+          "reviewer": "Lois Young",
+          "stars": 5,
+          "guide": "Dylan Berggren",
+          "text": "Our tour guide Dillion for the Discovery Riverboat Tour was EXCELLENT! I would highly recommend!!"
+        },
+        {
+          "date": "2026-07-09",
+          "reviewer": "Sarah Heath",
+          "stars": 5,
+          "guide": "Milo Pranther",
+          "text": "Milo was my guide and was a wealth of knowledge for all my nature questions..."
+        },
+        {
+          "date": "2026-07-09",
+          "reviewer": "Jonathan Dodson",
+          "stars": 5,
+          "guide": "Ripley Caldwell",
+          "text": "We had an absolute amazing trip with our host and guide Ripley..."
+        }
+      ]
+    },
+    "tripAdvisor": {
+      "count": 1,
+      "avg": 5.0,
+      "fiveStar": 1,
+      "reviews": [
+        {
+          "date": "2026-07-05",
+          "reviewer": "225jeyv",
+          "stars": 5,
+          "guide": "Dylan Berggren",
+          "tour": "Northern Lights & Chena Hot Springs Tour",
+          "text": "Dillon was a tremendous, knowledgeable and helpful guide. He ensured our questions were answered and tailored the day. The excursion exceeded our expectations - fully due to Dillon!"
+        }
+      ]
+    }
+  },
+  "totalReviews": 6,
+  "totalBonus": 55,
+  "guides": [
+    {
+      "name": "Dylan Berggren",
+      "gmaps": 2,
+      "ta": 1,
+      "fiveStar": 3,
+      "bonus": 25
+    },
+    {
+      "name": "Pepper Burrel",
+      "gmaps": 1,
+      "ta": 0,
+      "fiveStar": 1,
+      "bonus": 10
+    },
+    {
+      "name": "Milo Pranther",
+      "gmaps": 1,
+      "ta": 0,
+      "fiveStar": 1,
+      "bonus": 10
+    },
+    {
+      "name": "Ripley Caldwell",
+      "gmaps": 1,
+      "ta": 0,
+      "fiveStar": 1,
+      "bonus": 10
+    }
+  ]
+}

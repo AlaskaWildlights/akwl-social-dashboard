@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Alaska Wild Lights Social Dashboard</title>
+<script type='text/javascript' src='https://api.netlify.com/wMIoVdAgufDroTAgYvgVoOOQSb_BB4oOuB-WjDvEyx2yCwH0ujUsvWjraMKVlWBxyr-P1VIZLqSxAVplWCJAir3LgjfwnWC1Ss1o5Jz67g3x-rHwhEeB740-vnHJDAKIldol5Uxr2UIGOivt9Sl4IVj912YdvmYtZ_Wg0cPPpQzRuc46UnbX9u2Gh9a_WfHei0IDlht5jKcdkqpOPvIQzLeOL6mnQOZ6vEfjdU2njyxZtjSJH2LIJ9UhN8cHnS-6G8iO-0Dpjwx3QWPadGcgwq8ZgWGA1eNl8UuZcEieuUDqhPuQ73joao2QeChjWxmc9QhUEZKaqyVHAKsGaARGSWABfHbcHNYr2uMC3QAAfARJBc-1p5SLkb2OOcj5noa1TAn4nTJstk6ycLPwSJFOFfVToKlBB0hMW6_FORxpp5fAAseZVjDWUfW4oliEfTCmtiH5vCklcpU87knfD1-PWmWYaOoo7mLK8HqKqRoS8-XS1X4_LesnVXGklLC4zn8b9udNH_wJm3nfeIo4Y3_E'></script><script type='text/javascript' src='https://api.netlify.com/5VTs75K3L8oqiIejVD6HozXzW1fVB2LOgf8tf79c7BotJ3hrVyycOJNsAfs30IE-E-nT8vFtCICT7xc2DR7lCDFP9-drn-kcwvegHIFKr5V80D2wYUdTmTgxKxJl2cidY0kUM_LQiSpuF80kwANp46PACuZCa_xvkWA8TC5KW7038TdOoHRN4yue6lsRu6sJ9YywCxGlum3aCbMLCphwzc_hEdUVpQiRN1k2nNs4KiWTfZrWJu5M-2g60zy24DMNfKQLpi1WymVM1bk8xZ-QDjIcIg-p9WR9nNTqMaKgqojy4YXOzM34jUx0UYWcwhl82Bb01Z_1gCRjf9E_Z2VU5rmG7tkNiTrzTCak0zwx4WhJ9VhmjJbyrsc_wm6iIQOzdkqouVGNB5vKwzqN6FdMN6q133-eVOUIJTqtu0wlgbKfNVf_gW4o9qEDph6EmjyKA5-xn6ErNuPoUwty7fT0y7RJxtCvfaYfR-tqRedh9gwP76ZkxWqkZ4YPNjHKzrRYfDrf1XhXUKYlfSVNx4AO'></script><script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#1a2336;--surf:#212d42;--surf2:#283349;--surf3:#2f3c54;
+  --bdr:rgba(255,255,255,.13);--bdr2:rgba(255,255,255,.2);--bdr3:rgba(255,255,255,.28);
+  --text:#f5f8ff;--mut:#9aafc8;--dim:#4a6480;
+  --ig:#00B4D8;--fb:#3A86FF;--tt:#FF006E;--ga:#06D6A0;
+  --up:#2ED573;--dn:#FF4757;--skip:#FFA502;--gold:#FFD166;--aurora:#00E55A;
+  --f:Arial,Helvetica,sans-serif;--m:'Courier New',Courier,monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--f);font-size:9px;overflow-x:hidden}
+.shell{max-width:1300px;margin:0 auto;padding:0 14px 36px}
+
+/* topbar */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 0 9px;border-bottom:1px solid var(--bdr);margin-bottom:0}
+.brand{font-size:12px;font-weight:700;letter-spacing:-.2px}
+.brand-sub{font-size:9px;color:var(--mut);letter-spacing:.7px;text-transform:uppercase;margin-top:1px}
+.topbar-r{display:flex;align-items:center;gap:7px}
+.upd-badge{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--mut);padding:4px 9px;border:1px solid var(--bdr);border-radius:4px;background:var(--surf)}
+.upd-dot{width:5px;height:5px;border-radius:50%;background:var(--mut);flex-shrink:0}
+.upd-dot.fresh{background:var(--up)}
+.upd-dot.stale{background:var(--skip)}
+.upload-btn{display:flex;align-items:center;gap:5px;background:var(--surf2);border:1px solid var(--bdr2);color:var(--text);font-size:9px;font-weight:700;padding:5px 10px;border-radius:5px;cursor:pointer;font-family:var(--f)}
+.upload-btn:hover{border-color:var(--bdr3)}
+input[type=file]{display:none}
+
+/* tabs */
+.tabbar{display:flex;align-items:flex-end;padding:10px 0 0;border-bottom:1px solid var(--bdr);margin-bottom:0;overflow-x:auto;gap:0}
+.tab{display:flex;align-items:center;gap:5px;padding:5px 12px 6px;font-size:9px;font-weight:700;color:var(--mut);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:color .15s,border-color .15s}
+.tab:hover{color:var(--text)}
+.tab.on{color:var(--text);border-bottom-color:var(--tc)}
+.tdot{width:5px;height:5px;border-radius:50%;background:var(--tc);flex-shrink:0}
+
+/* range bar */
+.rangebar{display:flex;align-items:center;gap:7px;padding:8px 0 10px;border-bottom:1px solid var(--bdr);margin-bottom:14px;flex-wrap:wrap}
+.rb{font-size:9px;font-weight:700;padding:4px 8px;border-radius:4px;border:1px solid var(--bdr);background:transparent;color:var(--mut);cursor:pointer;font-family:var(--f)}
+.rb:hover,.rb.on{border-color:var(--bdr2);color:var(--text);background:var(--surf2)}
+.rsep{width:1px;height:14px;background:var(--bdr2);flex-shrink:0}
+.dr-lbl{font-size:9px;color:var(--mut);font-weight:700}
+
+
+select.rcsel{background:var(--surf2);border:1px solid var(--bdr2);color:var(--text);font-size:9px;padding:4px 8px;border-radius:4px;font-family:var(--f);outline:none;cursor:pointer;height:26px}
+select.rcsel:hover,select.rcsel:focus{border-color:var(--bdr3)}
+
+/* pages */
+.pg{display:none}.pg.on{display:block}
+
+/* section label */
+.sl{font-size:8px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mut);margin:12px 0 6px;display:flex;align-items:center;gap:7px}
+.sl::after{content:'';flex:1;height:1px;background:var(--bdr)}
+.sd{width:4px;height:4px;border-radius:50%;flex-shrink:0}
+
+/* goals strip */
+.goals{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:var(--surf);border:1px solid var(--bdr);border-radius:8px;padding:11px 14px;margin-bottom:12px}
+.gi{display:flex;flex-direction:column;gap:4px}
+.gi-h{display:flex;justify-content:space-between;align-items:center}
+.gi-n{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--mut)}
+.gi-p{font-size:10px;font-weight:700;font-family:var(--m)}
+.gi-t{height:3px;background:var(--dim);border-radius:2px;overflow:hidden}
+.gi-f{height:100%;border-radius:2px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.gi-v{display:flex;justify-content:space-between;font-size:10px}
+.gi-c{font-weight:700;font-family:var(--m)}
+.gi-tg{color:var(--mut)}
+
+/* summary kpi cards */
+.sum-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;min-width:0}
+.sc{background:var(--surf);border:1px solid var(--bdr);border-radius:8px;padding:11px 13px;position:relative;overflow:hidden;transition:border-color .15s;min-width:0}
+.sc:hover{border-color:var(--bdr2)}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--ac)}
+.sc-lbl{font-size:8px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
+.sc-val{font-size:15px;font-weight:700;font-family:var(--m);line-height:1;margin-bottom:3px}
+.sc-sub{font-size:10px;color:var(--mut);display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.sc-ft{border-top:1px solid var(--bdr);margin-top:7px;padding-top:5px;font-size:8px;color:var(--mut)}
+.sc-ft b{color:#bcd;font-family:var(--m);font-weight:700}
+
+/* wow chips */
+.wo{font-size:9px;font-weight:700;font-family:var(--m);padding:1px 4px;border-radius:3px;white-space:nowrap}
+.wu{color:#2ed573;background:rgba(46,213,115,.07)}
+.wd{color:#ff6b7a;background:rgba(255,71,87,.07)}
+.ws{color:#ffa502;background:rgba(255,165,2,.07)}
+
+/* insights */
+.ins-g{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;min-width:0}
+.ins{background:var(--surf);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;min-width:0}
+.ins-v{font-size:16px;font-weight:700;font-family:var(--m);line-height:1;margin-bottom:2px}
+.ins-l{font-size:9px;color:var(--mut);margin-bottom:4px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.ins-c{font-size:10px;color:var(--dim)}
+.ins-tag{font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;display:inline-block;margin-top:3px}
+
+/* ── ANNUAL TABLE ── */
+.tbl-wrap{overflow-x:auto;overflow-y:hidden;border-radius:8px;border:1px solid var(--bdr);margin-bottom:10px}
+.tbl-wrap::-webkit-scrollbar{height:4px}
+.tbl-wrap::-webkit-scrollbar-track{background:rgba(255,255,255,.03)}
+.tbl-wrap::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+table.ann{border-collapse:collapse;width:100%;min-width:860px;font-size:9px}
+table.ann thead th{padding:5px 9px;text-align:right;font-size:7px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--mut);background:var(--surf2);white-space:nowrap;border-bottom:1px solid var(--bdr);position:sticky;top:22px;z-index:3}
+table.ann thead th:first-child{text-align:left;position:sticky;left:0;top:0;z-index:4;background:var(--surf2);box-shadow:2px 0 6px rgba(0,0,0,.25)}
+table.ann thead th.gh{text-align:center;border-left:1px solid var(--bdr)}
+table.ann tbody tr:hover td{background:rgba(255,255,255,.025)}
+table.ann tbody tr:hover td:first-child{background:#28384f}
+table.ann tbody tr.latest td{background:rgba(0,180,216,.04)}
+table.ann tbody tr.latest td:first-child{background:#182838}
+table.ann td{padding:4px 9px;text-align:right;border-bottom:1px solid var(--bdr);font-family:var(--m);white-space:nowrap;position:relative}
+table.ann td:first-child{text-align:left;font-family:var(--f);position:sticky;left:0;background:var(--surf);z-index:2;font-weight:700;color:var(--text);box-shadow:2px 0 6px rgba(0,0,0,.25)}
+table.ann tr:hover td:first-child{background:#1a2535}
+table.ann td.gc{text-align:center;border-left:1px solid var(--bdr)}
+/* heatmap cell */
+.hm{display:inline-block;width:100%;text-align:right}
+/* group header in column headers */
+table.ann thead tr.grp-row th{padding:3px 10px;font-size:8px;text-align:center;border-bottom:1px solid var(--bdr2);position:sticky;top:0;z-index:3;background:var(--surf2)}
+/* wow inline */
+.wt{font-size:8px;font-family:var(--m);margin-left:3px}
+.wt.u{color:var(--up)}.wt.d{color:var(--dn)}.wt.s{color:var(--skip)}
+/* missing */
+.miss{color:var(--dim);font-style:italic}
+
+/* nodata */
+.nodata-banner{display:flex;align-items:center;gap:7px;background:rgba(255,165,2,.04);border:1px solid rgba(255,165,2,.12);border-radius:6px;padding:6px 10px;font-size:10px;color:var(--skip);margin-bottom:10px;font-weight:700}
+.nodata-banner span{color:var(--mut);font-weight:400}
+.na{color:var(--dim)!important;font-style:italic}
+
+/* charts */
+.ch{background:var(--surf);border:1px solid var(--bdr);border-radius:8px;padding:11px 14px;margin-bottom:8px;min-width:0;overflow:hidden}
+.ch-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.ch-t{font-size:10px;font-weight:700}
+.ch-scroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;max-width:100%}
+.ch-scroll::-webkit-scrollbar{height:4px}
+.ch-scroll::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+.ch-c{position:relative;height:130px;width:100%}
+.ch-empty{height:130px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--dim);font-style:italic;border:1px dashed var(--bdr);border-radius:5px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;min-width:0}
+.tc{background:var(--surf);border:1px solid var(--bdr);border-radius:8px;overflow:hidden;min-width:0}
+.tc-h{padding:7px 12px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between}
+.tc-t{font-size:10px;font-weight:700;display:flex;align-items:center;gap:5px}
+.pill{font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 6px;border-radius:3px}
+table.mt{width:100%;border-collapse:collapse;font-size:9px}
+table.mt th{padding:4px 12px;text-align:left;font-size:7px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--bdr)}
+table.mt th:not(:first-child){text-align:right}
+table.mt td{padding:5px 12px;border-bottom:1px solid var(--bdr);color:var(--text);table-layout:fixed}
+table.mt td:not(:first-child){text-align:right;font-family:var(--m);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+table.mt tr:last-child td{border-bottom:none}
+table.mt tr:hover td{background:rgba(255,255,255,.015)}
+.mn{color:var(--mut)!important}
+
+/* audience */
+.ag{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;min-width:0}
+.ac{background:var(--surf);border:1px solid var(--bdr);border-radius:8px;overflow:hidden;min-width:0}
+.ac-h{padding:6px 10px;border-bottom:1px solid var(--bdr);font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.ar{padding:4px 10px;display:flex;align-items:center;gap:6px;font-size:9px}
+.ar:hover{background:rgba(255,255,255,.015)}
+.ark{width:12px;font-size:8px;color:var(--dim);font-family:var(--m);text-align:right;flex-shrink:0}
+.arn{flex:1;color:#d0e4f0}
+.arbb{width:36px;height:3px;background:var(--dim);border-radius:2px;overflow:hidden}
+.arbf{height:100%;border-radius:2px}
+.arv{width:30px;text-align:right;font-family:var(--m);font-size:9px;color:var(--mut)}
+.age-r{padding:3px 10px}
+.age-l{font-size:9px;color:var(--mut);margin-bottom:2px;font-weight:700}
+.age-bs{display:flex;height:5px;gap:1px}
+.age-w{background:var(--ig);border-radius:1px 0 0 1px}
+.age-m{background:var(--fb);border-radius:0 1px 1px 0}
+.age-vs{display:flex;justify-content:space-between;font-size:8px;font-family:var(--m);margin-top:1px}
+.avw{color:var(--ig)}.avm{color:var(--fb)}
+
+/* GA */
+.src-r{display:flex;align-items:center;gap:6px;padding:5px 12px;border-bottom:1px solid var(--bdr);font-size:9px}
+.src-r:last-child{border-bottom:none}
+.src-r:hover{background:rgba(255,255,255,.015)}
+.src-n{flex:1;color:var(--mut)}
+.src-b{width:32px;height:3px;background:var(--dim);border-radius:2px;overflow:hidden}
+.src-f{height:100%;background:var(--ga);border-radius:2px}
+.src-s{font-family:var(--m);width:36px;text-align:right}
+.src-rv{font-family:var(--m);color:var(--ga);font-weight:700;width:58px;text-align:right}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:200}
+.modal-bg.open{display:flex}
+.modal{background:var(--surf2);border:1px solid var(--bdr2);border-radius:12px;padding:24px 28px;width:460px;max-width:94vw}
+.modal-ttl{font-size:14px;font-weight:700;margin-bottom:5px}
+.modal-sub{font-size:10px;color:var(--mut);margin-bottom:16px;line-height:1.6}
+.dz{border:1px dashed var(--bdr3);border-radius:8px;padding:24px 16px;text-align:center;cursor:pointer;transition:all .15s;margin-bottom:12px}
+.dz:hover,.dz.drag{border-color:var(--aurora);background:rgba(0,229,90,.04)}
+.dz-t{font-size:11px;color:var(--mut)}
+.dz-t b{color:var(--aurora)}
+.upst{font-size:10px;min-height:18px;margin-bottom:10px}
+.upst.ok{color:var(--up);font-weight:700}
+.upst.err{color:var(--dn);font-weight:700}
+.modal-act{display:flex;gap:7px;justify-content:flex-end}
+.btn-c{font-size:10px;font-weight:700;padding:6px 12px;border-radius:5px;border:1px solid var(--bdr2);background:transparent;color:var(--mut);cursor:pointer;font-family:var(--f)}
+.btn-c:hover{color:var(--text)}
+.btn-a{font-size:10px;font-weight:700;padding:6px 12px;border-radius:5px;border:1px solid rgba(0,229,90,.4);background:rgba(0,229,90,.1);color:var(--aurora);cursor:pointer;font-family:var(--f)}
+.btn-a:hover{background:rgba(0,229,90,.18)}
+.btn-a:disabled{opacity:.35;cursor:not-allowed}
+
+/* ── v5 additions ── */
+.kpi-goal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;min-width:0}
+.kg{background:var(--surf);border:1px solid var(--bdr);border-radius:8px;padding:12px 14px;position:relative;overflow:hidden;transition:border-color .15s;min-width:0}
+.kg::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--ac)}
+.kg:hover{border-color:var(--bdr2)}
+.kg-lbl{font-size:8px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--mut);margin-bottom:5px}
+.kg-val{font-size:14px;font-weight:700;font-family:var(--m);line-height:1;margin-bottom:2px}
+.kg-sub{font-size:9px;color:var(--mut);margin-bottom:7px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.kg-track{height:4px;background:var(--dim);border-radius:2px;overflow:hidden;margin-bottom:4px}
+.kg-fill{height:100%;border-radius:2px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.kg-meta{display:flex;justify-content:space-between;font-size:9px}
+.kg-curr{font-family:var(--m);font-weight:700}
+.kg-tgt{color:var(--mut)}
+/* peak badge */
+.peak-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:3px 7px;font-size:9px;color:var(--mut);font-weight:600;white-space:nowrap}
+/* tab text brighter */
+.tab{color:var(--mut)}
+.tab.on{color:#f0f4ff}
+/* ga layout */
+.ga-metrics-row{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:10px;min-width:0}
+.gm{background:var(--surf);border:1px solid var(--bdr);border-radius:7px;padding:10px 12px;min-width:0;transition:border-color .15s}
+.gm:hover{border-color:var(--bdr2)}
+.gm-l{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);margin-bottom:5px}
+.gm-v{font-size:14px;font-weight:700;font-family:var(--m);line-height:1;margin-bottom:3px}
+.gm-s{font-size:9px;color:var(--mut);display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+/* tt video tabs */
+.vid-tabs{display:flex;gap:5px;margin-bottom:8px}
+.vt{font-size:9px;font-weight:600;padding:3px 9px;border-radius:4px;border:1px solid var(--bdr);background:transparent;color:var(--mut);cursor:pointer;font-family:var(--f)}
+.vt.on{background:var(--surf2);border-color:var(--bdr2);color:var(--text)}
+/* annual table vertical scroll */
+.ann-wrap{max-height:340px;overflow-y:auto;overflow-x:auto;border-radius:8px;border:1px solid var(--bdr)}
+.ann-wrap::-webkit-scrollbar{width:4px;height:4px}
+.ann-wrap::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
+/* pie chart */
+.pie-wrap{position:relative;height:130px;display:flex;align-items:center;justify-content:center}
+.pie-legend{display:flex;flex-direction:column;gap:4px;padding:0 8px}
+.pie-item{display:flex;align-items:center;gap:5px;font-size:8px}
+.pie-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+/* make text in cards more visible */
+.sc-sub{color:#8aabcc!important}
+.sc-ft{color:#8aabcc!important}
+.sc-ft b{color:#cce0f0!important}
+.mn{color:#8aabcc!important}
+.kc-sl{color:#8aabcc!important}
+.ins-c{color:#6a85a0!important}
+.src-n{color:#8aabcc!important}
+.gi-tg{color:#8aabcc!important}
+.gi-n{color:#9ab0c8!important}
+/* section title no week ref */
+.sl{font-size:8px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--mut);margin:12px 0 6px;display:flex;align-items:center;gap:7px}
+.sl::after{content:'';flex:1;height:1px;background:var(--bdr)}
+.sd{width:4px;height:4px;border-radius:50%;flex-shrink:0}
+/* current week badge */
+.cur-week-badge{display:inline-flex;align-items:center;gap:5px;background:var(--surf2);border:1px solid var(--bdr2);border-radius:5px;padding:3px 9px;font-size:9px;font-weight:700;color:var(--text);margin-bottom:12px}
+.cw-dot{width:5px;height:5px;border-radius:50%;background:var(--mut)}
+.sc-pk{font-size:8px;color:var(--dim);margin-top:4px;padding-top:4px;border-top:1px solid var(--bdr)}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<div class="topbar">
+  <div>
+    <div class="brand">Alaska Wild Lights &mdash; Social Dashboard</div>
+    <div class="brand-sub">Internal use only</div>
+  </div>
+  <div class="topbar-r">
+    <div class="upd-badge" id="upd-badge">
+      <span class="upd-dot" id="upd-dot"></span>
+      <span id="upd-text">No data</span>
+    </div>
+    <button class="upload-btn" onclick="openModal()">
+      <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5.5 7V1.5M3 3.5l2.5-2 2.5 2M1.5 9h8"/></svg>
+      Update data
+    </button>
+  </div>
+</div>
+
+<div class="tabbar" id="tabbar"></div>
+
+<div class="rangebar">
+  <button class="rb on" onclick="setPreset('all',this)">All time</button>
+  <button class="rb" onclick="setPreset(4,this)">Last 4w</button>
+  <button class="rb" onclick="setPreset(8,this)">Last 8w</button>
+  <div class="rsep"></div>
+  <select class="rcsel" id="wk-single" onchange="applyWeekSingle()"></select>
+</div>
+
+<div id="pg-dashboard" class="pg on"></div>
+<div id="pg-ig" class="pg"></div>
+<div id="pg-fb" class="pg"></div>
+<div id="pg-tt" class="pg"></div>
+<div id="pg-ga" class="pg"></div>
+<div id="pg-audience" class="pg"></div>
+
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-ttl">Upload weekly JSON(s)</div>
+    <div class="modal-sub">Upload the weekly JSON from Apps Script. New weeks merge into history. Downloads updated HTML ready for Netlify.</div>
+    <div class="dz" id="dz"
+      onclick="document.getElementById('fup').click()"
+      ondragover="event.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="handleDrop(event)">
+      <div style="font-size:20px;margin-bottom:7px;color:var(--mut)">&#8593;</div>
+      <div class="dz-t">Drop <b>one or more JSON files</b> here or <b>click to browse</b></div>
+    </div>
+    <input type="file" id="fup" accept=".json" multiple onchange="handleMultiFile(this.files)">
+    <div class="upst" id="upst"></div>
+    <div class="modal-act">
+      <button class="btn-c" onclick="closeModal()">Cancel</button>
+      <button class="btn-a" id="apbtn" disabled onclick="applyUpload()">Merge &amp; Download</button>
+    </div>
+  </div>
+</div>
+
+<script>// == DATA_START ==
+var EMBEDDED_DATA = {"generated":"2026-07-13T00:00:00.000Z","goals":{"ig_followers":1500,"ig_eng_rate":6,"tt_followers":100},"weeks":[{"iso":"2026-W17","label":"Apr 19–25","ig_reach":229,"ig_views":354,"ig_follows":7,"ig_visits":42,"ig_inter":3,"ig_clicks":2,"ig_eng":0.0131,"ig_followers":643,"fb_views":164,"fb_visits":67,"fb_viewers":22,"fb_follows":32,"fb_inter":2,"fb_clicks":1,"tt_views":0,"tt_reach":0,"tt_profile_views":0,"tt_new_flw":0,"tt_lost_flw":0,"tt_net_growth":0,"tt_likes":0,"tt_comments":0,"tt_shares":0,"tt_website_clicks":0,"tt_followers":0,"tt_top_videos":[],"ga_sessions":927,"ga_eng_sessions":479,"ga_eng_rate":0.5167,"ga_avg_eng_time":43.8,"ga_key_events":17,"ga_revenue":1596.0,"ga_sources":[{"src":"(direct)","sessions":408,"revenue":0.0},{"src":"google","sessions":346,"revenue":1596.0},{"src":"alaskawildlights.com","sessions":41,"revenue":0.0},{"src":"alaska-org","sessions":34,"revenue":0.0},{"src":"m.facebook.com","sessions":17,"revenue":0.0},{"src":"explorefairbanks.com","sessions":16,"revenue":0.0},{"src":"bing","sessions":12,"revenue":0.0},{"src":"fairbanks.extranet.simpleviewcrm.com","sessions":8,"revenue":0.0}],"ga_missing":false},{"iso":"2026-W18","label":"Apr 26–May 2","ig_reach":693,"ig_views":1189,"ig_follows":13,"ig_visits":45,"ig_inter":33,"ig_clicks":3,"ig_eng":0.0476,"ig_followers":650,"fb_views":1092,"fb_visits":197,"fb_viewers":673,"fb_follows":65,"fb_inter":42,"fb_clicks":2,"tt_views":0,"tt_reach":0,"tt_profile_views":0,"tt_new_flw":0,"tt_lost_flw":0,"tt_net_growth":0,"tt_likes":0,"tt_comments":0,"tt_shares":0,"tt_website_clicks":0,"tt_followers":0,"tt_top_videos":[],"ga_sessions":891,"ga_eng_sessions":429,"ga_eng_rate":0.4815,"ga_avg_eng_time":37.9,"ga_key_events":8,"ga_revenue":915.0,"ga_sources":[{"src":"(direct)","sessions":370,"revenue":0.0},{"src":"google","sessions":333,"revenue":915.0},{"src":"alaska-org","sessions":42,"revenue":0.0},{"src":"alaskawildlights.com","sessions":41,"revenue":0.0},{"src":"facebook","sessions":15,"revenue":0.0},{"src":"explorefairbanks.com","sessions":13,"revenue":0.0},{"src":"fairbanks.extranet.simpleviewcrm.com","sessions":12,"revenue":0.0},{"src":"(not set)","sessions":9,"revenue":0.0}],"ga_missing":false},{"iso":"2026-W19","label":"May 3–9","ig_reach":1266,"ig_views":2744,"ig_follows":15,"ig_visits":76,"ig_inter":79,"ig_clicks":4,"ig_eng":0.0624,"ig_followers":663,"fb_views":2706,"fb_visits":166,"fb_viewers":1928,"fb_follows":27,"fb_inter":71,"fb_clicks":2,"tt_views":1367,"tt_reach":1313,"tt_profile_views":34,"tt_new_flw":18,"tt_lost_flw":0,"tt_net_growth":18,"tt_likes":74,"tt_comments":5,"tt_shares":2,"tt_website_clicks":2,"tt_followers":19,"tt_top_videos":[{"title":"From ice-cold craft brews to local Fairbanks artistry—the Arctic Ale trail is Alaska, poured right 🍺","link":"https://www.tiktok.com/@alaska.wild.lights/video/7635839839627185438","views":615,"likes":25,"comments":0,"shares":1},{"title":"Hot Springs ♨️…and the world’s largest year-round ice museum 🧊 in the same day? Only in Alaska.  One","link":"https://www.tiktok.com/@alaska.wild.lights/video/7636518660512795934","views":394,"likes":16,"comments":1,"shares":2}],"ga_sessions":952,"ga_eng_sessions":528,"ga_eng_rate":0.5546,"ga_avg_eng_time":43.6,"ga_key_events":14,"ga_revenue":3617.5,"ga_sources":[{"src":"(direct)","sessions":411,"revenue":0.0},{"src":"google","sessions":371,"revenue":3117.5},{"src":"alaskawildlights.com","sessions":42,"revenue":0.0},{"src":"alaska-org","sessions":38,"revenue":500.0},{"src":"facebook","sessions":15,"revenue":0.0},{"src":"ActiveCampaign","sessions":13,"revenue":0.0},{"src":"instagram","sessions":10,"revenue":0.0},{"src":"explorefairbanks.com","sessions":8,"revenue":0.0}],"ga_missing":false},{"iso":"2026-W20","label":"May 10–16","ig_reach":1175,"ig_views":2834,"ig_follows":9,"ig_visits":60,"ig_inter":89,"ig_clicks":0,"ig_eng":0.0757,"ig_followers":667,"fb_views":1576,"fb_visits":169,"fb_viewers":798,"fb_follows":15,"fb_inter":64,"fb_clicks":1,"tt_views":6079,"tt_reach":5863,"tt_profile_views":56,"tt_new_flw":32,"tt_lost_flw":0,"tt_net_growth":32,"tt_likes":470,"tt_comments":14,"tt_shares":39,"tt_website_clicks":1,"tt_followers":51,"tt_top_videos":[{"title":"This is Alaska—Happy Mother’s Day  #alaska #visitalaska #moose #bucketlist #findyourwild","link":"https://www.tiktok.com/@alaska.wild.lights/video/7638391784455916831","views":2103,"likes":259,"comments":8,"shares":22},{"title":"Experience Alaska beyond the ordinary 🌏 Travel the legendary Dalton Highway, cross the mighty Yukon ","link":"https://www.tiktok.com/@alaska.wild.lights/video/7639837797427268894","views":1637,"likes":108,"comments":1,"shares":16},{"title":"They say beer tastes colder at the northernmost brewery in America — we’ll let you be the judge. 🍻 T","link":"https://www.tiktok.com/@alaska.wild.lights/video/7640242976135908638","views":1193,"likes":94,"comments":1,"shares":8},{"title":"Planning a trip to Alaska to view the Northern Lights? The Interior of Alaska is one of the best pla","link":"https://www.tiktok.com/@alaska.wild.lights/video/7640591986105322782","views":832,"likes":21,"comments":1,"shares":3},{"title":"✨Find Your Wild✨ somewhere between the mountains and the midnight sun  #alaska #bucketlist #bear #mi","link":"https://www.tiktok.com/@alaska.wild.lights/video/7638797749294468383","views":600,"likes":32,"comments":1,"shares":1},{"title":"If the #northernlights are on your bucket list clink the link in our bio 💚 #alaska #auroraborealis #","link":"https://www.tiktok.com/@alaska.wild.lights/video/7639485431649750303","views":409,"likes":38,"comments":2,"shares":0}],"ga_sessions":1143,"ga_eng_sessions":588,"ga_eng_rate":0.5144,"ga_avg_eng_time":46.7,"ga_key_events":7,"ga_revenue":1505.0,"ga_sources":[{"src":"(direct)","sessions":665,"revenue":1005.0},{"src":"google","sessions":293,"revenue":500.0},{"src":"alaskawildlights.com","sessions":61,"revenue":0.0},{"src":"alaska-org","sessions":48,"revenue":0.0},{"src":"facebook","sessions":21,"revenue":0.0},{"src":"(not set)","sessions":10,"revenue":0.0},{"src":"bing","sessions":7,"revenue":0.0},{"src":"duckduckgo","sessions":4,"revenue":0.0}],"ga_missing":false},{"iso":"2026-W21","label":"May 17–23","ig_reach":1649,"ig_views":4004,"ig_follows":9,"ig_visits":60,"ig_inter":142,"ig_clicks":0,"ig_eng":0.0861,"ig_followers":676,"fb_views":2992,"fb_visits":95,"fb_viewers":2272,"fb_follows":12,"fb_inter":76,"fb_clicks":0,"tt_views":7696,"tt_reach":7481,"tt_profile_views":42,"tt_new_flw":39,"tt_lost_flw":0,"tt_net_growth":39,"tt_likes":451,"tt_comments":9,"tt_shares":40,"tt_website_clicks":1,"tt_followers":90,"tt_top_videos":[{"title":"Did you know Chena Hot Springs is known for its uniquely high mineral content? ♨️ Relax in 106° natu","link":"https://www.tiktok.com/@alaska.wild.lights/video/7641336671358766367","views":1415,"likes":86,"comments":1,"shares":4},{"title":"You never know what you’ll experience along the Dalton Highway on our Arctic Circle Day Tour 👀 From ","link":"https://www.tiktok.com/@alaska.wild.lights/video/7641727810977025311","views":967,"likes":73,"comments":2,"shares":2},{"title":"Life as an Arctic Circle tour guide in Alaska is never boring 🚐🌎 Every day brings different wildlife","link":"https://www.tiktok.com/@alaska.wild.lights/video/7642825763791670559","views":929,"likes":46,"comments":2,"shares":3},{"title":"🍺 Arctic Ale Trail Highlight of the Week: Silver Gulch Brewing & Bottling Co.  With a cold pint in h","link":"https://www.tiktok.com/@alaska.wild.lights/video/7642467540828015903","views":855,"likes":50,"comments":1,"shares":6},{"title":"Have you always wanted to see the Northern Lights in Alaska?  It’s your sign to stop scrolling and f","link":"https://www.tiktok.com/@alaska.wild.lights/video/7643213003491446046","views":595,"likes":43,"comments":1,"shares":3}],"ga_sessions":1073,"ga_eng_sessions":535,"ga_eng_rate":0.4986,"ga_avg_eng_time":44.8,"ga_key_events":12,"ga_revenue":1583.0,"ga_sources":[{"src":"google","sessions":394,"revenue":363.0},{"src":"(direct)","sessions":317,"revenue":0.0},{"src":"(not set)","sessions":215,"revenue":0.0},{"src":"alaskawildlights.com","sessions":52,"revenue":1220.0},{"src":"alaska-org","sessions":41,"revenue":0.0},{"src":"facebook","sessions":9,"revenue":0.0},{"src":"ActiveCampaign","sessions":4,"revenue":0.0},{"src":"bing","sessions":4,"revenue":0.0}],"ga_missing":false},{"iso":"2026-W22","label":"May 24–30","ig_reach":2393,"ig_views":4361,"ig_follows":10,"ig_visits":57,"ig_inter":127,"ig_clicks":2,"ig_eng":0.0531,"ig_followers":686,"fb_views":2445,"fb_visits":133,"fb_viewers":1694,"fb_follows":8,"fb_inter":104,"fb_clicks":2,"tt_views":5628,"tt_reach":5057,"tt_profile_views":43,"tt_new_flw":38,"tt_lost_flw":0,"tt_net_growth":38,"tt_likes":281,"tt_comments":5,"tt_shares":34,"tt_website_clicks":3,"tt_followers":128,"tt_top_videos":[{"title":"Happy Memorial Day from Alaska Wild Lights. Today, we honor and remember the brave men and women who","link":"https://www.tiktok.com/@alaska.wild.lights/video/7643940569005280543","views":1828,"likes":63,"comments":0,"shares":13},{"title":"Imagine this being a part of your Alaska itinerary ✨ Our Chena Hot Springs Day Tour is not just anot","link":"https://www.tiktok.com/@alaska.wild.lights/video/7644330804574735646","views":888,"likes":57,"comments":1,"shares":3},{"title":"Fleet Management Friday 🚐 Our lead mechanic, Cody, works behind the scenes to keep our fleet road tr","link":"https://www.tiktok.com/@alaska.wild.lights/video/7645417276623080734","views":471,"likes":19,"comments":1,"shares":0},{"title":"Spend the day exploring Fairbanks on our Heritage Tour 🌞 📍 Morris Thompson Cultural & Visitors Cente","link":"https://www.tiktok.com/@alaska.wild.lights/video/7645105026477706526","views":396,"likes":19,"comments":0,"shares":2}],"ga_sessions":800,"ga_eng_sessions":421,"ga_eng_rate":0.5262,"ga_avg_eng_time":52.1,"ga_key_events":14,"ga_revenue":3486.1,"ga_sources":[{"src":"(direct) / (none)","sessions":318,"revenue":0.0},{"src":"google / cpc","sessions":200,"revenue":1742.0},{"src":"google / organic","sessions":132,"revenue":1409.1},{"src":"alaskawildlights.com / referral","sessions":49,"revenue":335.0},{"src":"alaska-org / partner","sessions":39,"revenue":0.0},{"src":"bing / organic","sessions":9,"revenue":0.0},{"src":"instagram / bio","sessions":6,"revenue":0.0},{"src":"ActiveCampaign / email","sessions":5,"revenue":0.0}],"ga_missing":false},{"iso":"2026-W23","label":"May 31–Jun 6","ig_reach":1887,"ig_views":3624,"ig_follows":12,"ig_visits":39,"ig_inter":188,"ig_clicks":0,"ig_eng":0.0996,"ig_followers":690,"fb_views":2933,"fb_visits":56,"fb_viewers":2289,"fb_follows":5,"fb_inter":111,"fb_clicks":0,"tt_views":5065,"tt_reach":4201,"tt_profile_views":39,"tt_new_flw":36,"tt_lost_flw":2,"tt_net_growth":34,"tt_likes":237,"tt_comments":10,"tt_shares":27,"tt_website_clicks":1,"tt_followers":162,"tt_top_videos":[{"title":"Our guides spend every day exploring #alaska  and sharing it with guests from around the world. So w","link":"https://www.tiktok.com/@alaska.wild.lights/video/7647660218179931405","views":846,"likes":54,"comments":1,"shares":7},{"title":"Spend a day on one of North America’s most legendary highways.  Travel the Dalton Highway, cross the","link":"https://www.tiktok.com/@alaska.wild.lights/video/7647308172780244254","views":748,"likes":52,"comments":3,"shares":4},{"title":"🏔️ SAVE THIS POST if Alaska is on your summer travel list 🏔️ Step outside of the ordinary and experi","link":"https://www.tiktok.com/@alaska.wild.lights/video/7646817069916245279","views":450,"likes":29,"comments":1,"shares":2},{"title":"Sip your way through Fairbanks on the Arctic Ale Trail 🍺 Your adventure includes a stop at HooDoo Br","link":"https://www.tiktok.com/@alaska.wild.lights/video/7646243439767604511","views":323,"likes":7,"comments":0,"shares":0},{"title":"Some experiences are worth traveling for.  Watching the Aurora Borealis dance across the sky in Fair","link":"https://www.tiktok.com/@alaska.wild.lights/video/7648013142001192222","views":321,"likes":22,"comments":3,"shares":1},{"title":"","link":"https://www.tiktok.com/@alaska.wild.lights/video/7648049106891361566","views":315,"likes":5,"comments":0,"shares":0}],"ga_sessions":5201,"ga_eng_sessions":2515,"ga_eng_rate":0.4836,"ga_avg_eng_time":42.2,"ga_key_events":54,"ga_revenue":10655.1,"ga_sources":[{"src":"(direct)","sessions":2865,"revenue":2479.0},{"src":"google","sessions":1431,"revenue":4014.1},{"src":"(not set)","sessions":252,"revenue":0.0},{"src":"alaskawildlights.com","sessions":232,"revenue":2105.0},{"src":"alaska-org","sessions":166,"revenue":605.0},{"src":"facebook","sessions":45,"revenue":0.0},{"src":"bing","sessions":30,"revenue":0.0},{"src":"instagram","sessions":23,"revenue":0.0}],"ga_missing":false},{"iso":"2026-W24","label":"Jun 7–13","ig_reach":1238,"ig_views":2601,"ig_follows":9,"ig_visits":48,"ig_inter":166,"ig_clicks":1,"ig_eng":0.1341,"ig_followers":699,"fb_views":1950,"fb_visits":90,"fb_viewers":1185,"fb_follows":1,"fb_inter":108,"fb_clicks":1,"tt_views":4063,"tt_reach":3011,"tt_profile_views":31,"tt_new_flw":34,"tt_lost_flw":1,"tt_net_growth":33,"tt_likes":231,"tt_comments":8,"tt_shares":19,"tt_website_clicks":0,"tt_followers":195,"tt_top_videos":[{"title":"Mail a postcard from the Arctic Circle in Alaska 🌎📬 In a world of texts and emails, there’s somethin","link":"https://www.tiktok.com/@alaska.wild.lights/video/7649897813186186526","views":461,"likes":39,"comments":2,"shares":2},{"title":"Our goal is to make exploring #InteriorAlaska easy and enjoyable.  🚐 Complimentary hotel pick-up and","link":"https://www.tiktok.com/@alaska.wild.lights/video/7649814205243100446","views":413,"likes":3,"comments":0,"shares":0},{"title":"The Trans-Alaska Pipeline is one of Alaska’s most iconic landmarks—but there isn’t just one way to e","link":"https://www.tiktok.com/@alaska.wild.lights/video/7650259035890961695","views":380,"likes":19,"comments":1,"shares":1}],"ga_sessions":1261,"ga_eng_sessions":594,"ga_eng_rate":0.4711,"ga_avg_eng_time":40.0,"ga_key_events":11,"ga_revenue":4961.2,"ga_sources":[{"src":"(direct) / (none)","sessions":724,"revenue":0.0},{"src":"google / cpc","sessions":281,"revenue":2144.0},{"src":"google / organic","sessions":89,"revenue":1597.2},{"src":"alaskawildlights.com / referral","sessions":58,"revenue":550.0},{"src":"alaska-org / partner","sessions":44,"revenue":0.0},{"src":"(not set)","sessions":10,"revenue":670.0},{"src":"ActiveCampaign / email","sessions":8,"revenue":0.0},{"src":"bing / organic","sessions":6,"revenue":0.0}],"ga_missing":false},{"iso":"2026-W25","label":"Jun 14–20","ig_reach":770,"ig_views":1829,"ig_follows":5,"ig_visits":32,"ig_inter":116,"ig_clicks":0,"ig_eng":0.1506,"ig_followers":704,"fb_views":1197,"fb_visits":46,"fb_viewers":882,"fb_follows":5,"fb_inter":53,"fb_clicks":0,"tt_views":2083,"tt_reach":1558,"tt_profile_views":17,"tt_new_flw":26,"tt_lost_flw":3,"tt_net_growth":23,"tt_likes":140,"tt_comments":3,"tt_shares":7,"tt_website_clicks":1,"tt_followers":218,"tt_top_videos":[{"title":"Nothing beats summertime in Interior Alaska! #moose #alaska #midnightsun #fairbanksalaska #alaskatok","link":"https://www.tiktok.com/@alaska.wild.lights/video/7652819122719575327","views":370,"likes":35,"comments":2,"shares":0},{"title":"The Arctic Ale Trail takes you beyond the taproom and into the heart of Fairbanks’ craft beer scene.","link":"https://www.tiktok.com/@alaska.wild.lights/video/7651723211612179743","views":248,"likes":8,"comments":0,"shares":0},{"title":"If you’re looking for a day trip that combines some of Alaska’s most unique experiences, this is it.","link":"https://www.tiktok.com/@alaska.wild.lights/video/7653120705113967902","views":53,"likes":2,"comments":3,"shares":0}],"ga_sessions":5048,"ga_eng_sessions":2377,"ga_eng_rate":0.4709,"ga_avg_eng_time":39.9,"ga_key_events":53,"ga_revenue":14017.5,"ga_sources":[{"src":"(direct) / (none)","sessions":2916,"revenue":1474.0},{"src":"google / cpc","sessions":988,"revenue":2479.0},{"src":"google / organic","sessions":419,"revenue":3804.9},{"src":"alaskawildlights.com / referral","sessions":207,"revenue":2982.6},{"src":"alaska-org / partner","sessions":155,"revenue":1155.0},{"src":"(not set)","sessions":113,"revenue":670.0},{"src":"bing / organic","sessions":29,"revenue":0.0},{"src":"ActiveCampaign / email","sessions":21,"revenue":0.0}],"ga_missing":false},{"iso":"2026-W26","label":"Jun 21–27","ig_reach":1048,"ig_views":2644,"ig_follows":12,"ig_visits":46,"ig_inter":204,"ig_clicks":1,"ig_eng":0.1947,"ig_followers":716,"fb_views":1008,"fb_visits":51,"fb_viewers":727,"fb_follows":3,"fb_inter":127,"fb_clicks":1,"tt_views":3022,"tt_reach":2347,"tt_profile_views":27,"tt_new_flw":16,"tt_lost_flw":1,"tt_net_growth":15,"tt_likes":192,"tt_comments":13,"tt_shares":7,"tt_website_clicks":3,"tt_followers":233,"tt_top_videos":[{"title":"Experience one of Alaska’s most unforgettable summer adventures beneath the Midnight Sun 🌞🌎 Follow t","link":"https://www.tiktok.com/@alaska.wild.lights/video/7654686074991578398","views":651,"likes":48,"comments":3,"shares":3},{"title":"Now you’re crossing the Arctic Circle, spotting wildlife, soaking in natural hot springs, and experi","link":"https://www.tiktok.com/@alaska.wild.lights/video/7654311197851880735","views":647,"likes":76,"comments":1,"shares":1},{"title":"Aurora season in Interior Alaska begins on August 21, which means we’re officially halfway there 💚✨ ","link":"https://www.tiktok.com/@alaska.wild.lights/video/7655070441337294110","views":560,"likes":21,"comments":3,"shares":1},{"title":"Long summer days call for local brews!  Spend an evening exploring Fairbanks’ craft beer scene with ","link":"https://www.tiktok.com/@alaska.wild.lights/video/7655828001556303134","views":157,"likes":4,"comments":0,"shares":0}],"ga_sessions":1070,"ga_eng_sessions":557,"ga_eng_rate":0.5206,"ga_avg_eng_time":43.8,"ga_key_events":18,"ga_revenue":1569.0,"ga_sources":[{"src":"(direct) / (none)","sessions":521,"revenue":0.0},{"src":"google / cpc","sessions":262,"revenue":0.0},{"src":"google / organic","sessions":94,"revenue":299.0},{"src":"alaskawildlights.com / referral","sessions":54,"revenue":1270.0},{"src":"alaska-org / partner","sessions":37,"revenue":0.0},{"src":"ActiveCampaign / email","sessions":19,"revenue":0.0},{"src":"foodie15 / influencer","sessions":13,"revenue":0.0},{"src":"bing / organic","sessions":7,"revenue":0.0}],"ga_missing":false},{"iso":"2026-W27","label":"Jun 28–Jul 4","ig_reach":2618,"ig_views":6709,"ig_follows":21,"ig_visits":127,"ig_inter":390,"ig_clicks":0,"ig_eng":0.149,"ig_followers":721,"fb_views":2260,"fb_visits":192,"fb_viewers":1275,"fb_follows":5,"fb_inter":109,"fb_clicks":8,"tt_views":4058,"tt_reach":3526,"tt_profile_views":37,"tt_new_flw":18,"tt_lost_flw":0,"tt_net_growth":18,"tt_likes":257,"tt_comments":10,"tt_shares":17,"tt_website_clicks":2,"tt_followers":251,"tt_top_videos":[{"title":"Looking for the perfect day trip from Fairbanks?  Relax in natural mineral-rich waters and enjoy a scenic drive through Interior Alaska on our Chena Hot Springs Day Tour! Let us handle the logistics while you soak, explore, and make unforgettable memories. ✨ Book your Chena Hot Springs Tour today - link in bio!  #fairbanksalaska #hotsprings #explorealaska #midnightsun #alaskatok","date":"2026/06/29","views":952,"likes":57,"link":"https://www.tiktok.com/@alaska.wild.lights/video/7656918814633872671"},{"title":"Our Arctic Circle Day Tour takes you beyond where most Alaska itineraries end. Journey deep into Alaska’s Interior on the legendary Dalton Highway, a rugged road built to support the Trans-Alaska Pipeline. Cross the Arctic Circle as you experience breathtaking landscapes, abundant wildlife, and some of the most remote scenery accessible by road in North America. ✨Tap the link in our bio to learn more and book your Arctic adventure✨ #arcticcircle #fairbanksalaska #explorealaska #moose #midnightsun","date":"2026/07/01","views":757,"likes":38,"link":"https://www.tiktok.com/@alaska.wild.lights/video/7657689182613048606"},{"title":"Explore the Aurora Ice Museum on our Chena Hot Springs Day Tour, where every detail is hand-carved from ice.  Sip an appletini from an ice glass before warming up with a soak in the geothermal hot springs. 🚐 Hotel pickup included. Comment 🥶to learn more about the Ice Museum & Chena Hot Springs Day Tour! #hotsprings #fairbanksalaska #explorealaska #findyourwild","date":"2026/07/03","views":593,"likes":61,"link":"https://www.tiktok.com/@alaska.wild.lights/video/7658406361721523487"}],"ga_sessions":1619,"ga_eng_sessions":749,"ga_eng_rate":0.4626,"ga_avg_eng_time":35.2,"ga_key_events":21,"ga_revenue":2309.8,"ga_missing":false,"ga_sources":[{"src":"(direct) / (none)","sessions":1049,"revenue":0.0},{"src":"google / cpc","sessions":237,"revenue":299.0},{"src":"google / organic","sessions":128,"revenue":0.0},{"src":"alaska-org / partner","sessions":44,"revenue":2010.8},{"src":"alaskawildlights.com / referral","sessions":39,"revenue":0.0},{"src":"(not set)","sessions":21,"revenue":0.0},{"src":"instagram / bio","sessions":17,"revenue":0.0},{"src":"foodie15 / influencer","sessions":16,"revenue":0.0},{"src":"facebook / social","sessions":10,"revenue":0.0},{"src":"ActiveCampaign / email","sessions":8,"revenue":0.0}]},{"iso":"2026-W28","label":"Jul 5–11","ig_reach":3125,"ig_views":8786,"ig_follows":15,"ig_visits":79,"ig_inter":354,"ig_clicks":4,"ig_eng":0.1133,"ig_followers":736,"fb_views":1940,"fb_visits":119,"fb_viewers":1219,"fb_follows":5,"fb_inter":76,"fb_clicks":3,"tt_views":4881,"tt_reach":3899,"tt_profile_views":58,"tt_new_flw":46,"tt_lost_flw":0,"tt_net_growth":46,"tt_likes":375,"tt_comments":35,"tt_shares":43,"tt_website_clicks":0,"tt_followers":297,"tt_top_videos":[{"title":"When -50° is part of the job description 🥶 #fairbanksalaska #explorealaska #findyourwild #belowzero ","date":"2026/07/08","views":1978,"likes":251,"link":"https://www.tiktok.com/@alaska.wild.lights/video/7660221091809332511"},{"title":"We asked @fbxfoodie | Alaska Life to spend an evening on the Arctic Ale Trail… here's what she had to say. 👀🍻 From behind-the-scenes brewery access to locally crafted beers and ciders, the Arctic Ale Trail is a different way to experience Fairbanks' growing craft beverage scene. ✨ Ready to sip your way through Fairbanks? Explore the Arctic Ale Trail through the link in bio. ✨Use code FOODIE15 to save 15%. ✨Call (907)-712-4529 to receive a LOCALS ONLY discount in addition to 15% off. #brewerytour #findyourwild #fairbanksalaska #explorealaska #midnightsun  ","date":"2026/07/07","views":584,"likes":30,"link":"https://www.tiktok.com/@alaska.wild.lights/video/7659897915703332127"},{"title":"2:00AM and the sun is still shining…that's the magic of an Interior Alaska summer.  Whether you're crossing the Arctic Circle or soaking in Chena Hot Springs, our summer tours allow you to make the most of every hour of daylight. ✨ Find Your Wild under the Midnight Sun—explore our summer tours through the link in our bio. #midnightsun #interioralaska #fairbanksalaska #explorealaska #fairbankstourist","date":"2026/07/11","views":491,"likes":48,"link":"https://www.tiktok.com/@alaska.wild.lights/video/7661317893883301151"},{"title":"Let us show you the best of Interior Alaska! Cross the Arctic Circle on the legendary Dalton Highway, experience the magic of the Midnight Sun, soak in the mineral-rich waters of Chena Hot Springs, discover Fairbanks history, or sip your way through the local craft beer scene.  No matter how you choose to explore, your Alaska adventure starts with us.  ✨🔗 Explore all of our summer tours through the link in our bio. #fairbanksalaska #explorealaska #interioralaska #fairbankstourist #visitalaska ","date":"2026/07/09","views":408,"likes":22,"link":"https://www.tiktok.com/@alaska.wild.lights/video/7660573999939833118"},{"title":"Send this post to someone you'd love to experience the Northern Lights with 💚 We offer several Northern Lights tours, each with a unique way to experience the magic of the North: -Cross the Arctic Circle while the Northern Lights dance overhead.  -Soak in natural, mineral-rich hot springs beneath the Aurora.  -Watch the sky come alive from a cozy Aurora viewing lodge.  🔗✨ Explore our Northern Lights tours - https://bit.ly/3QWpcdM or comment 💚 to receive The Honest Guide: Seeing the Northern Lights in Alaska.   #northernlights #fairbanksalaska #auroraborealis #explorealaska #alaska ","date":"2026/07/07","views":296,"likes":15,"link":"https://www.tiktok.com/@alaska.wild.lights/video/7659616166163352862"}],"ga_sessions":1270,"ga_eng_sessions":609,"ga_eng_rate":0.4795,"ga_avg_eng_time":51.3,"ga_key_events":16,"ga_revenue":968.0,"ga_sources":[{"src":"(direct)","sessions":695,"revenue":0.0},{"src":"google / cpc","sessions":316,"revenue":242.0},{"src":"google / organic","sessions":113,"revenue":726.0},{"src":"alaskawildlights.com","sessions":39,"revenue":0.0},{"src":"alaska-org","sessions":31,"revenue":0.0},{"src":"(not set)","sessions":12,"revenue":0.0},{"src":"ActiveCampaign / email","sessions":10,"revenue":0.0},{"src":"(data not available)","sessions":8,"revenue":0.0},{"src":"explorefairbanks.com","sessions":8,"revenue":0.0},{"src":"instagram / bio","sessions":8,"revenue":0.0},{"src":"bing","sessions":4,"revenue":0.0},{"src":"foodie15 / influencer","sessions":4,"revenue":0.0},{"src":"yahoo","sessions":3,"revenue":0.0}],"ga_missing":false}],"audience":{"ig":{"age_gender":[{"band":"18-24","v1":1.7,"v2":2.0},{"band":"25-34","v1":22.5,"v2":12.4},{"band":"35-44","v1":24.6,"v2":11.1},{"band":"45-54","v1":9.0,"v2":4.3},{"band":"55-64","v1":4.6,"v2":3.5},{"band":"65+","v1":3.3,"v2":1.0}],"gender_order":["Women","Men"],"top_countries":[{"name":"United States","pct":83.2},{"name":"Brazil","pct":2.4},{"name":"Canada","pct":1.9},{"name":"Germany","pct":1.6},{"name":"Mexico","pct":1.2},{"name":"India","pct":1.1},{"name":"United Kingdom","pct":0.9},{"name":"Costa Rica","pct":0.7},{"name":"United Arab Emirates","pct":0.5},{"name":"Australia","pct":0.5}],"top_cities":[{"name":"College, AK","pct":10.6},{"name":"Anchorage, AK","pct":7.6},{"name":"North Pole, AK","pct":2.3},{"name":"Palmer, AK","pct":2.1},{"name":"Wasilla, AK","pct":1.3},{"name":"Los Angeles, CA","pct":0.7},{"name":"Seattle, WA","pct":0.7},{"name":"New York, NY","pct":0.7},{"name":"Toledo, OH","pct":0.7},{"name":"Fox, AK","pct":0.7}]},"fb":{"age_gender":[{"band":"18-24","v1":0.0,"v2":0.6},{"band":"25-34","v1":9.4,"v2":5.6},{"band":"35-44","v1":13.7,"v2":12.4},{"band":"45-54","v1":16.1,"v2":10.0},{"band":"55-64","v1":8.6,"v2":9.4},{"band":"65+","v1":6.8,"v2":7.4}],"gender_order":["Men","Women"],"top_countries":[{"name":"United States","pct":64.0},{"name":"Canada","pct":3.9},{"name":"South Africa","pct":3.4},{"name":"Bangladesh","pct":1.7},{"name":"Germany","pct":1.7},{"name":"India","pct":1.7},{"name":"Philippines","pct":1.1},{"name":"Slovenia","pct":1.1},{"name":"Sri Lanka","pct":1.1},{"name":"United Kingdom","pct":1.1}],"top_cities":[]},"tt":{"daily":[{"date":"2026/05/03","new_flw":4,"total_flw":5,"reached":218,"engaged":16},{"date":"2026/05/04","new_flw":7,"total_flw":12,"reached":597,"engaged":53},{"date":"2026/05/05","new_flw":1,"total_flw":13,"reached":166,"engaged":8},{"date":"2026/05/06","new_flw":3,"total_flw":16,"reached":167,"engaged":26},{"date":"2026/05/07","new_flw":1,"total_flw":17,"reached":38,"engaged":5},{"date":"2026/05/08","new_flw":2,"total_flw":19,"reached":75,"engaged":7},{"date":"2026/05/09","new_flw":0,"total_flw":19,"reached":52,"engaged":5},{"date":"2026/05/10","new_flw":0,"total_flw":23,"reached":137,"engaged":19},{"date":"2026/05/11","new_flw":8,"total_flw":27,"reached":1517,"engaged":229},{"date":"2026/05/12","new_flw":1,"total_flw":28,"reached":816,"engaged":75},{"date":"2026/05/13","new_flw":1,"total_flw":29,"reached":370,"engaged":40},{"date":"2026/05/14","new_flw":3,"total_flw":32,"reached":590,"engaged":48},{"date":"2026/05/15","new_flw":6,"total_flw":38,"reached":1151,"engaged":132},{"date":"2026/05/16","new_flw":13,"total_flw":51,"reached":1282,"engaged":134},{"date":"2026/05/17","new_flw":6,"total_flw":57,"reached":1189,"engaged":84},{"date":"2026/05/18","new_flw":2,"total_flw":59,"reached":778,"engaged":73},{"date":"2026/05/19","new_flw":5,"total_flw":64,"reached":1387,"engaged":103},{"date":"2026/05/20","new_flw":7,"total_flw":71,"reached":838,"engaged":80},{"date":"2026/05/21","new_flw":8,"total_flw":79,"reached":726,"engaged":67},{"date":"2026/05/22","new_flw":4,"total_flw":83,"reached":1544,"engaged":142},{"date":"2026/05/23","new_flw":7,"total_flw":90,"reached":1019,"engaged":78},{"date":"2026/05/24","new_flw":6,"total_flw":96,"reached":815,"engaged":0},{"date":"2026/05/25","new_flw":6,"total_flw":102,"reached":802,"engaged":73},{"date":"2026/05/26","new_flw":8,"total_flw":110,"reached":1243,"engaged":88},{"date":"2026/05/27","new_flw":7,"total_flw":117,"reached":1020,"engaged":98},{"date":"2026/05/28","new_flw":2,"total_flw":119,"reached":154,"engaged":13},{"date":"2026/05/29","new_flw":7,"total_flw":126,"reached":764,"engaged":46},{"date":"2026/05/30","new_flw":2,"total_flw":128,"reached":259,"engaged":20},{"date":"2026/05/31","new_flw":6,"total_flw":134,"reached":245,"engaged":18},{"date":"2026/06/01","new_flw":3,"total_flw":136,"reached":406,"engaged":22},{"date":"2026/06/02","new_flw":7,"total_flw":143,"reached":438,"engaged":33},{"date":"2026/06/03","new_flw":0,"total_flw":143,"reached":293,"engaged":23},{"date":"2026/06/04","new_flw":5,"total_flw":148,"reached":808,"engaged":82},{"date":"2026/06/05","new_flw":13,"total_flw":160,"reached":1246,"engaged":122},{"date":"2026/06/06","new_flw":2,"total_flw":162,"reached":765,"engaged":60},{"date":"2026/06/07","new_flw":8,"total_flw":170,"reached":408,"engaged":50},{"date":"2026/06/08","new_flw":3,"total_flw":173,"reached":442,"engaged":32},{"date":"2026/06/09","new_flw":4,"total_flw":177,"reached":301,"engaged":29},{"date":"2026/06/10","new_flw":4,"total_flw":181,"reached":529,"engaged":59},{"date":"2026/06/11","new_flw":4,"total_flw":184,"reached":612,"engaged":58},{"date":"2026/06/12","new_flw":7,"total_flw":191,"reached":434,"engaged":41},{"date":"2026/06/13","new_flw":4,"total_flw":195,"reached":285,"engaged":36},{"date":"2026/06/14","new_flw":3,"total_flw":198,"reached":214,"engaged":24},{"date":"2026/06/15","new_flw":3,"total_flw":200,"reached":293,"engaged":37},{"date":"2026/06/16","new_flw":4,"total_flw":203,"reached":211,"engaged":21},{"date":"2026/06/17","new_flw":6,"total_flw":209,"reached":200,"engaged":17},{"date":"2026/06/18","new_flw":2,"total_flw":211,"reached":307,"engaged":28},{"date":"2026/06/19","new_flw":4,"total_flw":215,"reached":217,"engaged":33},{"date":"2026/06/20","new_flw":4,"total_flw":218,"reached":116,"engaged":19},{"date":"2026/06/21","new_flw":1,"total_flw":219,"reached":76,"engaged":7},{"date":"2026/06/22","new_flw":2,"total_flw":221,"reached":296,"engaged":32},{"date":"2026/06/23","new_flw":3,"total_flw":224,"reached":569,"engaged":83},{"date":"2026/06/24","new_flw":6,"total_flw":230,"reached":587,"engaged":80},{"date":"2026/06/25","new_flw":1,"total_flw":230,"reached":437,"engaged":32},{"date":"2026/06/26","new_flw":1,"total_flw":231,"reached":240,"engaged":11},{"date":"2026/06/27","new_flw":2,"total_flw":233,"reached":142,"engaged":19}]}}};;
+// == DATA_END ===
+
+var D, FW=[], curTab='dashboard', curPreset='all', CHT={}, pendJSON=null, vidView='weekly';
+
+function init(){
+  D=JSON.parse(JSON.stringify(EMBEDDED_DATA));
+  buildTabs(); buildWeekSelects(); applyFilter(); updBadge();
+  if(D.weeks&&D.weeks.length>0){renderAll();}else{
+    document.getElementById('pg-dashboard').innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--mut)">'
+      +'<div style="font-size:32px;margin-bottom:14px">&#8593;</div>'
+      +'<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">No data loaded</div>'
+      +'<div style="font-size:10px">Click <b style="color:var(--text)">Update data</b> to upload your weekly JSON(s)</div>'
+      +'</div>';
+  }
+}
+
+var TABS=[
+  {id:'dashboard',label:'Dashboard',col:'#7a8ba8'},
+  {id:'ig',label:'Instagram',col:'#00B4D8'},
+  {id:'fb',label:'Facebook',col:'#3A86FF'},
+  {id:'tt',label:'TikTok',col:'#FF006E'},
+  {id:'ga',label:'Analytics',col:'#06D6A0'},
+  {id:'audience',label:'Audience',col:'#FFD166'}
+];
+
+// Formatters
+function F(n)  { return n==null?'--':Math.round(n).toLocaleString(); }
+function FD1(n){ return n==null?'--':Number(n).toFixed(1); }
+function P(n)  { return n==null?'--':((n*100).toFixed(1)+'%'); }
+function C(n)  { return n==null?'--':('$'+Number(n).toLocaleString('en-US',{maximumFractionDigits:0})); }
+function isV(v){ return v!=null && v!='--' && !isNaN(v) && v!==''; }
+function cl(n,a,b){ return Math.min(b,Math.max(a,n)); }
+function sumF(a,fn){ return a.reduce(function(s,w){var v=fn(w);return s+(isV(v)?Number(v):0);},0); }
+function avgF(a,fn){ var vs=a.map(fn).filter(isV); return vs.length?vs.reduce(function(x,y){return x+y;},0)/vs.length:null; }
+function peakF(a,fn){ var mx=null,iso='',label=''; a.forEach(function(w){var v=fn(w);if(isV(v)&&(mx===null||v>mx)){mx=v;iso=w.iso;label=w.label||w.iso;}}); return {val:mx,iso:iso,label:label}; }
+
+// WoW chip
+function woW(arr,idx,fn,isRate,isCumul){
+  var curr=fn(arr[idx]);
+  if(!isV(curr)) return '';
+  if(isCumul){
+    if(idx<1) return '';
+    var p=fn(arr[idx-1]); if(!isV(p)) return '';
+    var d=curr-p; var cls=d>0?'wu':d<0?'wd':'wn';
+    return '<span class="wo '+cls+'">'+(d>=0?'+':'')+F(d)+'</span>';
+  }
+  if(idx<1) return '';
+  var prev=null,sk=false;
+  if(!isV(fn(arr[idx-1]))) sk=true;
+  for(var i=idx-1;i>=0;i--){var v=fn(arr[i]);if(isV(v)){prev=v;break;}}
+  if(prev===null||prev===0) return '';
+  var ch=(curr-prev)/Math.abs(prev);
+  var cls=sk?'ws':ch>0?'wu':ch<0?'wd':'wn';
+  var lbl=isRate?((ch>=0?'+':'')+((ch*100).toFixed(1))+'pp'):((ch>=0?'+':'')+((ch*100).toFixed(1))+'%');
+  return '<span class="wo '+cls+'">'+lbl+(sk?' *':'')+'</span>';
+}
+function woT(arr,idx,fn,isRate){
+  var curr=fn(arr[idx]); if(!isV(curr)||idx<1) return '';
+  var prev=null,sk=false;
+  if(!isV(fn(arr[idx-1]))) sk=true;
+  for(var i=idx-1;i>=0;i--){var v=fn(arr[i]);if(isV(v)){prev=v;break;}}
+  if(prev===null||prev===0) return '';
+  var ch=(curr-prev)/Math.abs(prev);
+  var cls=sk?'s':ch>0?'u':'d';
+  var lbl=isRate?((ch>=0?'+':'')+((ch*100).toFixed(1))+'pp'):((ch>=0?'+':'')+((ch*100).toFixed(0))+'%');
+  return '<span class="wt '+cls+'">'+lbl+'</span>';
+}
+
+// Tabs
+function buildTabs(){
+  document.getElementById('tabbar').innerHTML=TABS.map(function(t){
+    return '<div class="tab'+(t.id==='dashboard'?' on':'')+'" style="--tc:'+t.col+'" data-tab="'+t.id+'" onclick="switchTab(\''+t.id+'\')"><span class="tdot"></span>'+t.label+'</div>';
+  }).join('');
+}
+function switchTab(id){
+  curTab=id;
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('on',t.dataset.tab===id);});
+  document.querySelectorAll('.pg').forEach(function(p){p.classList.toggle('on',p.id==='pg-'+id);});
+  destroyCharts(); renderAll();
+}
+
+// Range
+function buildWeekSelects(){
+  var sel=document.getElementById('wk-single');
+  if(!sel||!D.weeks.length) return;
+  sel.innerHTML='<option value="all">-- Jump to week --</option>';
+  D.weeks.slice().reverse().forEach(function(w){
+    var o=document.createElement('option');
+    o.value=w.iso; o.textContent=w.iso+' ('+w.label+')';
+    sel.appendChild(o);
+  });
+  sel.value='all';
+}
+function setPreset(p,btn){
+  curPreset=p;
+  document.querySelectorAll('.rb').forEach(function(b){b.classList.remove('on');});
+  if(btn) btn.classList.add('on');
+  var sel=document.getElementById('wk-single');
+  if(sel) sel.value='all';
+  applyFilter(); renderAll();
+}
+function applyWeekSingle(){
+  var sel=document.getElementById('wk-single');
+  if(!sel||sel.value==='all'){setPreset('all',document.querySelector('.rb'));return;}
+  curPreset='week1';
+  document.querySelectorAll('.rb').forEach(function(b){b.classList.remove('on');});
+  applyFilter(); renderAll();
+}
+
+function applyFilter(){
+  var all=D.weeks;
+  if(curPreset==='week1'){
+    var sel=document.getElementById('wk-single');
+    var iso=sel?sel.value:'all';
+    FW=iso==='all'?all.slice():all.filter(function(w){return w.iso===iso;});
+  } else if(typeof curPreset==='number'){
+    FW=all.slice(-curPreset);
+  } else {
+    FW=all.slice(); // 'all' or default
+  }
+
+}
+function updBadge(){
+  var dot=document.getElementById('upd-dot'), txt=document.getElementById('upd-text');
+  var badge=document.getElementById('upd-badge');
+  if(!D.generated||!D.weeks.length){if(dot)dot.className='upd-dot';if(txt)txt.textContent='No data';return;}
+  var gen=new Date(D.generated), diff=(new Date()-gen)/86400000;
+  var last=D.weeks[D.weeks.length-1];
+  if(dot) dot.className='upd-dot '+(diff<8?'fresh':diff<15?'stale':'');
+  if(txt) txt.textContent='Latest week: '+last.iso+' - '+last.label;
+  if(badge) badge.title='Updated: '+gen.toLocaleString()+'  |  '+D.weeks.length+' weeks';
+}
+
+// Current week badge
+function cwBadge(iso,label){
+  return '<div class="cur-week-badge"><span class="cw-dot"></span>Showing: '+iso+' &mdash; '+label+'</div>';
+}
+
+// Charts
+function destroyCharts(){ Object.keys(CHT).forEach(function(k){try{CHT[k].destroy();}catch(e){}}); CHT={}; }
+
+function mkChart(id,arr,fn,col,fmt,isPct,type){
+  isPct=isPct||false; type=type||'bar';
+  var el=document.getElementById(id); if(!el) return;
+  var vals=arr.map(fn);
+  if(!vals.some(isV)){el.parentElement.innerHTML='<div class="ch-empty">No data</div>';return;}
+  if(arr.length===1&&type==='line'){type='bar';}
+  var n=arr.length, minW=n>10?n*42:0;
+  var container=el.parentElement;
+  if(minW>0){
+    container.innerHTML='<div class="ch-scroll"><canvas id="'+id+'" style="height:130px;display:block"></canvas></div>';
+    document.getElementById(id).style.minWidth=minW+'px';
+  }
+  var canvas=document.getElementById(id); if(!canvas) return;
+  var ctx=canvas.getContext('2d');
+  CHT[id]=new Chart(ctx,{type:type,
+    data:{labels:arr.map(function(w){return w.iso;}), datasets:[{
+      label:'',data:vals,
+      backgroundColor:type==='bar'?vals.map(function(_,i){return i===n-1?col:col+'35';}):col+'18',
+      borderColor:type==='bar'?vals.map(function(_,i){return i===n-1?col:'transparent';}):col,
+      borderWidth:type==='bar'?vals.map(function(_,i){return i===n-1?2:0;}):2,
+      borderRadius:type==='bar'?3:0,
+      pointBackgroundColor:col,pointBorderColor:col,
+      pointRadius:type==='line'?vals.map(function(_,i){return i===n-1?4:3;}):0,
+      fill:type==='line', tension:0.45, spanGaps:true, cubicInterpolationMode:'monotone'
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:0},
+      plugins:{legend:{display:false},
+        tooltip:{backgroundColor:'#161e2e',borderColor:'rgba(255,255,255,.1)',borderWidth:1,
+          titleColor:'#5a6e8a',bodyColor:'#eef2ff',padding:7,
+          callbacks:{label:function(c){return isV(c.parsed.y)?fmt(c.parsed.y):'No data';}}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)',drawBorder:false},ticks:{color:'#4a6480',font:{size:8,family:'Arial'}}},
+        y:{grid:{color:'rgba(255,255,255,0.04)',drawBorder:false},ticks:{color:'#4a6480',font:{size:8,family:'Arial'},
+          callback:function(v){return isPct?(v*100).toFixed(0)+'%':(v>=1000?Math.round(v/100)/10+'k':v);}}}
+      }}
+  });
+}
+
+function mkMulti(id, arr, datasets, fmt, type){
+  type=type||'bar';
+  var el=document.getElementById(id); if(!el) return;
+  var n=arr.length, minW=n>10?n*48:0;
+  var container=el.parentElement;
+  if(minW>0){
+    container.innerHTML='<div class="ch-scroll"><canvas id="'+id+'" style="height:150px;display:block"></canvas></div>';
+    document.getElementById(id).style.minWidth=minW+'px';
+  }
+  var canvas=document.getElementById(id); if(!canvas) return;
+  var ctx=canvas.getContext('2d');
+  var lblStyle={color:'#8aabcc',font:{size:9,family:'Arial'},boxWidth:10,padding:10,usePointStyle:true,pointStyleWidth:8};
+  CHT[id]=new Chart(ctx,{type:type,
+    data:{labels:arr.map(function(w){return w.label||w.iso;}),
+      datasets:datasets.map(function(ds){
+        var vals=arr.map(ds.fn);
+        return {
+          label:ds.label, data:vals,
+          backgroundColor:type==='line'?ds.col+'18':ds.col+'cc',
+          borderColor:ds.col, borderWidth:type==='line'?2:1.5,
+          borderRadius:type==='bar'?3:0,
+          pointBackgroundColor:ds.col, pointBorderColor:ds.col,
+          pointRadius:type==='line'?vals.map(function(_,i){return i===n-1?4:3;}):0,
+          fill:false, tension:0.4, spanGaps:true, cubicInterpolationMode:'monotone'
+        };
+      })},
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:0},
+      plugins:{legend:{display:true,position:'top',align:'end',labels:lblStyle},
+        tooltip:{backgroundColor:'#161e2e',borderColor:'rgba(255,255,255,.1)',borderWidth:1,
+          titleColor:'#5a6e8a',bodyColor:'#eef2ff',padding:8,
+          callbacks:{label:function(c){return c.dataset.label+': '+fmt(c.parsed.y);}}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)',drawBorder:false},ticks:{color:'#4a6480',font:{size:8,family:'Arial'}}},
+        y:{grid:{color:'rgba(255,255,255,0.04)',drawBorder:false},ticks:{color:'#4a6480',font:{size:8,family:'Arial'},
+          callback:function(v){return v>=1000?Math.round(v/100)/10+'k':v;}}}
+      }}
+  });
+}
+
+function mkGoalLine(id, arr, valFn, col, label, goal, goalLabel){
+  var el=document.getElementById(id); if(!el) return;
+  var ctx=el.getContext('2d');
+  var vals=arr.map(valFn);
+  var goalData=arr.map(function(){return goal;});
+  var lblStyle={color:'#8aabcc',font:{size:9,family:'Arial'},boxWidth:10,padding:10,usePointStyle:true,pointStyleWidth:8};
+  CHT[id]=new Chart(ctx,{type:'line',
+    data:{labels:arr.map(function(w){return w.label||w.iso;}), datasets:[
+      {label:label,data:vals,borderColor:col,backgroundColor:col+'20',borderWidth:2,
+       pointBackgroundColor:col,pointRadius:vals.map(function(_,i){return i===arr.length-1?4:3;}),
+       fill:false,tension:0.4,spanGaps:true,cubicInterpolationMode:'monotone'},
+      {label:goalLabel,data:goalData,borderColor:'#FFD166',borderWidth:1.5,
+       borderDash:[5,4],pointRadius:0,fill:false,backgroundColor:'transparent'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:0},
+      plugins:{legend:{display:true,position:'top',align:'end',labels:lblStyle},
+        tooltip:{backgroundColor:'#161e2e',borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:'#5a6e8a',bodyColor:'#eef2ff',padding:7}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,0.04)',drawBorder:false},ticks:{color:'#4a6480',font:{size:8,family:'Arial'}}},
+        y:{grid:{color:'rgba(255,255,255,0.04)',drawBorder:false},ticks:{color:'#4a6480',font:{size:8,family:'Arial'},
+          callback:function(v){return v>=1000?Math.round(v/100)/10+'k':v;}}}
+      }}
+  });
+}
+
+function mkPie(id, labels, values, colors){
+  var el=document.getElementById(id); if(!el) return;
+  var ctx=el.getContext('2d');
+  CHT[id]=new Chart(ctx,{type:'doughnut',
+    data:{labels:labels,datasets:[{data:values,backgroundColor:colors,borderColor:'rgba(0,0,0,.3)',borderWidth:1}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',
+      plugins:{legend:{display:false},
+        tooltip:{backgroundColor:'#161e2e',borderColor:'rgba(255,255,255,.1)',borderWidth:1,bodyColor:'#eef2ff',padding:7,
+          callbacks:{label:function(c){return c.label+': '+c.parsed.toLocaleString()+' sessions';}}}}}
+  });
+}
+
+function renderAll(){
+  if(!FW.length) return;
+  var w=FW, last=w[w.length-1], li=w.length-1;
+  destroyCharts();
+  if(curTab==='dashboard') renderDashboard(w,last,li);
+  if(curTab==='ig')        renderIG(w,last,li);
+  if(curTab==='fb')        renderFB(w,last,li);
+  if(curTab==='tt')        renderTT(w,last,li);
+  if(curTab==='ga')        renderGA(w,last,li);
+  if(curTab==='audience')  renderAudience();
+}
+
+// -- DASHBOARD --------------------------------------------------------------
+function renderDashboard(w,last,li){
+  var el=document.getElementById('pg-dashboard');
+  var G=D.goals||{};
+  var allW=D.weeks;
+  var lA=allW[allW.length-1];
+
+  // Q2 Goal cards
+  // Quarterly goals - IG only
+  var QTR=[
+    {lbl:'Q1',flw:'+1,000',eng:'>=6%'},
+    {lbl:'Q2',flw:'+1,500',eng:'>=6%'},
+    {lbl:'Q3',flw:'+2,000',eng:'>=5.5%'},
+    {lbl:'Q4',flw:'+3,000',eng:'>=5.0%'}
+  ];
+  var curIgFlw=lA.ig_followers;
+  var curIgEng=lA.ig_eng;
+  var th='padding:6px 12px;font-size:8px;font-weight:600;border-bottom:1px solid var(--bdr);color:var(--mut)';
+  var gH='<table style="width:100%;border-collapse:collapse;font-size:9px">'
+    +'<thead><tr>'
+    +'<th style="'+th+';text-align:left"></th>'
+    +'<th style="'+th+';text-align:center">Q1</th>'
+    +'<th style="'+th+';text-align:center">Q2</th>'
+    +'<th style="'+th+';text-align:center">Q3</th>'
+    +'<th style="'+th+';text-align:center">Q4</th>'
+    +'<th style="'+th+';text-align:center;color:var(--text)">Current</th>'
+    +'</tr></thead><tbody>';
+  gH+='<tr><td style="padding:6px 12px;color:var(--mut);font-size:8px">IG Followers</td>';
+  for(var qi=0;qi<4;qi++) gH+='<td style="padding:6px 12px;text-align:center;font-family:var(--m);color:var(--mut)">'+QTR[qi].flw+'</td>';
+  gH+='<td style="padding:6px 12px;text-align:center;font-family:var(--m);font-weight:700;color:var(--ig)">'+F(curIgFlw)+'</td></tr>';
+  gH+='<tr style="border-top:1px solid var(--bdr)"><td style="padding:6px 12px;color:var(--mut);font-size:8px">IG Engagement rate</td>';
+  for(var qi=0;qi<4;qi++) gH+='<td style="padding:6px 12px;text-align:center;font-family:var(--m);color:var(--mut)">'+QTR[qi].eng+'</td>';
+  gH+='<td style="padding:6px 12px;text-align:center;font-family:var(--m);font-weight:700;color:var(--gold)">'+P(curIgEng)+'</td></tr>';
+  gH+='</tbody></table>';
+
+  // Platform KPI cards with peak badges
+  var trv=sumF(w,function(x){return x.ga_revenue;});
+  var pkIG=peakF(w,function(x){return x.ig_reach;});
+  var pkFB=peakF(w,function(x){return x.fb_views;});
+  var pkGA=peakF(w,function(x){return x.ga_revenue;});
+
+  // Top TT video all time
+  var topVidStr='No video data';
+  var allVids=[];
+  for(var wi=0;wi<D.weeks.length;wi++){
+    var wk=D.weeks[wi];
+    if(wk.tt_top_videos){
+      for(var vi=0;vi<wk.tt_top_videos.length;vi++){
+        allVids.push({v:wk.tt_top_videos[vi],iso:wk.iso});
+      }
+    }
+  }
+  if(allVids.length){
+    allVids.sort(function(a,b){return b.v.views-a.v.views;});
+    topVidStr='Top video: '+F(allVids[0].v.views)+' views ('+allVids[0].iso+')';
+  }
+
+  var kItems=[
+    {ac:'var(--ig)',lbl:'Instagram',  val:F(last.ig_followers),    sub:'followers',
+     wow:woW(w,li,function(x){return x.ig_followers;},false,true),
+     ft:'Reach '+F(last.ig_reach)+'  Eng '+P(last.ig_eng),
+     peak:'Peak reach: '+F(pkIG.val)+' ('+pkIG.iso+')'},
+    {ac:'var(--fb)',lbl:'Facebook',   val:F(last.fb_views),        sub:'views',
+     wow:woW(w,li,function(x){return x.fb_views;}),
+     ft:'Interactions '+F(last.fb_inter)+'  Viewers '+F(last.fb_viewers),
+     peak:'Peak views: '+F(pkFB.val)+' ('+pkFB.iso+')'},
+    {ac:'var(--tt)',lbl:'TikTok',     val:F(last.tt_followers),    sub:'followers',
+     wow:woW(w,li,function(x){return x.tt_followers;},false,true),
+     ft:'Video views '+F(last.tt_views)+'  Likes '+F(last.tt_likes),
+     peak:topVidStr},
+    {ac:'var(--ga)',lbl:'Analytics',  val:C(last.ga_revenue),      sub:'revenue',
+     wow:woW(w,li,function(x){return x.ga_revenue;}),
+     ft:'Sessions '+F(last.ga_sessions)+'  Season '+C(trv),
+     peak:'Peak revenue: '+C(pkGA.val)+' ('+pkGA.iso+')'}
+  ];
+  var kH='';
+  for(var i=0;i<kItems.length;i++){
+    var k=kItems[i];
+    kH+='<div class="sc" style="--ac:'+k.ac+'">'
+      +'<div class="sc-lbl">'+k.lbl+'</div>'
+      +'<div class="sc-val">'+k.val+'</div>'
+      +'<div class="sc-sub">'+k.sub+' '+k.wow+'</div>'
+      +'<div class="sc-ft">'+k.ft+'</div>'
+      +'<div class="sc-pk">'+k.peak+'</div>'
+      +'</div>';
+  }
+
+  // Annual table - newest week first
+  var COLS=[
+    {key:'ig_reach',    lbl:'IG Reach', fmt:F,  fn:function(x){return x.ig_reach;},    col:'#00B4D8',rate:false,cumul:false},
+    {key:'ig_eng',      lbl:'Eng%',     fmt:P,  fn:function(x){return x.ig_eng;},       col:'#00B4D8',rate:true, cumul:false},
+    {key:'ig_followers',lbl:'IG Flw',   fmt:F,  fn:function(x){return x.ig_followers;}, col:'#00B4D8',rate:false,cumul:true},
+    {key:'ig_inter',    lbl:'Inter',    fmt:F,  fn:function(x){return x.ig_inter;},     col:'#00B4D8',rate:false,cumul:false},
+    {key:'fb_views',    lbl:'FB Views', fmt:F,  fn:function(x){return x.fb_views;},     col:'#3A86FF',rate:false,cumul:false},
+    {key:'fb_inter',    lbl:'FB Inter', fmt:F,  fn:function(x){return x.fb_inter;},     col:'#3A86FF',rate:false,cumul:false},
+    {key:'tt_views',    lbl:'TT Views', fmt:F,  fn:function(x){return x.tt_views;},     col:'#FF006E',rate:false,cumul:false},
+    {key:'tt_followers',lbl:'TT Flw',   fmt:F,  fn:function(x){return x.tt_followers;}, col:'#FF006E',rate:false,cumul:true},
+    {key:'ga_sessions', lbl:'GA Sess',  fmt:F,  fn:function(x){return x.ga_sessions;},  col:'#06D6A0',rate:false,cumul:false},
+    {key:'ga_revenue',  lbl:'GA Rev',   fmt:C,  fn:function(x){return x.ga_revenue;},   col:'#06D6A0',rate:false,cumul:false}
+  ];
+
+  var colMins=[],colMaxs=[];
+  for(var ci=0;ci<COLS.length;ci++){
+    var vals=w.map(COLS[ci].fn).filter(isV);
+    colMins.push(vals.length?Math.min.apply(null,vals):0);
+    colMaxs.push(vals.length?Math.max.apply(null,vals):1);
+  }
+
+  var grpH='<tr>'
+    +'<th style="position:sticky;left:0;top:0;z-index:4;background:var(--surf2)"></th>'
+    +'<th colspan="4" style="text-align:center;color:#00B4D8;border-left:1px solid rgba(255,255,255,.06)">Instagram</th>'
+    +'<th colspan="2" style="text-align:center;color:#3A86FF;border-left:1px solid rgba(255,255,255,.06)">Facebook</th>'
+    +'<th colspan="2" style="text-align:center;color:#FF006E;border-left:1px solid rgba(255,255,255,.06)">TikTok</th>'
+    +'<th colspan="2" style="text-align:center;color:#06D6A0;border-left:1px solid rgba(255,255,255,.06)">Analytics</th>'
+    +'</tr>';
+  var thH='<tr><th style="text-align:left;position:sticky;left:0;top:22px;z-index:4;background:var(--surf2);box-shadow:2px 0 5px rgba(0,0,0,.3)">Week</th>';
+  for(var ci=0;ci<COLS.length;ci++){
+    var bl=(ci===0||ci===4||ci===6||ci===8)?'border-left:1px solid rgba(255,255,255,.06);':'';
+    thH+='<th style="top:22px;'+bl+'color:'+COLS[ci].col+'">'+COLS[ci].lbl+'</th>';
+  }
+  thH+='</tr>';
+
+  var revW=w.slice().reverse();
+  var bodyH='';
+  for(var ri=0;ri<revW.length;ri++){
+    var row=revW[ri];
+    var origIdx=w.indexOf(row);
+    var isLatest=(origIdx===w.length-1);
+    var rowH='<tr class="'+(isLatest?'latest':'')+'">'
+      +'<td style="text-align:left;font-family:var(--f);font-weight:700;position:sticky;left:0;background:'
+      +(isLatest?'#182838':'var(--surf)')+';z-index:2;box-shadow:2px 0 5px rgba(0,0,0,.3)">'
+      +'<span style="color:var(--mut);margin-right:4px">'+row.iso+'</span>'+row.label+'</td>';
+    for(var ci=0;ci<COLS.length;ci++){
+      var val=COLS[ci].fn(row);
+      var bl=(ci===0||ci===4||ci===6||ci===8)?'border-left:1px solid rgba(255,255,255,.06);':'';
+      var bg='';
+      if(isV(val)&&colMaxs[ci]>colMins[ci]){
+        var t=(val-colMins[ci])/(colMaxs[ci]-colMins[ci]);
+        bg='background:rgba('+Math.round(t*0+(1-t)*20)+','+Math.round(t*160+(1-t)*50)+','+Math.round(t*100+(1-t)*80)+',0.22);';
+      }
+      var wowt=woT(w,origIdx,COLS[ci].fn,COLS[ci].rate);
+      rowH+='<td style="'+bl+bg+'">'+(isV(val)?COLS[ci].fmt(val):'<span class="miss">--</span>')+wowt+'</td>';
+    }
+    rowH+='</tr>';
+    bodyH+=rowH;
+  }
+  var totH='<td style="text-align:left;font-family:var(--f);font-size:8px;color:var(--mut);font-weight:700;position:sticky;left:0;background:var(--surf2);z-index:2">TOTAL/AVG</td>';
+  for(var ci=0;ci<COLS.length;ci++){
+    var tot=COLS[ci].cumul?COLS[ci].fn(w[w.length-1]):COLS[ci].rate?avgF(w,COLS[ci].fn):sumF(w,COLS[ci].fn);
+    var bl=(ci===0||ci===4||ci===6||ci===8)?'border-left:1px solid rgba(255,255,255,.06);':'';
+    totH+='<td style="'+bl+'font-weight:700;color:#bcd">'+(isV(tot)?COLS[ci].fmt(tot):'--')+'</td>';
+  }
+
+  el.innerHTML=
+    '<div class="sl"><span class="sd" style="background:var(--gold)"></span>Quarterly goals</div>'
+    +'<div class="tc" style="margin-bottom:10px">'+gH+'</div>'
+    +'<div class="sl"><span class="sd" style="background:var(--mut)"></span>Platform snapshot &mdash; latest week</div>'
+    +'<div class="sum-grid">'+kH+'</div>'
+    +'<div class="sl"><span class="sd" style="background:var(--mut)"></span>Cross-platform trends</div>'
+    +'<div class="two">'
+    +'<div class="ch" style="margin:0"><div class="ch-h"><span class="ch-t">Follower growth &mdash; IG + TikTok</span></div><div class="ch-c" style="height:150px"><canvas id="db-flw"></canvas></div></div>'
+    +'<div class="ch" style="margin:0"><div class="ch-h"><span class="ch-t">Views by platform (grouped)</span></div><div class="ch-c" style="height:150px"><canvas id="db-views"></canvas></div></div>'
+    +'</div>'
+    +'<div class="sl"><span class="sd" style="background:var(--gold)"></span>Weekly data &mdash; all platforms</div>'
+    +'<div class="ann-wrap">'
+    +'<table class="ann"><thead>'+grpH+thH+'</thead>'
+    +'<tbody>'+bodyH+'</tbody>'
+    +'<tfoot><tr style="border-top:2px solid rgba(255,255,255,.11)">'+totH+'</tr></tfoot>'
+    +'</table></div>';
+
+  setTimeout(function(){
+    mkMulti('db-flw',w,[
+      {label:'IG',     fn:function(x){return x.ig_followers;}, col:'#FF006E'},
+      {label:'TikTok', fn:function(x){return x.tt_followers;}, col:'#00B4D8'}
+    ],F,'line');
+    mkMulti('db-views',w,[
+      {label:'IG', fn:function(x){return x.ig_views;},  col:'#FF006E'},
+      {label:'FB', fn:function(x){return x.fb_views;},  col:'#3A86FF'},
+      {label:'TT', fn:function(x){return x.tt_views;},  col:'#00B4D8'}
+    ],F,'bar');
+  },80);
+}
+
+// -- INSTAGRAM --------------------------------------------------------------
+function renderIG(w,last,li){
+  var el=document.getElementById('pg-ig');
+  var rows=[
+    ['Reach',         function(x){return x.ig_reach;},    F,false,false],
+    ['Views',         function(x){return x.ig_views;},    F,false,false],
+    ['Follows',       function(x){return x.ig_follows;},  F,false,false],
+    ['Profile Visits',function(x){return x.ig_visits;},   F,false,false],
+    ['Interactions',  function(x){return x.ig_inter;},    F,false,false],
+    ['Link Clicks',   function(x){return x.ig_clicks;},   F,false,false],
+    ['Eng Rate',      function(x){return x.ig_eng;},      P,true, false],
+    ['Total Followers',function(x){return x.ig_followers;},F,false,true]
+  ];
+  var trs='';
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i]; var cv=r[1](last); var tot=r[4]?'Cumulative':r[2](sumF(w,r[1]));
+    trs+='<tr><td class="mn">'+r[0]+'</td><td>'+r[2](cv)+' '+woW(w,li,r[1],r[3],r[4])+'</td><td>'+tot+'</td></tr>';
+  }
+  var pkR=peakF(w,function(x){return x.ig_reach;});
+  var pkI=peakF(w,function(x){return x.ig_inter;});
+  var goal=D.goals?(D.goals.ig_followers||1500):1500;
+
+  el.innerHTML=''
+    +'<div class="sl"><span class="sd" style="background:var(--ig)"></span>Metrics</div>'
+    +'<div class="tc" style="margin-bottom:8px">'
+    +'<div class="tc-h"><div class="tc-t"><span class="pill" style="background:rgba(0,180,216,.12);color:var(--ig)">IG</span>Weekly metrics</div>'
+    +'<div style="display:flex;gap:5px">'
+    +'<span class="peak-badge">Peak reach: '+F(pkR.val)+' ('+pkR.iso+')</span>'
+    +'<span class="peak-badge">Peak inter: '+F(pkI.val)+' ('+pkI.iso+')</span>'
+    +'</div></div>'
+    +'<table class="mt"><thead><tr><th>Metric</th><th style="text-align:right">Latest / WoW</th><th>Range total</th></tr></thead>'
+    +'<tbody>'+trs+'</tbody></table></div>'
+    +'<div class="two">'
+    +'<div class="ch" style="margin:0"><div class="ch-h"><span class="ch-t">Reach</span></div><div class="ch-c"><canvas id="ig-r"></canvas></div></div>'
+    +'<div class="ch" style="margin:0"><div class="ch-h"><span class="ch-t">Engagement rate</span></div><div class="ch-c"><canvas id="ig-e"></canvas></div></div>'
+    +'</div>'
+    +'<div class="two">'
+    +'<div class="ch" style="margin:0"><div class="ch-h"><span class="ch-t">Followers</span></div><div class="ch-c"><canvas id="ig-f"></canvas></div></div>'
+    +'<div class="ch" style="margin:0"><div class="ch-h"><span class="ch-t">Interactions</span></div><div class="ch-c"><canvas id="ig-i"></canvas></div></div>'
+    +'</div>'
+    +'<div class="sl"><span class="sd" style="background:var(--ig)"></span>Follows &amp; Interactions trend</div>'
+    +'<div class="two">'
+    +'<div class="ch" style="margin:0"><div class="ch-h"><span class="ch-t">Follows &amp; Interactions</span></div><div class="ch-c" style="height:150px"><canvas id="ig-fi"></canvas></div></div>'
+    +'<div class="ch" style="margin:0"><div class="ch-h"><span class="ch-t">Total followers vs Q2 goal ('+F(goal)+')</span></div><div class="ch-c" style="height:150px"><canvas id="ig-goal"></canvas></div></div>'
+    +'</div>';
+
+  setTimeout(function(){
+    mkChart('ig-r',w,function(x){return x.ig_reach;},'#00B4D8',F);
+    mkChart('ig-e',w,function(x){return x.ig_eng;},'#3A86FF',P,true,'line');
+    mkChart('ig-f',w,function(x){return x.ig_followers;},'#00B4D8',F,false,'line');
+    mkChart('ig-i',w,function(x){return x.ig_inter;},'#06D6A0',F);
+    mkMulti('ig-fi',w,[
+      {label:'Follows',      fn:function(x){return x.ig_follows;}, col:'#FF006E'},
+      {label:'Interactions', fn:function(x){return x.ig_inter;},   col:'#FFA502'}
+    ],F,'bar');
+    mkGoalLine('ig-goal',w,function(x){return x.ig_followers;},'#FF006E',
+      'Total Followers',goal,'Q2 Goal '+F(goal));
+  },30);
+}
+
+// -- FACEBOOK --------------------------------------------------------------
+function renderFB(w,last,li){
+  var el=document.getElementById('pg-fb');
+  var rows=[
+    ['Views',       function(x){return x.fb_views;},   F],
+    ['Visits',      function(x){return x.fb_visits;},  F],
+    ['Viewers',     function(x){return x.fb_viewers;},  F],
+    ['Follows',     function(x){return x.fb_follows;},  F],
+    ['Interactions',function(x){return x.fb_inter;},    F],
+    ['Link Clicks', function(x){return x.fb_clicks;},   F]
+  ];
+  var trs='';
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i];
+    trs+='<tr><td class="mn">'+r[0]+'</td><td>'+r[2](r[1](last))+' '+woW(w,li,r[1])+'</td><td>'+r[2](sumF(w,r[1]))+'</td></tr>';
+  }
+  var pkV=peakF(w,function(x){return x.fb_views;});
+  var pkI=peakF(w,function(x){return x.fb_inter;});
+
+  el.innerHTML=''
+    +'<div class="sl"><span class="sd" style="background:var(--fb)"></span>Metrics</div>'
+    +'<div class="tc" style="margin-bottom:8px">'
+    +'<div class="tc-h"><div class="tc-t"><span class="pill" style="background:rgba(58,134,255,.12);color:var(--fb)">FB</span>Weekly metrics</div>'
+    +'<div style="display:flex;gap:5px">'
+    +'<span class="peak-badge">Peak views: '+F(pkV.val)+' ('+pkV.iso+')</span>'
+    +'<span class="peak-badge">Peak inter: '+F(pkI.val)+' ('+pkI.iso+')</span>'
+    +'</div></div>'
+    +'<table class="mt"><thead><tr><th>Metric</th><th style="text-align:right">Latest / WoW</th><th>Range total</th></tr></thead>'
+    +'<tbody>'+trs+'</tbody></table></div>'
+    +'<div class="sl"><span class="sd" style="background:var(--fb)"></span>Views &amp; Visits trend</div>'
+    +'<div class="two">'
+    +'<div class="ch" style="margin:0"><div class="ch-h"><span class="ch-t">Views &amp; Visits</span></div><div class="ch-c" style="height:150px"><canvas id="fb-vv"></canvas></div></div>'
+    +'<div class="ch" style="margin:0"><div class="ch-h"><span class="ch-t">Follows &amp; Interactions</span></div><div class="ch-c" style="height:150px"><canvas id="fb-fi"></canvas></div></div>'
+    +'</div>';
+
+  setTimeout(function(){
+    mkMulti('fb-vv',w,[
+      {label:'Views',  fn:function(x){return x.fb_views;},  col:'#3A86FF'},
+      {label:'Visits', fn:function(x){return x.fb_visits;}, col:'#00B4D8'}
+    ],F,'bar');
+    mkMulti('fb-fi',w,[
+      {label:'Follows',      fn:function(x){return x.fb_follows;}, col:'#3A86FF'},
+      {label:'Interactions', fn:function(x){return x.fb_inter;},   col:'#06D6A0'}
+    ],F,'bar');
+  },30);
+}
+
+// -- TIKTOK -----------------------------------------------------------------
+function renderTT(w,last,li){
+  var el=document.getElementById('pg-tt');
+  var rows=[
+    ['Video Views',   function(x){return x.tt_views;},          F,false,false],
+    ['Reached',       function(x){return x.tt_reach;},          F,false,false],
+    ['Profile Views', function(x){return x.tt_profile_views;},  F,false,false],
+    ['New Followers', function(x){return x.tt_new_flw;},        F,false,false],
+    ['Lost Followers',function(x){return x.tt_lost_flw;},       F,false,false],
+    ['Net Growth',    function(x){return x.tt_net_growth;},     F,false,false],
+    ['Likes',         function(x){return x.tt_likes;},          F,false,false],
+    ['Comments',      function(x){return x.tt_comments;},       F,false,false],
+    ['Shares',        function(x){return x.tt_shares;},         F,false,false],
+    ['Website Clicks',function(x){return x.tt_website_clicks;}, F,false,false],
+    ['Total Followers',function(x){return x.tt_followers;},     F,false,true]
+  ];
+  var trs='';
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i]; var ic=r[4];
+    trs+='<tr><td class="mn">'+r[0]+'</td><td>'+r[2](r[1](last))+' '+woW(w,li,r[1],r[3],ic)+'</td><td>'+(ic?'Cumulative':r[2](sumF(w,r[1])))+'</td></tr>';
+  }
+  var pkV=peakF(w,function(x){return x.tt_views;});
+  var allVids2=[];
+  for(var wi=0;wi<D.weeks.length;wi++){
+    var wk2=D.weeks[wi];
+    if(wk2.tt_top_videos){
+      for(var vi=0;vi<wk2.tt_top_videos.length;vi++){
+        allVids2.push({v:wk2.tt_top_videos[vi],iso:wk2.iso,label:wk2.label||wk2.iso});
+      }
+    }
+  }
+  allVids2.sort(function(a,b){return b.v.views-a.v.views;});
+  var topBadge=allVids2.length?('<span class="peak-badge">Top video all-time: '+F(allVids2[0].v.views)+' views ('+allVids2[0].iso+')</span>'):'';
+
+  el.innerHTML=''
+    +'<div class="sl"><span class="sd" style="background:var(--tt)"></span>Metrics</div>'
+    +'<div class="tc" style="margin-bottom:8px">'
+    +'<div class="tc-h"><div class="tc-t"><span class="pill" style="background:rgba(255,0,110,.12);color:var(--tt)">TT</span>Weekly metrics</div>'
+    +'<div style="display:flex;gap:5px">'
+    +'<span class="peak-badge">Peak views: '+F(pkV.val)+' ('+pkV.iso+')</span>'
+    +topBadge
+    +'</div></div>'
+    +'<table class="mt"><thead><tr><th>Metric</th><th style="text-align:right">Latest / WoW</th><th>Range total</th></tr></thead>'
+    +'<tbody>'+trs+'</tbody></table></div>'
+    +'<div class="two">'
+    +'<div class="ch" style="margin:0"><div class="ch-h"><span class="ch-t">Video views</span></div><div class="ch-c"><canvas id="tt-v"></canvas></div></div>'
+    +'<div class="ch" style="margin:0"><div class="ch-h"><span class="ch-t">Followers</span></div><div class="ch-c"><canvas id="tt-f"></canvas></div></div>'
+    +'</div>'
+    +buildVidSection(vidView, w);
+
+  setTimeout(function(){
+    mkChart('tt-v',w,function(x){return x.tt_views;},'#FF006E',F);
+    mkChart('tt-f',w,function(x){return x.tt_followers;},'#FF006E',F,false,'line');
+  },30);
+}
+
+function setVidView(v,btn){
+  vidView=v;
+  document.querySelectorAll('.vt').forEach(function(b){b.classList.remove('on');});
+  if(btn) btn.classList.add('on');
+  var sec=document.getElementById('vid-section');
+  if(sec) sec.outerHTML=buildVidSection(v,FW);
+}
+
+function buildVidSection(view,w){
+  var videos=[];
+  if(view==='weekly'){
+    var lw=w[w.length-1];
+    var vids=lw.tt_top_videos||[];
+    for(var i=0;i<vids.length;i++) videos.push({v:vids[i],iso:lw.iso,label:lw.label||lw.iso});
+  } else if(view==='monthly'){
+    var byMo={};
+    for(var wi=0;wi<D.weeks.length;wi++){
+      var wk=D.weeks[wi];
+      var mo=wk.start?wk.start.substring(0,7):'?';
+      if(!byMo[mo]) byMo[mo]=[];
+      var vids2=wk.tt_top_videos||[];
+      for(var vi=0;vi<vids2.length;vi++) byMo[mo].push({v:vids2[vi],iso:wk.iso,label:wk.label||wk.iso});
+    }
+    var months=Object.keys(byMo).sort();
+    for(var mi=0;mi<months.length;mi++){
+      var mv=byMo[months[mi]];
+      mv.sort(function(a,b){return b.v.views-a.v.views;});
+      for(var i=0;i<mv.length;i++) videos.push(mv[i]);
+    }
+  } else {
+    for(var wi=0;wi<D.weeks.length;wi++){
+      var wk=D.weeks[wi];
+      var vids3=wk.tt_top_videos||[];
+      for(var vi=0;vi<vids3.length;vi++) videos.push({v:vids3[vi],iso:wk.iso,label:wk.label||wk.iso});
+    }
+    videos.sort(function(a,b){return b.v.views-a.v.views;});
+  }
+  if(!videos.length) return '<div id="vid-section" style="padding:12px;font-size:9px;color:var(--dim);font-style:italic">No video data for this period</div>';
+  var rows='';
+  for(var i=0;i<videos.length;i++){
+    var item=videos[i]; var v=item.v;
+    var short=v.title?v.title.substring(0,75)+(v.title.length>75?'...':''):'';
+    var lnk=v.url?'<a href="'+v.url+'" target="_blank" style="color:var(--tt);font-size:8px;font-weight:700;text-decoration:none">View</a>':'';
+    rows+='<tr>'
+      +'<td style="padding:5px 10px;color:var(--mut);font-family:var(--m);font-size:8px">'+item.iso+'</td>'
+      +'<td style="padding:5px 10px;font-size:8px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+short+'</td>'
+      +'<td style="padding:5px 10px;text-align:center;font-size:8px;color:var(--mut)">'+v.posted+'</td>'
+      +'<td style="padding:5px 10px;text-align:right;font-family:var(--m);font-weight:700;color:var(--tt)">'+F(v.views)+'</td>'
+      +'<td style="padding:5px 10px;text-align:right;font-family:var(--m)">'+F(v.likes)+'</td>'
+      +'<td style="padding:5px 10px;text-align:right;font-family:var(--m)">'+F(v.comments)+'</td>'
+      +'<td style="padding:5px 10px;text-align:right;font-family:var(--m)">'+F(v.shares)+'</td>'
+      +'<td style="padding:5px 10px">'+lnk+'</td>'
+      +'</tr>';
+  }
+  var onW=view==='weekly'?'on':''; var onM=view==='monthly'?'on':''; var onA=view==='alltime'?'on':'';
+  return '<div id="vid-section">'
+    +'<div class="sl"><span class="sd" style="background:var(--tt)"></span>Top videos</div>'
+    +'<div class="vid-tabs">'
+    +'<button class="vt '+onW+'" onclick="setVidView(\'weekly\',this)">This week</button>'
+    +'<button class="vt '+onM+'" onclick="setVidView(\'monthly\',this)">By month</button>'
+    +'<button class="vt '+onA+'" onclick="setVidView(\'alltime\',this)">All time</button>'
+    +'</div>'
+    +'<div class="tc"><table class="mt"><thead><tr>'
+    +'<th>Week</th><th>Title</th><th style="text-align:center">Posted</th>'
+    +'<th style="text-align:right">Views</th><th style="text-align:right">Likes</th>'
+    +'<th style="text-align:right">Comments</th><th style="text-align:right">Shares</th><th></th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table></div>'
+    +'</div>';
+}
+
+// -- ANALYTICS --------------------------------------------------------------
+function renderGA(w,last,li){
+  var el=document.getElementById('pg-ga');
+  var trv=sumF(w,function(x){return x.ga_revenue;});
+  var missW=[];
+  for(var i=0;i<w.length;i++){if(w[i].ga_missing) missW.push(w[i].iso);}
+
+  // 6 metric cards in a row
+  var gaM=[
+    {l:'Revenue',     v:last.ga_revenue,     fmt:C,   wow:woW(w,li,function(x){return x.ga_revenue;}),      col:'var(--ga)',   tot:C(trv)},
+    {l:'Sessions',    v:last.ga_sessions,    fmt:F,   wow:woW(w,li,function(x){return x.ga_sessions;}),     col:'var(--text)', tot:F(sumF(w,function(x){return x.ga_sessions;}))},
+    {l:'Engaged',     v:last.ga_eng_sessions,fmt:F,   wow:woW(w,li,function(x){return x.ga_eng_sessions;}), col:'var(--text)', tot:F(sumF(w,function(x){return x.ga_eng_sessions;}))},
+    {l:'Eng Rate',    v:last.ga_eng_rate,    fmt:P,   wow:woW(w,li,function(x){return x.ga_eng_rate;},true),col:'var(--gold)', tot:P(avgF(w,function(x){return x.ga_eng_rate;}))},
+    {l:'Avg Time (s)',v:last.ga_avg_eng_time,fmt:FD1, wow:'',                                                col:'var(--text)', tot:FD1(avgF(w,function(x){return x.ga_avg_eng_time;}))},
+    {l:'Key Events',  v:last.ga_key_events,  fmt:F,   wow:woW(w,li,function(x){return x.ga_key_events;}),   col:'var(--text)', tot:F(sumF(w,function(x){return x.ga_key_events;}))}
+  ];
+  var mH='';
+  for(var i=0;i<gaM.length;i++){
+    var m=gaM[i]; var val=last.ga_missing?null:m.v;
+    mH+='<div class="gm">'
+      +'<div class="gm-l">'+m.l+'</div>'
+      +'<div class="gm-v" style="color:'+m.col+'">'+(isV(val)?m.fmt(val):'<span class="na">--</span>')+'</div>'
+      +'<div class="gm-s">'+(isV(val)?m.wow:'')+'<span style="color:var(--dim)">Total: '+m.tot+'</span></div>'
+      +'</div>';
+  }
+
+  // Charts
+  var chartsH='<div class="two">'
+    +'<div class="ch" style="margin:0"><div class="ch-h"><span class="ch-t">Revenue by week</span></div><div class="ch-c"><canvas id="ga-r"></canvas></div></div>'
+    +'<div class="ch" style="margin:0"><div class="ch-h"><span class="ch-t">Sessions by week</span></div><div class="ch-c"><canvas id="ga-s"></canvas></div></div>'
+    +'</div>';
+
+  // Pie chart for traffic sources
+  var srcs=(last.ga_sources||[]).filter(function(s){return s.src&&s.src.trim().length>0;});
+  var pieH='';
+  var PIE_COLORS=['#06D6A0','#00B4D8','#3A86FF','#FFD166','#FF006E','#FFA502'];
+  if(srcs.length){
+    var topS=srcs.slice(0,6);
+    var pieLeg='';
+    for(var i=0;i<topS.length;i++){
+      var s=topS[i];
+      pieLeg+='<div class="pie-item">'
+        +'<div class="pie-dot" style="background:'+PIE_COLORS[i]+'"></div>'
+        +'<span style="color:#8aabcc">'+s.src+'</span>'
+        +'<span style="font-family:var(--m);margin-left:auto;padding-left:6px;color:var(--text)">'+F(s.sessions)+'</span>'
+        +(s.revenue>0?'<span style="font-family:var(--m);color:var(--ga);margin-left:4px">'+C(s.revenue)+'</span>':'')
+        +'</div>';
+    }
+    pieH='<div class="sl"><span class="sd" style="background:var(--ga)"></span>Traffic source breakdown</div>'
+      +'<div class="ch" style="margin-bottom:8px">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+      +'<div style="flex-shrink:0;width:130px;height:130px"><canvas id="ga-pie"></canvas></div>'
+      +'<div class="pie-legend" style="flex:1">'+pieLeg+'</div>'
+      +'</div></div>';
+  }
+
+  // Full sources list
+  var ms=srcs.length?Math.max.apply(null,srcs.map(function(s){return s.sessions||0;})):1;
+  var srcH='';
+  for(var i=0;i<srcs.length;i++){
+    var s=srcs[i];
+    srcH+='<div class="src-r">'
+      +'<span class="src-n">'+s.src+'</span>'
+      +'<div class="src-b"><div class="src-f" style="width:'+((s.sessions/ms)*100).toFixed(0)+'%"></div></div>'
+      +'<span class="src-s">'+F(s.sessions)+'</span>'
+      +'<span class="src-rv">'+(s.revenue>0?C(s.revenue):'')+'</span>'
+      +'</div>';
+  }
+
+  el.innerHTML=''
+    +(missW.length?'<div class="nodata-banner">No GA data: '+missW.join(', ')+'</div>':'')
+    +'<div class="sl"><span class="sd" style="background:var(--ga)"></span>Metrics</div>'
+    +'<div class="ga-metrics-row">'+mH+'</div>'
+    +chartsH
+    +pieH
+    +'<div class="sl"><span class="sd" style="background:var(--ga)"></span>All traffic sources</div>'
+    +'<div class="tc">'+(srcH||'<div style="padding:12px;font-size:9px;color:var(--dim)">No source data</div>')+'</div>';
+
+  setTimeout(function(){
+    mkChart('ga-r',w,function(x){return x.ga_revenue;},'#06D6A0',C);
+    mkChart('ga-s',w,function(x){return x.ga_sessions;},'#06D6A0',F);
+    if(srcs.length){
+      var topS2=srcs.slice(0,6);
+      mkPie('ga-pie',topS2.map(function(s){return s.src;}),topS2.map(function(s){return s.sessions;}),PIE_COLORS);
+    }
+  },30);
+}
+
+// -- AUDIENCE --------------------------------------------------------------
+function renderAudience(){
+  var el=document.getElementById('pg-audience');
+  var aud=D.audience||{};
+  var ig=aud.ig||null; var fb=aud.fb||null;
+  var tt=(aud.tt&&aud.tt.daily&&aud.tt.daily.length)?aud.tt:null;
+  if(!ig&&!fb&&!tt){
+    el.innerHTML='<div class="nodata-banner" style="margin-top:14px">No audience data. Upload a JSON with audience data.</div>';
+    return;
+  }
+  function barRows(items,color){
+    if(!items||!items.length) return '<div style="padding:10px 12px;font-size:8px;color:var(--dim)">No data</div>';
+    var mx=Math.max.apply(null,items.map(function(x){return x.pct;}));
+    var h='';
+    for(var i=0;i<items.length;i++){
+      var item=items[i]; var bw=mx>0?Math.round(item.pct/mx*100):0;
+      h+='<div class="ar"><span class="ark">'+(i+1)+'</span><span class="arn">'+item.name+'</span>'
+        +'<div class="arbb"><div class="arbf" style="width:'+bw+'%;background:'+color+'"></div></div>'
+        +'<span class="arv">'+Math.round(item.pct*1000)/10+'%</span></div>';
+    }
+    return h;
+  }
+  function ageRows(age_data,g_order){
+    if(!age_data||!age_data.length) return '';
+    var g1=(g_order&&g_order[0])||'V1'; var g2=(g_order&&g_order[1])||'V2';
+    var c1=g1.toLowerCase().indexOf('women')>=0?'var(--ig)':'var(--fb)';
+    var c2=g2.toLowerCase().indexOf('women')>=0?'var(--ig)':'var(--fb)';
+    var maxT=0;
+    for(var i=0;i<age_data.length;i++){var t=(age_data[i].v1||0)+(age_data[i].v2||0);if(t>maxT)maxT=t;}
+    var h='<div style="display:flex;gap:10px;padding:5px 12px 2px;font-size:8px;font-weight:700">'
+      +'<span style="color:'+c1+'">'+g1+'</span><span style="color:'+c2+'">'+g2+'</span></div>';
+    for(var i=0;i<age_data.length;i++){
+      var a=age_data[i];
+      var w1=maxT>0?Math.round((a.v1||0)/maxT*100):0;
+      var w2=maxT>0?Math.round((a.v2||0)/maxT*100):0;
+      h+='<div class="age-r"><div class="age-l">'+a.band+'</div>'
+        +'<div class="age-bs"><div style="flex:'+w1+';background:'+c1+';height:5px;border-radius:1px 0 0 1px"></div>'
+        +'<div style="flex:'+w2+';background:'+c2+';height:5px;border-radius:0 1px 1px 0"></div></div>'
+        +'<div class="age-vs"><span style="color:'+c1+'">'+Math.round((a.v1||0)*1000)/10+'%</span>'
+        +'<span style="color:'+c2+'">'+Math.round((a.v2||0)*1000)/10+'%</span></div></div>';
+    }
+    return h;
+  }
+  var html='';
+  if(ig){
+    html+='<div class="sl"><span class="sd" style="background:var(--ig)"></span>Instagram audience</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">'
+      +'<div class="ac"><div class="ac-h" style="color:var(--ig)">Age &amp; Gender</div>'+ageRows(ig.age_gender,ig.gender_order)+'</div>'
+      +'<div class="ac"><div class="ac-h" style="color:var(--ig)">Top Countries</div>'+barRows(ig.top_countries,'var(--ig)')+'</div>'
+      +'<div class="ac"><div class="ac-h" style="color:var(--ig)">Top Cities</div>'+barRows(ig.top_cities,'#7BC8D8')+'</div>'
+      +'</div>';
+  }
+  if(fb){
+    html+='<div class="sl"><span class="sd" style="background:var(--fb)"></span>Facebook audience</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">'
+      +'<div class="ac"><div class="ac-h" style="color:var(--fb)">Age &amp; Gender</div>'+ageRows(fb.age_gender,fb.gender_order)+'</div>'
+      +'<div class="ac"><div class="ac-h" style="color:var(--fb)">Top Countries</div>'+barRows(fb.top_countries,'var(--fb)')+'</div>'
+      +'<div class="ac"><div class="ac-h" style="color:var(--fb)">Top Cities</div>'+barRows(fb.top_cities,'#7AA6FF')+'</div>'
+      +'</div>';
+  }
+  if(tt&&tt.daily&&tt.daily.length){
+    var daily=tt.daily; var lastD=daily[daily.length-1];
+    var ttKpis=[
+      {l:'Total Followers',v:lastD.total_flw,col:'var(--tt)'},
+      {l:'New Followers',v:lastD.new_flw,col:'var(--tt)'},
+      {l:'Reached',v:lastD.reached,col:'#ff669a'},
+      {l:'Engaged',v:lastD.engaged,col:'#ff669a'}
+    ];
+    html+='<div class="sl"><span class="sd" style="background:var(--tt)"></span>TikTok audience</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">';
+    for(var i=0;i<ttKpis.length;i++){
+      var kp=ttKpis[i];
+      html+='<div class="ac" style="padding:10px 12px">'
+        +'<div style="font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--mut);margin-bottom:5px">'+kp.l+'</div>'
+        +'<div style="font-size:18px;font-weight:700;font-family:var(--m);color:'+kp.col+'">'+Number(kp.v).toLocaleString()+'</div>'
+        +'</div>';
+    }
+    html+='</div><div class="ac">'
+      +'<div style="font-size:8px;font-weight:700;text-transform:uppercase;color:var(--tt);padding:7px 12px 6px;border-bottom:1px solid var(--bdr)">Daily breakdown</div>'
+      +'<table style="width:100%;border-collapse:collapse;font-size:9px"><thead><tr style="border-bottom:1px solid var(--bdr)">'
+      +'<th style="padding:4px 12px;text-align:left;font-size:7px;font-weight:700;text-transform:uppercase;color:var(--mut)">Date</th>'
+      +'<th style="padding:4px 12px;text-align:right;font-size:7px;font-weight:700;text-transform:uppercase;color:var(--mut)">New</th>'
+      +'<th style="padding:4px 12px;text-align:right;font-size:7px;font-weight:700;text-transform:uppercase;color:var(--mut)">Total</th>'
+      +'<th style="padding:4px 12px;text-align:right;font-size:7px;font-weight:700;text-transform:uppercase;color:var(--mut)">Reached</th>'
+      +'<th style="padding:4px 12px;text-align:right;font-size:7px;font-weight:700;text-transform:uppercase;color:var(--mut)">Engaged</th>'
+      +'</tr></thead><tbody>';
+    for(var i=0;i<daily.length;i++){
+      var d=daily[i]; var bg=i%2===0?'':'background:rgba(255,255,255,.015);';
+      html+='<tr style="'+bg+'"><td style="padding:4px 12px;color:var(--mut);font-family:var(--m)">'+d.date+'</td>'
+        +'<td style="padding:4px 12px;text-align:right;font-family:var(--m);color:var(--tt)">+'+d.new_flw+'</td>'
+        +'<td style="padding:4px 12px;text-align:right;font-family:var(--m);font-weight:700">'+Number(d.total_flw).toLocaleString()+'</td>'
+        +'<td style="padding:4px 12px;text-align:right;font-family:var(--m)">'+Number(d.reached).toLocaleString()+'</td>'
+        +'<td style="padding:4px 12px;text-align:right;font-family:var(--m)">'+Number(d.engaged).toLocaleString()+'</td></tr>';
+    }
+    html+='</tbody></table></div>';
+  }
+  el.innerHTML=html;
+}
+
+// -- UPLOAD ------------------------------------------------------------------
+function openModal(){ document.getElementById('modal').classList.add('open'); }
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+  pendJSON=null;
+  document.getElementById('upst').textContent='';
+  document.getElementById('upst').className='upst';
+  document.getElementById('apbtn').disabled=true;
+}
+function handleDrop(e){ e.preventDefault(); document.getElementById('dz').classList.remove('drag'); handleMultiFile(e.dataTransfer.files); }
+function handleMultiFile(files){
+  if(!files||files.length===0){setSt('Please select at least one .json file','err');return;}
+  pendJSON=null;
+  var allWeeks=[]; var latestAudience={}; var errors=[]; var filesProcessed=0; var total=files.length;
+  for(var fi=0;fi<total;fi++){
+    var file=files[fi];
+    if(!file.name.endsWith('.json')){errors.push(file.name);filesProcessed++;if(filesProcessed===total)finalizeMerge(allWeeks,latestAudience,errors);continue;}
+    (function(f){
+      var r=new FileReader();
+      r.onload=function(ev){
+        try{
+          var p=JSON.parse(ev.target.result);
+          if(p.weeks&&Array.isArray(p.weeks)) allWeeks=allWeeks.concat(p.weeks);
+          else errors.push(f.name+' (invalid)');
+          // Keep audience from any file that has it
+          if(p.audience&&(p.audience.ig||p.audience.fb||p.audience.tt)){
+            latestAudience=p.audience;
+          }
+        }catch(err){errors.push(f.name+' (parse error)');}
+        filesProcessed++;
+        if(filesProcessed===total) finalizeMerge(allWeeks,latestAudience,errors);
+      };
+      r.onerror=function(){errors.push(f.name);filesProcessed++;if(filesProcessed===total)finalizeMerge(allWeeks,latestAudience,errors);};
+      r.readAsText(f);
+    })(file);
+  }
+}
+function finalizeMerge(allWeeks,latestAudience,errors){
+  if(!allWeeks.length){setSt('No valid weeks found','err');return;}
+  // Use audience from uploaded file if it has data, otherwise keep existing
+  var aud=(latestAudience&&(latestAudience.ig||latestAudience.fb||latestAudience.tt))?latestAudience:D.audience;
+  pendJSON={weeks:allWeeks,audience:aud,generated:new Date().toISOString()};
+  var newCount=allWeeks.filter(function(w){return !D.weeks.find(function(ew){return ew.iso===w.iso;});}).length;
+  setSt('Ready - '+allWeeks.length+' weeks, '+newCount+' new'+(errors.length?' ('+errors.length+' skipped)':''),'ok');
+  document.getElementById('apbtn').disabled=false;
+}
+function setSt(msg,cls){ var el=document.getElementById('upst'); el.textContent=msg; el.className='upst '+(cls||''); }
+function applyUpload(){
+  if(!pendJSON) return;
+  for(var i=0;i<pendJSON.weeks.length;i++){
+    var nw=pendJSON.weeks[i];
+    var idx=D.weeks.findIndex(function(ew){return ew.iso===nw.iso;});
+    if(idx>=0) D.weeks[idx]=nw; else D.weeks.push(nw);
+  }
+  D.weeks.sort(function(a,b){return a.iso.localeCompare(b.iso);});
+  if(pendJSON.audience) D.audience=pendJSON.audience;
+  D.generated=pendJSON.generated||new Date().toISOString();
+  buildWeekSelects(); applyFilter(); updBadge();
+  downloadHTML(); closeModal(); destroyCharts(); renderAll();
+}
+function downloadHTML(){
+  var html=document.documentElement.outerHTML;
+  var MARKER='// == DATA_START ==';
+  var END_MARKER='// == DATA_END ==';
+  var s=html.indexOf(MARKER); var e=html.indexOf(END_MARKER,s)+END_MARKER.length;
+  if(s<0){alert('Data marker not found');return;}
+  var block=MARKER+'\nvar EMBEDDED_DATA = '+JSON.stringify(D)+';\n'+END_MARKER;
+  var updated=html.substring(0,s)+block+html.substring(e);
+  var fname='akwl-dashboard-'+D.weeks[D.weeks.length-1].iso+'.html';
+  try {
+    // Method 1: Blob (may be blocked by AV)
+    var blob=new Blob([updated],{type:'text/html;charset=utf-8'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url; a.download=fname;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},200);
+  } catch(err){
+    // Method 2: data URI fallback
+    var a2=document.createElement('a');
+    a2.href='data:text/html;charset=utf-8,'+encodeURIComponent(updated);
+    a2.download=fname;
+    document.body.appendChild(a2); a2.click();
+    setTimeout(function(){document.body.removeChild(a2);},200);
+  }
+}
+
+document.addEventListener('DOMContentLoaded',init);
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,140 @@
+{
+  "iso": "2026-W28",
+  "label": "Jul 5–11",
+  "ig_reach": 3125,
+  "ig_views": 8786,
+  "ig_follows": 15,
+  "ig_visits": 79,
+  "ig_inter": 354,
+  "ig_clicks": 4,
+  "ig_eng": 0.1133,
+  "ig_followers": 736,
+  "fb_views": 1940,
+  "fb_visits": 119,
+  "fb_viewers": 1219,
+  "fb_follows": 5,
+  "fb_inter": 76,
+  "fb_clicks": 3,
+  "tt_views": 4881,
+  "tt_reach": 3899,
+  "tt_profile_views": 58,
+  "tt_new_flw": 46,
+  "tt_lost_flw": 0,
+  "tt_net_growth": 46,
+  "tt_likes": 375,
+  "tt_comments": 35,
+  "tt_shares": 43,
+  "tt_website_clicks": 0,
+  "tt_followers": 297,
+  "tt_top_videos": [
+    {
+      "title": "When -50° is part of the job description 🥶 #fairbanksalaska #explorealaska #findyourwild #belowzero ",
+      "date": "2026/07/08",
+      "views": 1978,
+      "likes": 251,
+      "link": "https://www.tiktok.com/@alaska.wild.lights/video/7660221091809332511"
+    },
+    {
+      "title": "We asked @fbxfoodie | Alaska Life to spend an evening on the Arctic Ale Trail… here's what she had to say. 👀🍻 From behind-the-scenes brewery access to locally crafted beers and ciders, the Arctic Ale Trail is a different way to experience Fairbanks' growing craft beverage scene. ✨ Ready to sip your way through Fairbanks? Explore the Arctic Ale Trail through the link in bio. ✨Use code FOODIE15 to save 15%. ✨Call (907)-712-4529 to receive a LOCALS ONLY discount in addition to 15% off. #brewerytour #findyourwild #fairbanksalaska #explorealaska #midnightsun  ",
+      "date": "2026/07/07",
+      "views": 584,
+      "likes": 30,
+      "link": "https://www.tiktok.com/@alaska.wild.lights/video/7659897915703332127"
+    },
+    {
+      "title": "2:00AM and the sun is still shining…that's the magic of an Interior Alaska summer.  Whether you're crossing the Arctic Circle or soaking in Chena Hot Springs, our summer tours allow you to make the most of every hour of daylight. ✨ Find Your Wild under the Midnight Sun—explore our summer tours through the link in our bio. #midnightsun #interioralaska #fairbanksalaska #explorealaska #fairbankstourist",
+      "date": "2026/07/11",
+      "views": 491,
+      "likes": 48,
+      "link": "https://www.tiktok.com/@alaska.wild.lights/video/7661317893883301151"
+    },
+    {
+      "title": "Let us show you the best of Interior Alaska! Cross the Arctic Circle on the legendary Dalton Highway, experience the magic of the Midnight Sun, soak in the mineral-rich waters of Chena Hot Springs, discover Fairbanks history, or sip your way through the local craft beer scene.  No matter how you choose to explore, your Alaska adventure starts with us.  ✨🔗 Explore all of our summer tours through the link in our bio. #fairbanksalaska #explorealaska #interioralaska #fairbankstourist #visitalaska ",
+      "date": "2026/07/09",
+      "views": 408,
+      "likes": 22,
+      "link": "https://www.tiktok.com/@alaska.wild.lights/video/7660573999939833118"
+    },
+    {
+      "title": "Send this post to someone you'd love to experience the Northern Lights with 💚 We offer several Northern Lights tours, each with a unique way to experience the magic of the North: -Cross the Arctic Circle while the Northern Lights dance overhead.  -Soak in natural, mineral-rich hot springs beneath the Aurora.  -Watch the sky come alive from a cozy Aurora viewing lodge.  🔗✨ Explore our Northern Lights tours - https://bit.ly/3QWpcdM or comment 💚 to receive The Honest Guide: Seeing the Northern Lights in Alaska.   #northernlights #fairbanksalaska #auroraborealis #explorealaska #alaska ",
+      "date": "2026/07/07",
+      "views": 296,
+      "likes": 15,
+      "link": "https://www.tiktok.com/@alaska.wild.lights/video/7659616166163352862"
+    }
+  ],
+  "ga_sessions": 1270,
+  "ga_eng_sessions": 609,
+  "ga_eng_rate": 0.4795,
+  "ga_avg_eng_time": 51.3,
+  "ga_key_events": 16,
+  "ga_revenue": 968.0,
+  "ga_sources": [
+    {
+      "src": "(direct)",
+      "sessions": 695,
+      "revenue": 0.0
+    },
+    {
+      "src": "google / cpc",
+      "sessions": 316,
+      "revenue": 242.0
+    },
+    {
+      "src": "google / organic",
+      "sessions": 113,
+      "revenue": 726.0
+    },
+    {
+      "src": "alaskawildlights.com",
+      "sessions": 39,
+      "revenue": 0.0
+    },
+    {
+      "src": "alaska-org",
+      "sessions": 31,
+      "revenue": 0.0
+    },
+    {
+      "src": "(not set)",
+      "sessions": 12,
+      "revenue": 0.0
+    },
+    {
+      "src": "ActiveCampaign / email",
+      "sessions": 10,
+      "revenue": 0.0
+    },
+    {
+      "src": "(data not available)",
+      "sessions": 8,
+      "revenue": 0.0
+    },
+    {
+      "src": "explorefairbanks.com",
+      "sessions": 8,
+      "revenue": 0.0
+    },
+    {
+      "src": "instagram / bio",
+      "sessions": 8,
+      "revenue": 0.0
+    },
+    {
+      "src": "bing",
+      "sessions": 4,
+      "revenue": 0.0
+    },
+    {
+      "src": "foodie15 / influencer",
+      "sessions": 4,
+      "revenue": 0.0
+    },
+    {
+      "src": "yahoo",
+      "sessions": 3,
+      "revenue": 0.0
+    }
+  ],
+  "ga_missing": false
+}

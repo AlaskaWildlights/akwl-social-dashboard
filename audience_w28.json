@@ -1,0 +1,603 @@
+{
+  "audience": {
+    "ig": {
+      "age_gender": [
+        {
+          "band": "18-24",
+          "v1": 1.7,
+          "v2": 2.0
+        },
+        {
+          "band": "25-34",
+          "v1": 22.5,
+          "v2": 12.4
+        },
+        {
+          "band": "35-44",
+          "v1": 24.6,
+          "v2": 11.1
+        },
+        {
+          "band": "45-54",
+          "v1": 9.0,
+          "v2": 4.3
+        },
+        {
+          "band": "55-64",
+          "v1": 4.6,
+          "v2": 3.5
+        },
+        {
+          "band": "65+",
+          "v1": 3.3,
+          "v2": 1.0
+        }
+      ],
+      "gender_order": [
+        "Women",
+        "Men"
+      ],
+      "top_countries": [
+        {
+          "name": "United States",
+          "pct": 83.2
+        },
+        {
+          "name": "Brazil",
+          "pct": 2.4
+        },
+        {
+          "name": "Canada",
+          "pct": 1.9
+        },
+        {
+          "name": "Germany",
+          "pct": 1.6
+        },
+        {
+          "name": "Mexico",
+          "pct": 1.2
+        },
+        {
+          "name": "India",
+          "pct": 1.1
+        },
+        {
+          "name": "United Kingdom",
+          "pct": 0.9
+        },
+        {
+          "name": "Costa Rica",
+          "pct": 0.7
+        },
+        {
+          "name": "United Arab Emirates",
+          "pct": 0.5
+        },
+        {
+          "name": "Australia",
+          "pct": 0.5
+        }
+      ],
+      "top_cities": [
+        {
+          "name": "College, AK",
+          "pct": 10.6
+        },
+        {
+          "name": "Anchorage, AK",
+          "pct": 7.6
+        },
+        {
+          "name": "North Pole, AK",
+          "pct": 2.3
+        },
+        {
+          "name": "Palmer, AK",
+          "pct": 2.1
+        },
+        {
+          "name": "Wasilla, AK",
+          "pct": 1.3
+        },
+        {
+          "name": "Los Angeles, CA",
+          "pct": 0.7
+        },
+        {
+          "name": "Seattle, WA",
+          "pct": 0.7
+        },
+        {
+          "name": "New York, NY",
+          "pct": 0.7
+        },
+        {
+          "name": "Toledo, OH",
+          "pct": 0.7
+        },
+        {
+          "name": "Fox, AK",
+          "pct": 0.7
+        }
+      ]
+    },
+    "fb": {
+      "age_gender": [
+        {
+          "band": "18-24",
+          "v1": 0.0,
+          "v2": 0.6
+        },
+        {
+          "band": "25-34",
+          "v1": 9.4,
+          "v2": 5.6
+        },
+        {
+          "band": "35-44",
+          "v1": 13.7,
+          "v2": 12.4
+        },
+        {
+          "band": "45-54",
+          "v1": 16.1,
+          "v2": 10.0
+        },
+        {
+          "band": "55-64",
+          "v1": 8.6,
+          "v2": 9.4
+        },
+        {
+          "band": "65+",
+          "v1": 6.8,
+          "v2": 7.4
+        }
+      ],
+      "gender_order": [
+        "Men",
+        "Women"
+      ],
+      "top_countries": [
+        {
+          "name": "United States",
+          "pct": 64.0
+        },
+        {
+          "name": "Canada",
+          "pct": 3.9
+        },
+        {
+          "name": "South Africa",
+          "pct": 3.4
+        },
+        {
+          "name": "Bangladesh",
+          "pct": 1.7
+        },
+        {
+          "name": "Germany",
+          "pct": 1.7
+        },
+        {
+          "name": "India",
+          "pct": 1.7
+        },
+        {
+          "name": "Philippines",
+          "pct": 1.1
+        },
+        {
+          "name": "Slovenia",
+          "pct": 1.1
+        },
+        {
+          "name": "Sri Lanka",
+          "pct": 1.1
+        },
+        {
+          "name": "United Kingdom",
+          "pct": 1.1
+        }
+      ],
+      "top_cities": []
+    },
+    "tt": {
+      "daily": [
+        {
+          "date": "2026/05/03",
+          "new_flw": 4,
+          "total_flw": 5,
+          "reached": 218,
+          "engaged": 16
+        },
+        {
+          "date": "2026/05/04",
+          "new_flw": 7,
+          "total_flw": 12,
+          "reached": 597,
+          "engaged": 53
+        },
+        {
+          "date": "2026/05/05",
+          "new_flw": 1,
+          "total_flw": 13,
+          "reached": 166,
+          "engaged": 8
+        },
+        {
+          "date": "2026/05/06",
+          "new_flw": 3,
+          "total_flw": 16,
+          "reached": 167,
+          "engaged": 26
+        },
+        {
+          "date": "2026/05/07",
+          "new_flw": 1,
+          "total_flw": 17,
+          "reached": 38,
+          "engaged": 5
+        },
+        {
+          "date": "2026/05/08",
+          "new_flw": 2,
+          "total_flw": 19,
+          "reached": 75,
+          "engaged": 7
+        },
+        {
+          "date": "2026/05/09",
+          "new_flw": 0,
+          "total_flw": 19,
+          "reached": 52,
+          "engaged": 5
+        },
+        {
+          "date": "2026/05/10",
+          "new_flw": 0,
+          "total_flw": 23,
+          "reached": 137,
+          "engaged": 19
+        },
+        {
+          "date": "2026/05/11",
+          "new_flw": 8,
+          "total_flw": 27,
+          "reached": 1517,
+          "engaged": 229
+        },
+        {
+          "date": "2026/05/12",
+          "new_flw": 1,
+          "total_flw": 28,
+          "reached": 816,
+          "engaged": 75
+        },
+        {
+          "date": "2026/05/13",
+          "new_flw": 1,
+          "total_flw": 29,
+          "reached": 370,
+          "engaged": 40
+        },
+        {
+          "date": "2026/05/14",
+          "new_flw": 3,
+          "total_flw": 32,
+          "reached": 590,
+          "engaged": 48
+        },
+        {
+          "date": "2026/05/15",
+          "new_flw": 6,
+          "total_flw": 38,
+          "reached": 1151,
+          "engaged": 132
+        },
+        {
+          "date": "2026/05/16",
+          "new_flw": 13,
+          "total_flw": 51,
+          "reached": 1282,
+          "engaged": 134
+        },
+        {
+          "date": "2026/05/17",
+          "new_flw": 6,
+          "total_flw": 57,
+          "reached": 1189,
+          "engaged": 84
+        },
+        {
+          "date": "2026/05/18",
+          "new_flw": 2,
+          "total_flw": 59,
+          "reached": 778,
+          "engaged": 73
+        },
+        {
+          "date": "2026/05/19",
+          "new_flw": 5,
+          "total_flw": 64,
+          "reached": 1387,
+          "engaged": 103
+        },
+        {
+          "date": "2026/05/20",
+          "new_flw": 7,
+          "total_flw": 71,
+          "reached": 838,
+          "engaged": 80
+        },
+        {
+          "date": "2026/05/21",
+          "new_flw": 8,
+          "total_flw": 79,
+          "reached": 726,
+          "engaged": 67
+        },
+        {
+          "date": "2026/05/22",
+          "new_flw": 4,
+          "total_flw": 83,
+          "reached": 1544,
+          "engaged": 142
+        },
+        {
+          "date": "2026/05/23",
+          "new_flw": 7,
+          "total_flw": 90,
+          "reached": 1019,
+          "engaged": 78
+        },
+        {
+          "date": "2026/05/24",
+          "new_flw": 6,
+          "total_flw": 96,
+          "reached": 815,
+          "engaged": 0
+        },
+        {
+          "date": "2026/05/25",
+          "new_flw": 6,
+          "total_flw": 102,
+          "reached": 802,
+          "engaged": 73
+        },
+        {
+          "date": "2026/05/26",
+          "new_flw": 8,
+          "total_flw": 110,
+          "reached": 1243,
+          "engaged": 88
+        },
+        {
+          "date": "2026/05/27",
+          "new_flw": 7,
+          "total_flw": 117,
+          "reached": 1020,
+          "engaged": 98
+        },
+        {
+          "date": "2026/05/28",
+          "new_flw": 2,
+          "total_flw": 119,
+          "reached": 154,
+          "engaged": 13
+        },
+        {
+          "date": "2026/05/29",
+          "new_flw": 7,
+          "total_flw": 126,
+          "reached": 764,
+          "engaged": 46
+        },
+        {
+          "date": "2026/05/30",
+          "new_flw": 2,
+          "total_flw": 128,
+          "reached": 259,
+          "engaged": 20
+        },
+        {
+          "date": "2026/05/31",
+          "new_flw": 6,
+          "total_flw": 134,
+          "reached": 245,
+          "engaged": 18
+        },
+        {
+          "date": "2026/06/01",
+          "new_flw": 3,
+          "total_flw": 136,
+          "reached": 406,
+          "engaged": 22
+        },
+        {
+          "date": "2026/06/02",
+          "new_flw": 7,
+          "total_flw": 143,
+          "reached": 438,
+          "engaged": 33
+        },
+        {
+          "date": "2026/06/03",
+          "new_flw": 0,
+          "total_flw": 143,
+          "reached": 293,
+          "engaged": 23
+        },
+        {
+          "date": "2026/06/04",
+          "new_flw": 5,
+          "total_flw": 148,
+          "reached": 808,
+          "engaged": 82
+        },
+        {
+          "date": "2026/06/05",
+          "new_flw": 13,
+          "total_flw": 160,
+          "reached": 1246,
+          "engaged": 122
+        },
+        {
+          "date": "2026/06/06",
+          "new_flw": 2,
+          "total_flw": 162,
+          "reached": 765,
+          "engaged": 60
+        },
+        {
+          "date": "2026/06/07",
+          "new_flw": 8,
+          "total_flw": 170,
+          "reached": 408,
+          "engaged": 50
+        },
+        {
+          "date": "2026/06/08",
+          "new_flw": 3,
+          "total_flw": 173,
+          "reached": 442,
+          "engaged": 32
+        },
+        {
+          "date": "2026/06/09",
+          "new_flw": 4,
+          "total_flw": 177,
+          "reached": 301,
+          "engaged": 29
+        },
+        {
+          "date": "2026/06/10",
+          "new_flw": 4,
+          "total_flw": 181,
+          "reached": 529,
+          "engaged": 59
+        },
+        {
+          "date": "2026/06/11",
+          "new_flw": 4,
+          "total_flw": 184,
+          "reached": 612,
+          "engaged": 58
+        },
+        {
+          "date": "2026/06/12",
+          "new_flw": 7,
+          "total_flw": 191,
+          "reached": 434,
+          "engaged": 41
+        },
+        {
+          "date": "2026/06/13",
+          "new_flw": 4,
+          "total_flw": 195,
+          "reached": 285,
+          "engaged": 36
+        },
+        {
+          "date": "2026/06/14",
+          "new_flw": 3,
+          "total_flw": 198,
+          "reached": 214,
+          "engaged": 24
+        },
+        {
+          "date": "2026/06/15",
+          "new_flw": 3,
+          "total_flw": 200,
+          "reached": 293,
+          "engaged": 37
+        },
+        {
+          "date": "2026/06/16",
+          "new_flw": 4,
+          "total_flw": 203,
+          "reached": 211,
+          "engaged": 21
+        },
+        {
+          "date": "2026/06/17",
+          "new_flw": 6,
+          "total_flw": 209,
+          "reached": 200,
+          "engaged": 17
+        },
+        {
+          "date": "2026/06/18",
+          "new_flw": 2,
+          "total_flw": 211,
+          "reached": 307,
+          "engaged": 28
+        },
+        {
+          "date": "2026/06/19",
+          "new_flw": 4,
+          "total_flw": 215,
+          "reached": 217,
+          "engaged": 33
+        },
+        {
+          "date": "2026/06/20",
+          "new_flw": 4,
+          "total_flw": 218,
+          "reached": 116,
+          "engaged": 19
+        },
+        {
+          "date": "2026/06/21",
+          "new_flw": 1,
+          "total_flw": 219,
+          "reached": 76,
+          "engaged": 7
+        },
+        {
+          "date": "2026/06/22",
+          "new_flw": 2,
+          "total_flw": 221,
+          "reached": 296,
+          "engaged": 32
+        },
+        {
+          "date": "2026/06/23",
+          "new_flw": 3,
+          "total_flw": 224,
+          "reached": 569,
+          "engaged": 83
+        },
+        {
+          "date": "2026/06/24",
+          "new_flw": 6,
+          "total_flw": 230,
+          "reached": 587,
+          "engaged": 80
+        },
+        {
+          "date": "2026/06/25",
+          "new_flw": 1,
+          "total_flw": 230,
+          "reached": 437,
+          "engaged": 32
+        },
+        {
+          "date": "2026/06/26",
+          "new_flw": 1,
+          "total_flw": 231,
+          "reached": 240,
+          "engaged": 11
+        },
+        {
+          "date": "2026/06/27",
+          "new_flw": 2,
+          "total_flw": 233,
+          "reached": 142,
+          "engaged": 19
+        }
+      ]
+    }
+  }
+}

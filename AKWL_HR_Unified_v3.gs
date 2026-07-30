@@ -176,16 +176,32 @@ function setByField_(sheet, headerMap, row, fieldKey, value) {
 function installTriggers() {
   ScriptApp.getProjectTriggers().forEach(t => {
     const fn = t.getHandlerFunction();
-    if (['onEmployeeSheetEdit', 'onEmployeeFormSubmit', 'dailyHRTasks'].includes(fn)) ScriptApp.deleteTrigger(t);
+    if (['onEmployeeSheetEdit', 'onEmployeeFormSubmit', 'onFormSubmit', 'dailyHRTasks'].includes(fn)) ScriptApp.deleteTrigger(t);
   });
 
   const ss = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
-  // One onEdit trigger covers both Current Employees (onboarding/offboarding)
-  // AND Form Responses (new submission detection). No separate onFormSubmit needed.
+  // onEdit: HR edits to Current Employees (Date of Hire → onboarding, End Date → offboarding)
   ScriptApp.newTrigger('onEmployeeSheetEdit').forSpreadsheet(ss).onEdit().create();
+  // onFormSubmit: fires when the Onboarding Form is submitted — onEdit does NOT fire for form submissions
+  ScriptApp.newTrigger('onEmployeeFormSubmit').forSpreadsheet(ss).onFormSubmit().create();
   ScriptApp.newTrigger('dailyHRTasks').timeBased().everyDays(1).atHour(8).inTimezone(CFG.TIMEZONE).create();
 
   Logger.log('Triggers installed. Now delete the triggers on the OLD scripts (0039, 0042, 049, 0040).');
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// FORM SUBMIT TRIGGER — fires when the Onboarding Form is submitted
+// ─────────────────────────────────────────────────────────────
+function onEmployeeFormSubmit(e) {
+  try {
+    const sheet = e.range.getSheet();
+    const row   = e.range.getRow();
+    handleFormResponseRow_(sheet, row);
+  } catch (err) {
+    Logger.log('onEmployeeFormSubmit error: ' + err.message);
+    MailApp.sendEmail(CFG.INFO_EMAIL, 'AKWL HR script error (onFormSubmit)', err.message + '\n' + err.stack);
+  }
 }
 
 
@@ -197,13 +213,7 @@ function onEmployeeSheetEdit(e) {
     const sheet     = e.range.getSheet();
     const sheetName = sheet.getName();
 
-    // ── Route: new form submission row ───────────────────────────
-    if (sheetName === CFG.TAB_FORM_RESPONSES) {
-      handleFormResponseRow_(sheet, e.range.getRow());
-      return;
-    }
-
-    // ── Route: HR edits Current Employees ────────────────────────
+    // Only act on Current Employees edits (onboarding / offboarding triggers)
     if (sheetName !== CFG.TAB_CURRENT) return;
 
     const row = e.range.getRow();

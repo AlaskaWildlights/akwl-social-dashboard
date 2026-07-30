@@ -356,7 +356,7 @@ function processFormResponseRow_(formSheet, row) {
 
   set('DOB',               'Date of Birth', true);
   set('PHONE',             'Phone Number');
-  set('PERSONAL_EMAIL',    'Personal Email');
+  set('PERSONAL_EMAIL',    'Email');
   set('EMERGENCY_CONTACT', 'Emergency Contact Name');
   set('STATE_OF_ISSUE',    'State of Issue');
   set('LICENSE_NUMBER',    'License Number');

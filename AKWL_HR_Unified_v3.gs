@@ -425,8 +425,7 @@ function runOnboarding(sheet, headerMap, row) {
     body: `${first} ${last} (${position}) has a Date of Hire entered.\n\n` +
       `Folder:              ${personFolder.getUrl()}\n` +
       `Offer Letter:        ${offerCopy.getUrl()}\n` +
-      `Onboarding Checklist:${checklistCopy.getUrl()}\n\n` +
-      `HR On-Boarding Checklist: ${CFG.HR_CHECKLIST_URL}`,
+      `Onboarding Checklist:${checklistCopy.getUrl()}`,
   });
 
   GmailApp.createDraft(CFG.INSURANCE_EMAIL, 'Insurance Update: New Hire',

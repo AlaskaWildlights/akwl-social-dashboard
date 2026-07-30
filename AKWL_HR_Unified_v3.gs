@@ -388,6 +388,16 @@ function processFormResponseRow_(formSheet, row) {
 function runOnboarding(sheet, headerMap, row) {
   const first    = getByField_(sheet, headerMap, row, 'FIRST_NAME');
   const last     = getByField_(sheet, headerMap, row, 'LAST_NAME');
+  if (!first || !last) return;
+
+  // Guard: skip if already onboarded (folder already created for this employee).
+  // Prevents duplicate folders/emails when HR edits Date of Hire more than once.
+  const folderPropKey = PROP_FOLDER_PREFIX + employeeKey_(first, last);
+  if (PropertiesService.getScriptProperties().getProperty(folderPropKey)) {
+    Logger.log(`runOnboarding: ${first} ${last} already onboarded — skipping.`);
+    return;
+  }
+
   const position = String(getByField_(sheet, headerMap, row, 'POSITION') || '');
   const isGuide  = /guide/i.test(position);
 

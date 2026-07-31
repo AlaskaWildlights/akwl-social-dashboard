@@ -531,6 +531,7 @@ function dailyHRTasks() {
 
   processStaleSchedules_(props);
   cleanupScheduledDocDeletions_();
+  checkMissingOnboardingDocs_();
 }
 
 function executeOffboarding_(entry) {
@@ -589,6 +590,7 @@ function executeOffboarding_(entry) {
         DriveApp.getFolderById(employeeFolderId)
           .moveTo(DriveApp.getFolderById(CFG.FORMER_PERSONNEL_FOLDER_ID));
         PropertiesService.getScriptProperties().deleteProperty(folderPropKey);
+        PropertiesService.getScriptProperties().deleteProperty('REMINDER_DOCS_' + employeeKey_(entry.first, entry.last));
       } catch (folderErr) {
         Logger.log('Could not move employee folder: ' + folderErr.message);
       }
@@ -641,6 +643,78 @@ function moveToFormerEmployees_(sourceSheet, sourceHeaderMap, sourceRow, formerS
 
   formerSheet.getRange(nextRow, 1, 1, values.length).setValues([values]);
   return nextRow;
+}
+
+/**
+ * Runs daily. After 7 days from Date of Hire, checks each active employee
+ * for missing onboarding items. Sends one reminder (never repeats) tracked
+ * via Script Property REMINDER_DOCS_<key>.
+ * - If employee email is on file → email goes directly to them (CC info@)
+ * - If no email → email goes to info@ so HR can follow up manually
+ */
+function checkMissingOnboardingDocs_() {
+  const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+  const sheet     = ss.getSheetByName(CFG.TAB_CURRENT);
+  const headerMap = getHeaderMap_(sheet);
+  const props     = PropertiesService.getScriptProperties();
+  const today     = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < CFG.DATA_START_ROW) return;
+
+  for (let row = CFG.DATA_START_ROW; row <= lastRow; row++) {
+    const first      = getByField_(sheet, headerMap, row, 'FIRST_NAME');
+    const last       = getByField_(sheet, headerMap, row, 'LAST_NAME');
+    const dateOfHire = getByField_(sheet, headerMap, row, 'DATE_OF_HIRE');
+    if (!first || !last || !dateOfHire) continue;
+
+    const hireDate = new Date(dateOfHire);
+    hireDate.setHours(0, 0, 0, 0);
+    if ((today - hireDate) / 86400000 < 7) continue;  // less than 7 days — too early
+
+    const propKey = 'REMINDER_DOCS_' + employeeKey_(first, last);
+    if (props.getProperty(propKey)) continue;  // reminder already sent
+
+    const missing = [];
+    if (!getByField_(sheet, headerMap, row, 'CONTRACT_DOCUSEAL')) missing.push('Offer Letter (Docuseal signature)');
+    if (!getByField_(sheet, headerMap, row, 'DRIVERS_LICENSE'))   missing.push("Driver's License");
+    if (!getByField_(sheet, headerMap, row, 'DRIVING_HISTORY'))   missing.push('Driving Record');
+    if (!getByField_(sheet, headerMap, row, 'PHOTO_BIO'))         missing.push('Profile Photo');
+    if (!missing.length) continue;  // nothing missing — skip
+
+    const employeeEmail = getByField_(sheet, headerMap, row, 'PERSONAL_EMAIL');
+    const bulletList    = missing.map(m => `  • ${m}`).join('\n');
+
+    if (isValidEmail_(employeeEmail)) {
+      MailApp.sendEmail({
+        to      : employeeEmail,
+        cc      : CFG.INFO_EMAIL,
+        subject : 'Action Required: Complete Your Onboarding — Alaska Wild Lights',
+        body    :
+          `Hi ${first},\n\n` +
+          `We noticed a few items are still pending in your onboarding. ` +
+          `Please complete the following as soon as possible:\n\n` +
+          `${bulletList}\n\n` +
+          `You can submit these through your onboarding form or upload directly ` +
+          `to your onboarding folder. If you have any questions, don't hesitate to reach out.\n\n` +
+          `Best,\nAlaska Wild Lights`,
+      });
+    } else {
+      MailApp.sendEmail({
+        to      : CFG.INFO_EMAIL,
+        subject : `Reminder: Missing onboarding docs — ${first} ${last}`,
+        body    :
+          `${first} ${last} is missing the following onboarding items ` +
+          `(7 days since Date of Hire):\n\n` +
+          `${bulletList}\n\n` +
+          `No email on file — please follow up with them directly.`,
+      });
+    }
+
+    props.setProperty(propKey, new Date().toISOString());
+    Logger.log(`Onboarding reminder sent for ${first} ${last}. Missing: ${missing.join(', ')}`);
+  }
 }
 
 function sendFollowUpReminder_(entry) {

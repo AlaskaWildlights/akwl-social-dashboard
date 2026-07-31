@@ -74,8 +74,9 @@ const CFG = {
   OFFICE_CHECKLIST_TEMPLATE_ID   : '',
   COMPANY_PROPERTY_TEMPLATE_ID   : '',
 
-  TERM_LETTER_TEMPLATE_ID : '1dS4FAsCporrVLiYXJZvP2g8sPTuKV9wJuOex5ulN0Bc',
-  FORMER_DOCS_FOLDER_ID   : '14A65GrTTV737kDOwEKd2IFk457CjzhpC',
+  TERM_LETTER_TEMPLATE_ID    : '1dS4FAsCporrVLiYXJZvP2g8sPTuKV9wJuOex5ulN0Bc',
+  FORMER_DOCS_FOLDER_ID      : '14A65GrTTV737kDOwEKd2IFk457CjzhpC',   // termination letters
+  FORMER_PERSONNEL_FOLDER_ID : '1GpDVothhigJeNNDpU8eLan1bOKUMoMa2',  // employee folders moved here at offboarding
 
   HR_CHECKLIST_URL : 'https://docs.google.com/document/d/1gtcQ0adsPUIUZhDcA48cZhYCCaxeNL5XMSsSnYAD-d0/edit?tab=t.0',
 
@@ -580,6 +581,19 @@ function executeOffboarding_(entry) {
 
     removeContactSafely_(getByField_(sheet, headerMap, row, 'PERSONAL_EMAIL'));
 
+    // Move the employee's Drive folder into the Former Employees personnel folder
+    const folderPropKey      = PROP_FOLDER_PREFIX + employeeKey_(entry.first, entry.last);
+    const employeeFolderId   = PropertiesService.getScriptProperties().getProperty(folderPropKey);
+    if (employeeFolderId) {
+      try {
+        DriveApp.getFolderById(employeeFolderId)
+          .moveTo(DriveApp.getFolderById(CFG.FORMER_PERSONNEL_FOLDER_ID));
+        PropertiesService.getScriptProperties().deleteProperty(folderPropKey);
+      } catch (folderErr) {
+        Logger.log('Could not move employee folder: ' + folderErr.message);
+      }
+    }
+
     moveToFormerEmployees_(sheet, headerMap, row, ss.getSheetByName(CFG.TAB_FORMER));
     sheet.deleteRow(row);
 
@@ -635,9 +649,8 @@ function sendFollowUpReminder_(entry) {
     subject: `Action Required: Final Off-Boarding Steps — ${entry.first} ${entry.last}`,
     body: `This is the ${CFG.FOLLOW_UP_BUSINESS_DAYS}-business-day follow-up for ` +
       `${entry.first} ${entry.last} (terminated ${formatDate_(new Date(entry.endDate + 'T00:00:00'))}).\n\nPlease:\n` +
-      `1. Deactivate/remove them from QuickBooks.\n` +
-      `2. Move their personnel folder to the Former Employees folder:\n` +
-      `   https://drive.google.com/drive/folders/${CFG.FORMER_DOCS_FOLDER_ID}\n\n` +
+      `1. Deactivate/remove them from QuickBooks.\n\n` +
+      `Note: their Drive folder has already been moved to the Former Employees folder automatically.\n\n` +
       `Please confirm once complete.`,
   });
 }

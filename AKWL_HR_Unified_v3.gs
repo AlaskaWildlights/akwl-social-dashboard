@@ -64,19 +64,27 @@ const CFG = {
   TAB_FORMER         : 'Former Employees',    // exact case -- getSheetByName is case-sensitive
   TAB_FORM_RESPONSES : 'Form Responses',      // exact case -- the tab linked to the Onboarding Form
 
+  // Guides
   GUIDES_PARENT_FOLDER_ID        : '1Ya0e276RRvVasEcOBchsqAW3cEVNMo1w',
   GUIDE_OFFER_LETTER_TEMPLATE_ID : '1W1MAQhVm4nXu9RUrGS8UocD_Lf3UlsWjGwAra4d80XI',
   GUIDE_CHECKLIST_TEMPLATE_ID    : '1Tr9jDUBoocBKGM2IvJoYwZDMVk2wyH_WHnkN-qnp_kA',
 
-  // TODO: office-staff onboarding documents -- fill these in once you have them.
+  // Maintenance team (detailer, mechanic, lead mechanic)
+  // Folder naming: "Last Name, First Name (Role)"
+  MAINTENANCE_PARENT_FOLDER_ID        : '1NfaBoAoDSKqZI-PzQnPBhCXyzFoUPurm',
+  MAINTENANCE_OFFER_LETTER_TEMPLATE_ID: '1S0DzKnLOcSmEY6Xv-WDYO9JluxtSQeDCFJNmbWRrEk0',
+
+  // Checklist for all non-guide employees (maintenance + future office staff)
+  NON_GUIDE_CHECKLIST_TEMPLATE_ID: '19LzGeqpE4eMnFJIuw7oXUy-Farw1dPNc_QbC-ZhyjvM',
+
+  // TODO: office-staff onboarding (offer letter + parent folder) -- fill in once available
   OFFICE_PARENT_FOLDER_ID        : '',
   OFFICE_OFFER_LETTER_TEMPLATE_ID: '',
-  OFFICE_CHECKLIST_TEMPLATE_ID   : '',
   COMPANY_PROPERTY_TEMPLATE_ID   : '',
 
   TERM_LETTER_TEMPLATE_ID    : '1dS4FAsCporrVLiYXJZvP2g8sPTuKV9wJuOex5ulN0Bc',
   FORMER_DOCS_FOLDER_ID      : '14A65GrTTV737kDOwEKd2IFk457CjzhpC',   // termination letters
-  FORMER_PERSONNEL_FOLDER_ID : '1GpDVothhigJeNNDpU8eLan1bOKUMoMa2',  // employee folders moved here at offboarding
+  FORMER_PERSONNEL_FOLDER_ID : '1pqlCfTXlkN707XANQap77RHg3qkPYkDN',  // all employee folders moved here at offboarding
 
   HR_CHECKLIST_URL : 'https://docs.google.com/document/d/1gtcQ0adsPUIUZhDcA48cZhYCCaxeNL5XMSsSnYAD-d0/edit?tab=t.0',
 
@@ -401,24 +409,41 @@ function runOnboarding(sheet, headerMap, row) {
   const last     = getByField_(sheet, headerMap, row, 'LAST_NAME');
   if (!first || !last) return;
 
-  const position = String(getByField_(sheet, headerMap, row, 'POSITION') || '');
-  const isGuide  = /guide/i.test(position);
+  const position     = String(getByField_(sheet, headerMap, row, 'POSITION') || '');
+  const isGuide      = /guide/i.test(position);
+  const isMaintenance = /detailer|mechanic/i.test(position);  // covers detailer, mechanic, lead mechanic
 
-  const parentFolderId    = isGuide ? CFG.GUIDES_PARENT_FOLDER_ID         : CFG.OFFICE_PARENT_FOLDER_ID;
-  const offerTemplateId   = isGuide ? CFG.GUIDE_OFFER_LETTER_TEMPLATE_ID  : CFG.OFFICE_OFFER_LETTER_TEMPLATE_ID;
-  const checklistId       = isGuide ? CFG.GUIDE_CHECKLIST_TEMPLATE_ID     : CFG.OFFICE_CHECKLIST_TEMPLATE_ID;
+  let parentFolderId, offerTemplateId, checklistId, folderName;
+
+  if (isGuide) {
+    parentFolderId  = CFG.GUIDES_PARENT_FOLDER_ID;
+    offerTemplateId = CFG.GUIDE_OFFER_LETTER_TEMPLATE_ID;
+    checklistId     = CFG.GUIDE_CHECKLIST_TEMPLATE_ID;
+    folderName      = `${first} ${last}`;
+  } else if (isMaintenance) {
+    parentFolderId  = CFG.MAINTENANCE_PARENT_FOLDER_ID;
+    offerTemplateId = CFG.MAINTENANCE_OFFER_LETTER_TEMPLATE_ID;
+    checklistId     = CFG.NON_GUIDE_CHECKLIST_TEMPLATE_ID;
+    folderName      = `${last}, ${first} (${position})`;
+  } else {
+    // Office staff — offer letter + parent folder still TODO
+    parentFolderId  = CFG.OFFICE_PARENT_FOLDER_ID;
+    offerTemplateId = CFG.OFFICE_OFFER_LETTER_TEMPLATE_ID;
+    checklistId     = CFG.NON_GUIDE_CHECKLIST_TEMPLATE_ID;
+    folderName      = `${last}, ${first} (${position})`;
+  }
 
   if (!parentFolderId || !offerTemplateId || !checklistId) {
     MailApp.sendEmail(CFG.INFO_EMAIL, `Action needed: manual onboarding folder for ${first} ${last}`,
-      `${first} ${last} (${position}) has a Date of Hire, but this is a non-guide role and ` +
-      `the office-staff template IDs aren't configured in the script yet.\n\n` +
-      `Please build their onboarding folder manually for now:\n${CFG.HR_CHECKLIST_URL}\n\n` +
+      `${first} ${last} (${position}) has a Date of Hire, but the onboarding templates ` +
+      `for this role aren't fully configured in the script yet.\n\n` +
+      `Please build their onboarding folder manually for now.\n\n` +
       `Add the OFFICE_* template IDs to CFG and this step runs automatically next time.`);
     return;
   }
 
   const parentFolder  = DriveApp.getFolderById(parentFolderId);
-  const personFolder  = parentFolder.createFolder(`${first} ${last}`);
+  const personFolder  = parentFolder.createFolder(folderName);
 
   // Store folder ID so onEmployeeFormSubmit can move uploaded files here later
   PropertiesService.getScriptProperties()

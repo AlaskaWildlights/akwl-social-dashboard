@@ -587,6 +587,7 @@ function dailyHRTasks() {
   processStaleSchedules_(props);
   cleanupScheduledDocDeletions_();
   checkMissingOnboardingDocs_();
+  validateFormResponseProcessing_();
 }
 
 function executeOffboarding_(entry) {
@@ -769,6 +770,64 @@ function checkMissingOnboardingDocs_() {
 
     props.setProperty(propKey, new Date().toISOString());
     Logger.log(`Onboarding reminder sent for ${first} ${last}. Missing: ${missing.join(', ')}`);
+  }
+}
+
+/**
+ * Runs every 3 days to validate that all Form Responses rows have been processed
+ * and files moved to employee onboarding folders. Reprocesses any missed rows.
+ */
+function validateFormResponseProcessing_() {
+  const props = PropertiesService.getScriptProperties();
+  const lastCheckKey = 'LAST_FORM_VALIDATE_CHECK';
+  const lastCheck = props.getProperty(lastCheckKey);
+  const now = new Date();
+
+  // Only run every 3 days
+  if (lastCheck) {
+    const lastCheckDate = new Date(lastCheck);
+    const daysSinceCheck = (now - lastCheckDate) / (1000 * 60 * 60 * 24);
+    if (daysSinceCheck < 3) return;
+  }
+
+  // Update last check timestamp
+  props.setProperty(lastCheckKey, now.toISOString());
+
+  try {
+    const ss = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+    const formSheet = ss.getSheetByName(CFG.TAB_FORM_RESPONSES);
+    const lastRow = formSheet.getLastRow();
+
+    if (lastRow < 2) return;  // Only header row or empty
+
+    const unprocessedRows = [];
+
+    for (let row = 2; row <= lastRow; row++) {
+      const rowKey = PROP_FORM_ROW_PREFIX + row;
+      if (!props.getProperty(rowKey)) {
+        // This row was never processed — reprocess it now
+        unprocessedRows.push(row);
+        try {
+          handleFormResponseRow_(formSheet, row);
+        } catch (err) {
+          Logger.log(`validateFormResponseProcessing_: Failed to reprocess row ${row}: ${err.message}`);
+        }
+      }
+    }
+
+    if (unprocessedRows.length > 0) {
+      MailApp.sendEmail(CFG.INFO_EMAIL,
+        `Form Response Validation: Found and reprocessed ${unprocessedRows.length} missed row(s)`,
+        `The following Form Responses rows were unprocessed and have been reprocessed:\n\n` +
+        `Rows: ${unprocessedRows.join(', ')}\n\n` +
+        `Employee data has been synced to Current Employees and files moved to their ` +
+        `onboarding folders (if present). Please verify the data looks correct.`);
+      Logger.log(`validateFormResponseProcessing_: Reprocessed ${unprocessedRows.length} rows: ${unprocessedRows.join(', ')}`);
+    }
+  } catch (err) {
+    Logger.log('validateFormResponseProcessing_: ' + err.message);
+    MailApp.sendEmail(CFG.INFO_EMAIL, 'AKWL HR script error (validateFormResponseProcessing_)',
+      err.message + '\n' + err.stack);
   }
 }
 

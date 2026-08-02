@@ -477,10 +477,12 @@ function runOnboarding(sheet, headerMap, row) {
     const welcomeBody =
       `Welcome to Alaska Wild Lights, ${first}!\n\n` +
       `We're excited to have you join our team. To complete your onboarding, please follow these steps:\n\n` +
-      `STEP 1: SIGN YOUR OFFER LETTER\n` +
-      `Open your onboarding folder (see link below) and review your Offer Letter document. Sign and date it when ready.\n\n` +
+      `STEP 1: SIGN YOUR OFFER LETTER (DUE WITHIN 5 DAYS)\n` +
+      `Open your onboarding folder (see link below) and review your Offer Letter document. ` +
+      `Please sign and date it and return it within 5 days of receiving this email. ` +
+      `After 5 days, the document will expire.\n\n` +
       `STEP 2: COMPLETE THE ONBOARDING FORM\n` +
-      `After signing, please complete this form: https://forms.gle/DqnBvSXfjzeDzeiw9\n\n` +
+      `After signing your offer letter, please complete this form: https://forms.gle/DqnBvSXfjzeDzeiw9\n\n` +
       `When filling out the form, please have these items ready:\n` +
       `• Mailing address (street, city, state, ZIP)\n` +
       `• Phone number\n` +
@@ -492,7 +494,7 @@ function runOnboarding(sheet, headerMap, row) {
       `YOUR ONBOARDING FOLDER:\n` +
       `${personFolder.getUrl()}\n\n` +
       `This folder contains:\n` +
-      `• Offer Letter (sign this first)\n` +
+      `• Offer Letter (sign within 5 days)\n` +
       `• Onboarding Checklist (shows all requirements)\n` +
       `• Any role-specific documents\n\n` +
       `Questions? Reach out to info@alaskawildlights.com\n\n` +
@@ -504,8 +506,8 @@ function runOnboarding(sheet, headerMap, row) {
 
   addContactSafely_(first, last, email);
 
-  scheduleDocDeletion_(offerCopy.getId(), 15);
-  scheduleDocDeletion_(checklistCopy.getId(), 21);
+  scheduleDocDeletion_(offerCopy.getId(), 5);
+  scheduleDocDeletion_(checklistCopy.getId(), 15);
 
   Logger.log(`Onboarding complete for ${first} ${last}.`);
 }

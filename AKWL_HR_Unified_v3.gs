@@ -314,28 +314,34 @@ function handleFormResponseRow_(formSheet, row) {
  *   Start date, Availabilities
  */
 function processFormResponseRow_(formSheet, row) {
-  // Build a header map from row 1 of Form Responses (single-row headers)
-  const lastCol     = formSheet.getLastColumn();
-  const headerRow   = formSheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  // Read headers (row 1) and the entire data row in 2 API calls total.
+  // All field lookups index into rowValues[] — no per-field getValue() calls.
+  // First name = col C (3), Last name = col D (4) — confirmed layout.
+  const lastCol    = formSheet.getLastColumn();
+  const headerRow  = formSheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  const rowValues  = formSheet.getRange(row, 1, 1, lastCol).getValues()[0];
+
   const formHeaders = {};
   headerRow.forEach((val, i) => {
     const text = String(val || '').trim();
     if (text) formHeaders[text] = i + 1;
   });
 
-  const getFormVal = (question) => {
-    const col = formHeaders[question];
-    if (!col) return '';
-    const v = formSheet.getRange(row, col).getValue();
-    return v ? String(v).trim() : '';
-  };
-
-  const first = getFormVal('First name');
-  const last  = getFormVal('Last name');
+  // Fast name read using known column positions (C=3, D=4) — no header scan needed
+  const first = String(rowValues[2] || '').trim();  // col C
+  const last  = String(rowValues[3] || '').trim();  // col D
   if (!first || !last) {
     Logger.log(`processFormResponseRow_: row ${row} has no name — skipping.`);
     return;
   }
+
+  // All other fields via header map but reading from pre-loaded rowValues[]
+  const getFormVal = (question) => {
+    const col = formHeaders[question];
+    if (!col) return '';
+    const v = rowValues[col - 1];
+    return v ? String(v).trim() : '';
+  };
 
   const ss         = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
   const empSheet   = ss.getSheetByName(CFG.TAB_CURRENT);
@@ -345,7 +351,7 @@ function processFormResponseRow_(formSheet, row) {
   if (!empRow) {
     // Dump the full row so HR can copy it manually
     const rawData = {};
-    headerRow.forEach((h, i) => { if (h) rawData[h] = formSheet.getRange(row, i + 1).getValue(); });
+    headerRow.forEach((h, i) => { if (h) rawData[h] = rowValues[i]; });
     MailApp.sendEmail(CFG.INFO_EMAIL, 'AKWL HR script: Form submitted for unknown employee',
       `${first} ${last} submitted the onboarding form (row ${row} in Form Responses), ` +
       `but no matching row was found in "${CFG.TAB_CURRENT}".\n\n` +

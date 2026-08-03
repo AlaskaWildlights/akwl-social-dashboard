@@ -784,6 +784,7 @@ function checkMissingOnboardingDocs_() {
     const last       = getByField_(sheet, headerMap, row, 'LAST_NAME');
     const dateOfHire = getByField_(sheet, headerMap, row, 'DATE_OF_HIRE');
     if (!first || !last || !dateOfHire) continue;
+    if (/backup/i.test(String(getByField_(sheet, headerMap, row, 'POSITION') || ''))) continue;
 
     const hireDate = new Date(dateOfHire);
     hireDate.setHours(0, 0, 0, 0);
@@ -1206,6 +1207,7 @@ function checkEmployeeContacts_() {
     const role  = String(getByField_(sheet, headerMap, row, 'POSITION')       || '').trim();
     const dob   = getByField_(sheet, headerMap, row, 'DOB');
     if (!first || !last || !isValidEmail_(email)) continue;
+    if (/backup/i.test(role)) continue;
     if (!getContactResourceName_(email)) {
       addContactSafely_(first, last, email, phone || undefined, role || undefined, dob || undefined, CFG.COMPANY_NAME);
       added++;
@@ -1237,6 +1239,7 @@ function checkUpcomingBirthdays_() {
     const last  = String(getByField_(sheet, headerMap, row, 'LAST_NAME')  || '').trim();
     const dob   = getByField_(sheet, headerMap, row, 'DOB');
     if (!first || !last || !dob) continue;
+    if (/backup/i.test(String(getByField_(sheet, headerMap, row, 'POSITION') || ''))) continue;
 
     const dobDate = new Date(dob);
     if (isNaN(dobDate.getTime())) continue;

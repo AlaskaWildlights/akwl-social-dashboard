@@ -1373,6 +1373,38 @@ function markExistingEmployeesAsOnboarded() {
 }
 
 /**
+ * Runs all pending offboardings immediately, bypassing the end-date check.
+ * Use when you need to process an offboarding right now instead of waiting for dailyHRTasks.
+ * Only processes entries where executed = false.
+ */
+function runPendingOffboardingsNow() {
+  const props = PropertiesService.getScriptProperties();
+  const all   = props.getProperties();
+  let ran = 0;
+
+  Object.keys(all).forEach(key => {
+    if (!key.startsWith(PROP_OFFBOARD_PREFIX)) return;
+    let entry;
+    try { entry = JSON.parse(all[key]); } catch (e) { return; }
+    if (entry.executed) return;
+
+    Logger.log(`Running offboarding for ${entry.first} ${entry.last}...`);
+    const ok = executeOffboarding_(entry);
+    if (ok) {
+      entry.executed   = true;
+      entry.executedOn = Utilities.formatDate(new Date(), CFG.TIMEZONE, 'yyyy-MM-dd');
+      props.setProperty(key, JSON.stringify(entry));
+      Logger.log(`  ✓ Done.`);
+      ran++;
+    } else {
+      Logger.log(`  ✗ Failed — check logs above.`);
+    }
+  });
+
+  Logger.log(ran ? `runPendingOffboardingsNow complete: ${ran} offboarding(s) executed.` : 'No pending offboardings found.');
+}
+
+/**
  * TEST ONLY — Clears the 30-day throttle for all employees and runs the missing docs check immediately.
  * Use this to test that drafts are created correctly without waiting 30 days.
  * Safe to run multiple times — only clears REMINDER_DOCS_ properties.

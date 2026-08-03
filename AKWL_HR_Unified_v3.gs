@@ -87,10 +87,11 @@ const FIELD = {
   NOTES             : 'Notes',
 };
 
-const PROP_OFFBOARD_PREFIX  = 'OFFBOARD_';
-const PROP_FOLDER_PREFIX    = 'FOLDER_';      // FOLDER_<key>      → Drive folder ID
-const PROP_FORM_ROW_PREFIX  = 'FORM_ROW_';    // FORM_ROW_<n>      → ISO timestamp (processed lock)
-const PROP_OFFER_FILE_PREFIX = 'OFFER_FILE_'; // OFFER_FILE_<key>  → offer letter file ID (for start-date deletion)
+const PROP_OFFBOARD_PREFIX   = 'OFFBOARD_';
+const PROP_FOLDER_PREFIX     = 'FOLDER_';      // FOLDER_<key>      → Drive folder ID (real ID or absent)
+const PROP_FORM_ROW_PREFIX   = 'FORM_ROW_';    // FORM_ROW_<n>      → ISO timestamp (processed lock)
+const PROP_OFFER_FILE_PREFIX = 'OFFER_FILE_';  // OFFER_FILE_<key>  → offer letter file ID (for start-date deletion)
+const PROP_ONBOARDED_PREFIX  = 'ONBOARDED_';   // ONBOARDED_<key>   → 'true' (ran through this script) | 'LEGACY' (pre-existing)
 
 // Role → offer letter template ID. Checked in order; first match wins.
 // Lead Mechanic must come before plain Mechanic to avoid partial-match shadowing.
@@ -418,13 +419,14 @@ function runOnboarding(sheet, headerMap, row) {
   const last     = getByField_(sheet, headerMap, row, 'LAST_NAME');
   if (!first || !last) return;
 
-  // Guard: if this employee already has a folder on record, onboarding already ran — skip.
-  // This prevents re-processing existing employees when triggers are first installed,
-  // or if HR accidentally re-edits the Date of Hire cell.
+  // Guard: skip if onboarding already ran for this employee.
+  // 'LEGACY' = pre-existing employee marked by markExistingEmployeesAsOnboarded().
+  // 'true'   = went through this script normally.
+  // This also protects against HR accidentally re-editing the Date of Hire cell.
   const key   = employeeKey_(first, last);
   const props = PropertiesService.getScriptProperties();
-  if (props.getProperty(PROP_FOLDER_PREFIX + key)) {
-    Logger.log(`runOnboarding: skipping ${first} ${last} — already onboarded (FOLDER_ property exists).`);
+  if (props.getProperty(PROP_ONBOARDED_PREFIX + key)) {
+    Logger.log(`runOnboarding: skipping ${first} ${last} — already onboarded.`);
     return;
   }
 
@@ -561,6 +563,9 @@ function runOnboarding(sheet, headerMap, row) {
   }
 
   // Contact added later in processFormResponseRow_ once email + phone arrive via the form
+
+  // Mark as onboarded so this never re-runs (protects against accidental Date-of-Hire re-edits)
+  props.setProperty(PROP_ONBOARDED_PREFIX + key, 'true');
 
   Logger.log(`Onboarding complete for ${first} ${last} (${position})${isFallback ? ' — FALLBACK template' : ''}.`);
 }
@@ -783,6 +788,10 @@ function checkMissingOnboardingDocs_() {
     const hireDate = new Date(dateOfHire);
     hireDate.setHours(0, 0, 0, 0);
     if ((today - hireDate) / 86400000 < 7) continue;  // less than 7 days — too early
+
+    // Skip employees who pre-dated this script — they are established and their
+    // sheet fields may simply be blank because the old system never wrote checkmarks.
+    if (props.getProperty(PROP_ONBOARDED_PREFIX + employeeKey_(first, last)) === 'LEGACY') continue;
 
     const propKey = 'REMINDER_DOCS_' + employeeKey_(first, last);
     if (props.getProperty(propKey)) continue;  // reminder already sent
@@ -1301,13 +1310,13 @@ function markExistingEmployeesAsOnboarded() {
     const dateOfHire = getByField_(empSheet, headerMap, row, 'DATE_OF_HIRE');
     if (!first || !last || !dateOfHire) continue;
 
-    const folderKey = PROP_FOLDER_PREFIX + employeeKey_(first, last);
-    if (!props.getProperty(folderKey)) {
-      props.setProperty(folderKey, 'LEGACY');  // placeholder — prevents onboarding re-run
+    const onboardedKey = PROP_ONBOARDED_PREFIX + employeeKey_(first, last);
+    if (!props.getProperty(onboardedKey)) {
+      props.setProperty(onboardedKey, 'LEGACY');
       markedEmp++;
       Logger.log(`  Marked as legacy: ${first} ${last}`);
     } else {
-      Logger.log(`  Already has folder property: ${first} ${last} — skipped.`);
+      Logger.log(`  Already marked: ${first} ${last} — skipped.`);
     }
   }
 

@@ -1372,6 +1372,20 @@ function markExistingEmployeesAsOnboarded() {
   Logger.log('You can now safely run installTriggers().');
 }
 
+/**
+ * TEST ONLY — Clears the 30-day throttle for all employees and runs the missing docs check immediately.
+ * Use this to test that drafts are created correctly without waiting 30 days.
+ * Safe to run multiple times — only clears REMINDER_DOCS_ properties.
+ */
+function testMissingDocsNow() {
+  const props = PropertiesService.getScriptProperties();
+  const all   = props.getProperties();
+  let cleared = 0;
+  Object.keys(all).forEach(k => { if (k.startsWith('REMINDER_DOCS_')) { props.deleteProperty(k); cleared++; } });
+  Logger.log(`Cleared ${cleared} reminder throttle(s). Running missing docs check now...`);
+  checkMissingOnboardingDocs_();
+}
+
 /** Logs the detected header map for "current employees". Run this first to verify column detection. */
 function testShowHeaderMap() {
   const sheet = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID).getSheetByName(CFG.TAB_CURRENT);

@@ -373,8 +373,8 @@ function processFormResponseRow_(formSheet, row) {
   if (profilePicUrl) setByField_(empSheet, headerMap, empRow, 'PHOTO_BIO',        '✓');
 
   const docusealAnswer = getFormVal('Just a quick reminder! Have you signed your Offer Letter via Docuseal yet?');
-  if      (/^yes/i.test(docusealAnswer)) setByField_(empSheet, headerMap, empRow, 'CONTRACT_DOCUSEAL', '✓');
-  else if (/^no/i.test(docusealAnswer))  setByField_(empSheet, headerMap, empRow, 'CONTRACT_DOCUSEAL', '✕');
+  if      (/yes/i.test(docusealAnswer))     setByField_(empSheet, headerMap, empRow, 'CONTRACT_DOCUSEAL', '✓');  // "Yes, all signed!"
+  else if (/not yet/i.test(docusealAnswer)) setByField_(empSheet, headerMap, empRow, 'CONTRACT_DOCUSEAL', '✕');  // "Not yet"
 
   // ── Move uploaded files into the employee's onboarding folder ─
   const folderId = PropertiesService.getScriptProperties()
@@ -850,12 +850,14 @@ function validateFormResponseProcessing_() {
     }
 
     if (unprocessedRows.length > 0) {
-      MailApp.sendEmail(CFG.INFO_EMAIL,
-        `Form Response Validation: Found and reprocessed ${unprocessedRows.length} missed row(s)`,
-        `The following Form Responses rows were unprocessed and have been reprocessed:\n\n` +
-        `Rows: ${unprocessedRows.join(', ')}\n\n` +
-        `Employee data has been synced to Current Employees and files moved to their ` +
-        `onboarding folders (if present). Please verify the data looks correct.`);
+      MailApp.sendEmail({
+        to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
+        subject: `Form Response Validation: Found and reprocessed ${unprocessedRows.length} missed row(s)`,
+        body: `The following Form Responses rows were unprocessed and have been reprocessed:\n\n` +
+          `Rows: ${unprocessedRows.join(', ')}\n\n` +
+          `Employee data has been synced to Current Employees and files moved to their ` +
+          `onboarding folders (if present). Please verify the data looks correct.`,
+      });
       Logger.log(`validateFormResponseProcessing_: Reprocessed ${unprocessedRows.length} rows: ${unprocessedRows.join(', ')}`);
     }
   } catch (err) {

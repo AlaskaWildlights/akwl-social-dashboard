@@ -1,58 +1,7 @@
 /**
- * ============================================================
- * AKWL HR — ONBOARDING & OFFBOARDING (UNIFIED)  v3.6
- * ------------------------------------------------------------
- * Replaces and retires:
- *   - "0039. Employee Information Sheet"
- *   - "0042. Off-Boarding"
- *   - "049. HR Onboarding & Offboarding Automation" (v3)
- *   - "0040. Google Contacts Update"
- *
- * DESIGN DECISIONS (confirmed with business owner, July 2026):
- *   - Onboarding trigger: "Date of Hire" filled in manually by HR.
- *     Set at the moment you decide to hire -- folder/paperwork
- *     exist before day one. Start Date can slip; Date of Hire
- *     doesn't.
- *   - Offboarding trigger: "End Date" filled in -- scheduled
- *     immediately but only executed (letter, email, move row) on
- *     or after the actual end date.
- *   - The Onboarding Form is filled by the NEW HIRE (not HR).
- *     It has no Position/Date of Hire question, so submissions
- *     UPDATE the matching existing row (matched by first + last
- *     name). They never create a new row.
- *   - Unknown employee on form submit: email HR, skip.
- *   - Mailing Address, City, State, Emergency Contact Phone
- *     are NOT stored in "current employees". They remain in
- *     "Form Responses 2" (the form's own response tab). If you
- *     later decide to add those columns to the sheet, add the
- *     column headers and re-add the FIELD entries and
- *     setIfPresent calls in onEmployeeFormSubmit.
- *
- * WHY v1 BROKE (and what v3 fixes):
- *   v1 used hardcoded column numbers (COL.DATE_OF_HIRE = 4, etc).
- *   The sheet was redesigned multiple times -- columns reordered,
- *   banner rows added, "Onboarding Status" column removed. Every
- *   old script broke silently. v3 looks up each column BY ITS
- *   HEADER TEXT every single run (see getHeaderMap_). Reorder,
- *   insert, or delete columns and this script keeps working --
- *   only the header TEXT needs to stay the same (or update the
- *   FIELD map below).
- *
- * ONE-TIME SETUP (do in order):
- *   1. Go to script.google.com -> New project. Paste this file.
- *   2. Services (+) -> add "Google People API".
- *   3. Run `installTriggers` manually. Authorize when asked.
- *   4. On the OLD scripts (0039, 0042, 049, 0040): open each ->
- *      Triggers panel (clock icon) -> delete every trigger ->
- *      archive those projects. Otherwise you get duplicate emails
- *      and duplicate folders.
- *
- * FILL IN BEFORE STEP 4 (search "TODO" below):
- *   - Office-staff onboarding template IDs (offer letter,
- *     checklist, company property acknowledgement). Until filled
- *     in, a non-guide hire emails HR to build manually instead
- *     of using the wrong (guide) templates.
- * ============================================================
+ * AKWL HR — Onboarding & Offboarding Automation  v3.6
+ * Setup: run installTriggers(), authorize when prompted, delete triggers on old scripts.
+ * TODO: fill OFFICE_PARENT_FOLDER_ID and OFFICE_OFFER_LETTER_TEMPLATE_ID in CFG.
  */
 
 // ─────────────────────────────────────────────────────────────

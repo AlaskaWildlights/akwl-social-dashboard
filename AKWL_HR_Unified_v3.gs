@@ -1398,11 +1398,15 @@ function testProcessFormRow() {
 }
 
 /**
- * ONE-TIME — Run this BEFORE markExistingEmployeesAsOnboarded() if you suspect
- * any Form Response rows were never processed (e.g., trigger wasn't installed yet).
+ * Run this BEFORE markExistingEmployeesAsOnboarded() and any time you suspect
+ * a Form Response didn't make it to Current Employees.
  *
- * Scans every row in Form Responses, finds any without a FORM_ROW_<n> lock,
- * and processes them now. Logs exactly which rows were found and what happened.
+ * Two-pass check:
+ *   1. Rows with no FORM_ROW_<n> lock → clearly unprocessed.
+ *   2. Rows WITH a lock but whose employee has no Personal Email in Current Employees
+ *      → lock existed but data never arrived (e.g. script crashed mid-run).
+ *      Clears the stale lock and reprocesses.
+ *
  * No throttle — runs fully every time.
  */
 function processUnhandledFormResponses() {
@@ -1410,31 +1414,62 @@ function processUnhandledFormResponses() {
   const formSheet = ss.getSheetByName(CFG.TAB_FORM_RESPONSES);
   if (!formSheet) { Logger.log('Form Responses tab not found.'); return; }
 
-  const props   = PropertiesService.getScriptProperties();
-  const lastRow = formSheet.getLastRow();
+  const empSheet  = ss.getSheetByName(CFG.TAB_CURRENT);
+  const headerMap = getHeaderMap_(empSheet);
+  const props     = PropertiesService.getScriptProperties();
+  const lastRow   = formSheet.getLastRow();
   if (lastRow < 2) { Logger.log('Form Responses is empty.'); return; }
 
-  const unprocessed = [];
+  // Read form headers once (row 1)
+  const formHeaders = {};
+  formSheet.getRange(1, 1, 1, formSheet.getLastColumn()).getValues()[0]
+    .forEach((v, i) => { if (v) formHeaders[String(v).trim()] = i; });
+
+  const toProcess = [];
+
   for (let row = 2; row <= lastRow; row++) {
-    if (!props.getProperty(PROP_FORM_ROW_PREFIX + row)) unprocessed.push(row);
+    const lockKey  = PROP_FORM_ROW_PREFIX + row;
+    const hasLock  = !!props.getProperty(lockKey);
+    const rowVals  = formSheet.getRange(row, 1, 1, formSheet.getLastColumn()).getValues()[0];
+    const first    = String(rowVals[2] || '').trim();  // col C
+    const last     = String(rowVals[3] || '').trim();  // col D
+    if (!first || !last) continue;
+
+    if (!hasLock) {
+      toProcess.push({ row, reason: 'no lock' });
+      continue;
+    }
+
+    // Lock exists — verify data actually landed in Current Employees
+    const empRow = findEmployeeRow_(empSheet, headerMap, first, last);
+    if (!empRow) continue;  // employee not in sheet yet — skip
+    const emailInSheet = getByField_(empSheet, headerMap, empRow, 'PERSONAL_EMAIL');
+    const emailInForm  = formHeaders['Email'] !== undefined ? String(rowVals[formHeaders['Email']] || '').trim() : '';
+
+    if (emailInForm && !emailInSheet) {
+      // Form has an email but sheet is empty → data never landed
+      props.deleteProperty(lockKey);
+      toProcess.push({ row, reason: `stale lock — ${first} ${last} has no email in sheet despite form submission` });
+    }
   }
 
-  if (!unprocessed.length) {
-    Logger.log('All Form Response rows are already processed. Nothing to do.');
+  if (!toProcess.length) {
+    Logger.log('All Form Response rows are confirmed processed. Nothing to do.');
     return;
   }
 
-  Logger.log(`Found ${unprocessed.length} unprocessed row(s): ${unprocessed.join(', ')}`);
+  Logger.log(`Found ${toProcess.length} row(s) to process:`);
+  toProcess.forEach(({ row, reason }) => Logger.log(`  Row ${row}: ${reason}`));
 
-  unprocessed.forEach(row => {
+  toProcess.forEach(({ row }) => {
     Logger.log(`Processing row ${row}...`);
     try {
       handleFormResponseRow_(formSheet, row);
-      Logger.log(`  ✓ Row ${row} processed successfully.`);
+      Logger.log(`  ✓ Row ${row} done.`);
     } catch (err) {
       Logger.log(`  ✗ Row ${row} failed: ${err.message}`);
     }
   });
 
-  Logger.log('processUnhandledFormResponses complete. Now safe to run markExistingEmployeesAsOnboarded().');
+  Logger.log('processUnhandledFormResponses complete.');
 }

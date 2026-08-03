@@ -555,6 +555,8 @@ function dailyHRTasks() {
   checkMissingOnboardingDocs_();
   validateFormResponseProcessing_();
   processDocusealEmails_();
+  checkEmployeeContacts_();
+  checkUpcomingBirthdays_();
 }
 
 function executeOffboarding_(entry) {
@@ -985,60 +987,67 @@ function moveFileToEmployeeFolder_(driveUrl, destFolderId, newName) {
 // ─────────────────────────────────────────────────────────────
 
 /**
- * Runs daily. Scans info@ inbox for unread emails from DocuSeal,
- * extracts the two signed PDFs (offer letter + audit log), and saves
- * them to the employee's onboarding folder.
+ * Runs daily. Scans last 60 days of DocuSeal emails from info@docuseal.com,
+ * saves signed PDFs to the matching employee's onboarding folder.
  *
- * Expected attachment names:
- *   "Last, First_AKWL Offer Letter.pdf"   — signed offer letter
- *   "Audit Log - Last_AKWL Offer Letter.pdf" — audit trail
+ * Tracking: stores DOCUSEAL_MSG_<messageId> in Script Properties so already-
+ * processed emails are skipped regardless of read/unread state.
  *
- * Employee is identified from the main PDF filename ("Last, First" before
- * the underscore). Marks each processed email as read to avoid reprocessing.
+ * Name formats handled (both end with _AKWL Offer Letter.pdf):
+ *   "Last, First_AKWL Offer Letter.pdf"  → parses first + last directly
+ *   "Last_AKWL Offer Letter.pdf"         → looks up first name from sheet
  */
 function processDocusealEmails_() {
-  const threads = GmailApp.search('from:info@docuseal.com is:unread', 0, 20);
+  const threads = GmailApp.search('from:info@docuseal.com newer_than:60d', 0, 50);
   if (!threads.length) return;
 
   const props = PropertiesService.getScriptProperties();
 
   threads.forEach(thread => {
     thread.getMessages().forEach(msg => {
-      if (!msg.isUnread()) return;
+      const msgKey = 'DOCUSEAL_MSG_' + msg.getId();
+      if (props.getProperty(msgKey)) return;  // already processed
 
       const pdfs = msg.getAttachments().filter(a => a.getContentType() === 'application/pdf');
-      if (!pdfs.length) { msg.markRead(); return; }
+      if (!pdfs.length) { props.setProperty(msgKey, new Date().toISOString()); return; }
 
-      // Use the main offer letter file (not the audit log) to parse the name
       const mainPdf = pdfs.find(a => !a.getName().startsWith('Audit Log'));
-      if (!mainPdf) { msg.markRead(); return; }
+      if (!mainPdf) { props.setProperty(msgKey, new Date().toISOString()); return; }
 
-      // Parse "Last, First" from "Last, First_AKWL Offer Letter.pdf"
       const nameMatch = mainPdf.getName().replace(/\.pdf$/i, '').match(/^(.+?)_/);
       if (!nameMatch) {
         MailApp.sendEmail(CFG.INFO_EMAIL, 'DocuSeal: could not parse name from attachment',
           `File: ${mainPdf.getName()}\nSubject: ${msg.getSubject()}`);
-        msg.markRead();
+        props.setProperty(msgKey, new Date().toISOString());
         return;
       }
 
-      const nameParts = nameMatch[1].trim().split(/,\s*/);
-      if (nameParts.length < 2) {
-        MailApp.sendEmail(CFG.INFO_EMAIL, 'DocuSeal: expected "Last, First" format in filename',
-          `Parsed: "${nameMatch[1].trim()}"\nFile: ${mainPdf.getName()}`);
-        msg.markRead();
-        return;
-      }
+      const namePart = nameMatch[1].trim();
+      let first, last;
 
-      const last  = nameParts[0].trim();
-      const first = nameParts[1].trim();
+      if (namePart.includes(',')) {
+        // "Last, First" format
+        const parts = namePart.split(/,\s*/);
+        last  = parts[0].trim();
+        first = parts[1].trim();
+      } else {
+        // Last name only — look up first name from Current Employees
+        last  = namePart;
+        first = findFirstNameByLast_(last);
+        if (!first) {
+          MailApp.sendEmail(CFG.INFO_EMAIL, `DocuSeal: could not find employee with last name "${last}"`,
+            `File: ${mainPdf.getName()}\nSubject: ${msg.getSubject()}\n\nPlease save the attachments manually.`);
+          props.setProperty(msgKey, new Date().toISOString());
+          return;
+        }
+      }
 
       const folderId = props.getProperty(PROP_FOLDER_PREFIX + employeeKey_(first, last));
       if (!folderId) {
         MailApp.sendEmail(CFG.INFO_EMAIL, `DocuSeal: no onboarding folder found for ${first} ${last}`,
           `Received signed offer letter but no Drive folder is on record.\n` +
           `Please save the attachments manually.\nSubject: ${msg.getSubject()}`);
-        msg.markRead();
+        props.setProperty(msgKey, new Date().toISOString());
         return;
       }
 
@@ -1048,9 +1057,117 @@ function processDocusealEmails_() {
         Logger.log(`DocuSeal: saved "${pdf.getName()}" to ${first} ${last}'s folder`);
       });
 
-      msg.markRead();
+      props.setProperty(msgKey, new Date().toISOString());
     });
   });
+}
+
+/** Finds the first name of an employee by last name in Current Employees. */
+function findFirstNameByLast_(last) {
+  const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+  const sheet     = ss.getSheetByName(CFG.TAB_CURRENT);
+  const headerMap = getHeaderMap_(sheet);
+  const lastRow   = sheet.getLastRow();
+  if (lastRow < CFG.DATA_START_ROW) return null;
+
+  for (let row = CFG.DATA_START_ROW; row <= lastRow; row++) {
+    const rowLast = String(getByField_(sheet, headerMap, row, 'LAST_NAME') || '').trim();
+    if (rowLast.toLowerCase() === last.toLowerCase()) {
+      return String(getByField_(sheet, headerMap, row, 'FIRST_NAME') || '').trim() || null;
+    }
+  }
+  return null;
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// CONTACTS HEALTH CHECK + BIRTHDAY REMINDERS
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Runs every 45 days. Scans Current Employees and adds anyone with a personal
+ * email who is not yet in Google Contacts, including phone if available.
+ * Covers employees added manually (not via form) who were never picked up
+ * by processFormResponseRow_.
+ */
+function checkEmployeeContacts_() {
+  const props = PropertiesService.getScriptProperties();
+  const lastCheckKey = 'CONTACTS_LAST_CHECK';
+  const lastCheck = props.getProperty(lastCheckKey);
+  const now = new Date();
+
+  if (lastCheck && (now - new Date(lastCheck)) / (1000 * 60 * 60 * 24) < 45) return;
+  props.setProperty(lastCheckKey, now.toISOString());
+
+  const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+  const sheet     = ss.getSheetByName(CFG.TAB_CURRENT);
+  const headerMap = getHeaderMap_(sheet);
+  const lastRow   = sheet.getLastRow();
+  if (lastRow < CFG.DATA_START_ROW) return;
+
+  let added = 0;
+  for (let row = CFG.DATA_START_ROW; row <= lastRow; row++) {
+    const first = String(getByField_(sheet, headerMap, row, 'FIRST_NAME')     || '').trim();
+    const last  = String(getByField_(sheet, headerMap, row, 'LAST_NAME')      || '').trim();
+    const email = String(getByField_(sheet, headerMap, row, 'PERSONAL_EMAIL') || '').trim();
+    const phone = String(getByField_(sheet, headerMap, row, 'PHONE')          || '').trim();
+    if (!first || !last || !isValidEmail_(email)) continue;
+    if (!getContactResourceName_(email)) {
+      addContactSafely_(first, last, email, phone || undefined);
+      added++;
+    }
+  }
+
+  if (added > 0) Logger.log(`checkEmployeeContacts_: added ${added} missing contact(s).`);
+}
+
+/**
+ * Runs daily. Sends a reminder to info@ when an active employee's birthday
+ * is exactly 3 days away. Uses BDAY_SENT_<key> in Script Properties to send
+ * only once per calendar year per employee.
+ */
+function checkUpcomingBirthdays_() {
+  const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+  const sheet     = ss.getSheetByName(CFG.TAB_CURRENT);
+  const headerMap = getHeaderMap_(sheet);
+  const lastRow   = sheet.getLastRow();
+  if (lastRow < CFG.DATA_START_ROW) return;
+
+  const props  = PropertiesService.getScriptProperties();
+  const today  = new Date();
+  today.setHours(0, 0, 0, 0);
+  const DAYS_AHEAD = 3;
+
+  for (let row = CFG.DATA_START_ROW; row <= lastRow; row++) {
+    const first = String(getByField_(sheet, headerMap, row, 'FIRST_NAME') || '').trim();
+    const last  = String(getByField_(sheet, headerMap, row, 'LAST_NAME')  || '').trim();
+    const dob   = getByField_(sheet, headerMap, row, 'DOB');
+    if (!first || !last || !dob) continue;
+
+    const dobDate = new Date(dob);
+    if (isNaN(dobDate.getTime())) continue;
+
+    // This year's birthday; if already passed, check next year
+    const birthday = new Date(today.getFullYear(), dobDate.getMonth(), dobDate.getDate());
+    if (birthday < today) birthday.setFullYear(today.getFullYear() + 1);
+
+    const daysUntil = Math.round((birthday - today) / 86400000);
+    if (daysUntil !== DAYS_AHEAD) continue;
+
+    const propKey   = 'BDAY_SENT_' + employeeKey_(first, last);
+    const lastYear  = props.getProperty(propKey);
+    if (lastYear === String(birthday.getFullYear())) continue;  // already sent this year
+
+    MailApp.sendEmail({
+      to      : CFG.INFO_EMAIL,
+      subject : `Birthday in 3 days: ${first} ${last}`,
+      body    : `${first} ${last}'s birthday is on ${formatDate_(birthday)}.\n\n` +
+                `Consider sending a birthday message!`,
+    });
+
+    props.setProperty(propKey, String(birthday.getFullYear()));
+    Logger.log(`Birthday reminder sent for ${first} ${last} (${formatDate_(birthday)})`);
+  }
 }
 
 

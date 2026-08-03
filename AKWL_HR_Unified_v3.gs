@@ -794,11 +794,12 @@ function checkMissingOnboardingDocs_() {
     const lastSent = props.getProperty(propKey);
     if (lastSent && (today - new Date(lastSent)) / 86400000 < 30) continue;  // sent within last 30 days
 
+    const isMissing_ = v => !v || String(v).trim() === '✕';
     const missing = [];
-    if (!getByField_(sheet, headerMap, row, 'CONTRACT_DOCUSEAL')) missing.push('Offer Letter (Docuseal signature)');
-    if (!getByField_(sheet, headerMap, row, 'DRIVERS_LICENSE'))   missing.push("Driver's License");
-    if (!getByField_(sheet, headerMap, row, 'DRIVING_HISTORY'))   missing.push('Driving Record');
-    if (!getByField_(sheet, headerMap, row, 'PHOTO_BIO'))         missing.push('Profile Photo');
+    if (isMissing_(getByField_(sheet, headerMap, row, 'CONTRACT_DOCUSEAL'))) missing.push('Offer Letter (Docuseal signature)');
+    if (isMissing_(getByField_(sheet, headerMap, row, 'DRIVERS_LICENSE')))   missing.push("Driver's License");
+    if (isMissing_(getByField_(sheet, headerMap, row, 'DRIVING_HISTORY')))   missing.push('Driving Record');
+    if (isMissing_(getByField_(sheet, headerMap, row, 'PHOTO_BIO')))         missing.push('Profile Photo');
     if (!missing.length) continue;  // nothing missing — skip
 
     const employeeEmail = getByField_(sheet, headerMap, row, 'PERSONAL_EMAIL');

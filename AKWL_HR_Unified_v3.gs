@@ -352,6 +352,10 @@ function processFormResponseRow_(formSheet, row) {
     if (drivingRecUrl)  moveFileToEmployeeFolder_(drivingRecUrl,  folderId, `Driving Record_${last}`);
   }
 
+  // Add to Google Contacts now that personal email is confirmed on file
+  const personalEmail = getFormVal('Email');
+  if (personalEmail) addContactSafely_(first, last, personalEmail);
+
   Logger.log(`Form row ${row} applied to employee row ${empRow} (${first} ${last}).`);
 }
 
@@ -406,6 +410,7 @@ function runOnboarding(sheet, headerMap, row) {
 
   const offerCopy     = DriveApp.getFileById(offerTemplateId).makeCopy(`Offer Letter_${last}`, personFolder);
   const checklistCopy = DriveApp.getFileById(checklistId).makeCopy(`Onboarding Checklist_${last}`, personFolder);
+  DriveApp.getFileById(CFG.TERM_LETTER_TEMPLATE_ID).makeCopy(`Termination Letter_${last}`, personFolder);
 
   // Start Date may already be filled when HR sets Date of Hire — use it if available
   const startDate = getByField_(sheet, headerMap, row, 'START_DATE');
@@ -416,12 +421,13 @@ function runOnboarding(sheet, headerMap, row) {
     to: CFG.INFO_EMAIL, cc: CFG.JOSH_EMAIL,
     subject: `New Employee Onboarding — ${first} ${last}`,
     body: `${first} ${last} (${position}) has a Date of Hire entered.\n\n` +
-      `Folder:              ${personFolder.getUrl()}\n` +
-      `Offer Letter:        ${offerCopy.getUrl()}\n` +
-      `Onboarding Checklist:${checklistCopy.getUrl()}`,
+      `Folder:               ${personFolder.getUrl()}\n` +
+      `Offer Letter:         ${offerCopy.getUrl()}\n` +
+      `Onboarding Checklist: ${checklistCopy.getUrl()}\n` +
+      `HR Checklist:         ${CFG.HR_CHECKLIST_URL}`,
   });
 
-  GmailApp.createDraft(CFG.INSURANCE_EMAIL, 'Insurance Update: New Hire',
+  GmailApp.createDraft(CFG.INSURANCE_EMAIL, `Insurance Update: New Hire — ${first} ${last}`,
     `Tabatha,\n\nPlease see attached for documentation regarding our new hire ` +
     `(${first} ${last}) to update our insurance.\n\n` +
     `Thanks in advance!\n\n---\nNote for sender: please CC ${CFG.JOSH_EMAIL} before sending.`);
@@ -589,7 +595,7 @@ function executeOffboarding_(entry) {
         `and confirm Tabatha Wilson (Trucordia) has been notified to remove them from insurance.`,
     });
 
-    GmailApp.createDraft(CFG.INSURANCE_EMAIL, 'Employee Off-Boarded',
+    GmailApp.createDraft(CFG.INSURANCE_EMAIL, `Employee Off-Boarded — ${entry.first} ${entry.last}`,
       `Tabatha,\n\n${entry.first} ${entry.last} has been off-boarded effective ${endDateFormatted}.\n\n` +
       `Please remove them from our insurance policy accordingly.\n\nThank you!`);
 

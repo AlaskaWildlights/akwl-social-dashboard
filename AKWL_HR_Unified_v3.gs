@@ -519,8 +519,7 @@ function runOnboarding(sheet, headerMap, row) {
       `• Your general availability\n\n` +
       `Important: Please only upload the documents requested. If you don't yet have a specific ` +
       `document (for example, your driving record), do not substitute another document in its place. ` +
-      `Instead, let us know as soon as possible so we can start your processing right away ` +
-      `and get you enrolled in our insurance without delay.\n\n` +
+      `Instead, let us know as soon as possible.\n\n` +
       `STEP 3 — COMPLETE YOUR ONBOARDING CHECKLIST (WITHIN 15 DAYS OF YOUR START DATE)\n` +
       `Your Onboarding Checklist walks you through everything to complete before your first tour. ` +
       `You can find it in your onboarding folder below. Please complete all items within 15 days of your start date.\n` +
@@ -537,12 +536,7 @@ function runOnboarding(sheet, headerMap, row) {
       `• Come with questions — we want you to feel confident before your first solo tour.\n\n` +
       `If anything comes up before then, don't hesitate to reach out.\n\n` +
       `Best regards,\n` +
-      `Alaska Wild Lights Recruiting Team\n` +
-      `--\n` +
-      `Saray\n` +
-      `Office Assistant\n` +
-      `alaskawildlights.com\n` +
-      `+1 (907) 712-4529`);
+      `Alaska Wild Lights Team`);
 
     // 15-day checklist reminder draft — send manually when the time comes
     GmailApp.createDraft(email, `Reminder: Your Onboarding Checklist Is Due Soon`,

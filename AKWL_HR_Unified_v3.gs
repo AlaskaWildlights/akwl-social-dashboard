@@ -35,7 +35,8 @@ const CFG = {
   FORMER_DOCS_FOLDER_ID      : '14A65GrTTV737kDOwEKd2IFk457CjzhpC',   // termination letters
   FORMER_PERSONNEL_FOLDER_ID : '1pqlCfTXlkN707XANQap77RHg3qkPYkDN',  // all employee folders moved here at offboarding
 
-  HR_CHECKLIST_URL : 'https://docs.google.com/document/d/1gtcQ0adsPUIUZhDcA48cZhYCCaxeNL5XMSsSnYAD-d0/edit?tab=t.0',
+  HR_CHECKLIST_URL          : 'https://docs.google.com/document/d/1gtcQ0adsPUIUZhDcA48cZhYCCaxeNL5XMSsSnYAD-d0/edit?tab=t.0',
+  OFFBOARDING_CHECKLIST_URL : 'https://docs.google.com/document/d/1fBUM13Qmr4IcuV_kAVxs0MUyol1e6SqZ79toqi6OQ3k/edit?usp=drive_link',
 
   INFO_EMAIL      : 'info@alaskawildlights.com',
   JOSH_EMAIL      : 'joshuamcneal@alaskawildlights.com',
@@ -424,8 +425,9 @@ function runOnboarding(sheet, headerMap, row) {
     body: `${first} ${last} (${position}) has a Date of Hire entered.\n\n` +
       `Folder:               ${personFolder.getUrl()}\n` +
       `Offer Letter:         ${offerCopy.getUrl()}\n` +
-      `Onboarding Checklist: ${checklistCopy.getUrl()}\n` +
-      `HR Checklist:         ${CFG.HR_CHECKLIST_URL}`,
+      `Onboarding Checklist: ${checklistCopy.getUrl()}\n\n` +
+      `To complete the onboarding process, remember to complete each step on this checklist:\n` +
+      `${CFG.HR_CHECKLIST_URL}`,
   });
 
   GmailApp.createDraft(CFG.INSURANCE_EMAIL, `Insurance Update: New Hire — ${first} ${last}`,
@@ -552,6 +554,7 @@ function dailyHRTasks() {
   cleanupScheduledDocDeletions_();
   checkMissingOnboardingDocs_();
   validateFormResponseProcessing_();
+  processDocusealEmails_();
 }
 
 function executeOffboarding_(entry) {
@@ -576,15 +579,10 @@ function executeOffboarding_(entry) {
       .makeCopy(`Termination Letter_${entry.last}`, DriveApp.getFolderById(CFG.FORMER_DOCS_FOLDER_ID));
     const doc  = DocumentApp.openById(newFile.getId());
     const body = doc.getBody();
-    // Termination Letter placeholders (verified from Termination_Letter_DO_NOT_MODIFY.docx):
-    //   MONTH, DD, YYYY        → letter date (top of doc, no brackets)
-    //   [First Name, Last Name] → employee name (note: comma between names)
-    //   [MONTH, DD, YYYY]      → termination effective date (has brackets)
-    // ORDER MATTERS: replace the bracketed termination date FIRST, then the bare letter date,
-    // otherwise the bare replaceText would corrupt [MONTH, DD, YYYY] before it's replaced.
-    body.replaceText('\\[MONTH, DD, YYYY\\]',     endDateFormatted);
-    body.replaceText('MONTH, DD, YYYY',            formatDate_(new Date()));
-    body.replaceText('\\[First Name, Last Name\\]', `${entry.first} ${entry.last}`);
+    // Placeholders: {{MONTH, DAY, YEAR}} (letter date + effective date), {{FIRST_NAME}}, {{LAST_NAME}}
+    body.replaceText('\\{\\{MONTH, DAY, YEAR\\}\\}', endDateFormatted);
+    body.replaceText('\\{\\{FIRST_NAME\\}\\}',        entry.first);
+    body.replaceText('\\{\\{LAST_NAME\\}\\}',         entry.last);
     doc.saveAndClose();
 
     MailApp.sendEmail({
@@ -593,7 +591,10 @@ function executeOffboarding_(entry) {
       body: `${entry.first} ${entry.last}'s employment ends ${endDateFormatted}.\n\n` +
         `Termination letter: ${newFile.getUrl()}\n\n` +
         `Please ensure Pathway processes their final paycheck within 3 business days, ` +
-        `and confirm Tabatha Wilson (Trucordia) has been notified to remove them from insurance.`,
+        `and confirm Tabatha Wilson (Trucordia) has been notified to remove them from insurance.\n\n` +
+        `HIGH IMPORTANCE — Complete the offboarding checklist for ${entry.first} ${entry.last} based on their role. ` +
+        `This checklist covers highly sensitive account access and information:\n` +
+        `${CFG.OFFBOARDING_CHECKLIST_URL}`,
     });
 
     GmailApp.createDraft(CFG.INSURANCE_EMAIL, `Employee Off-Boarded — ${entry.first} ${entry.last}`,
@@ -976,6 +977,80 @@ function moveFileToEmployeeFolder_(driveUrl, destFolderId, newName) {
   } catch (err) {
     Logger.log('moveFileToEmployeeFolder_ error: ' + err.message);
   }
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// DOCUSEAL — save signed PDFs to onboarding folder
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Runs daily. Scans info@ inbox for unread emails from DocuSeal,
+ * extracts the two signed PDFs (offer letter + audit log), and saves
+ * them to the employee's onboarding folder.
+ *
+ * Expected attachment names:
+ *   "Last, First_AKWL Offer Letter.pdf"   — signed offer letter
+ *   "Audit Log - Last_AKWL Offer Letter.pdf" — audit trail
+ *
+ * Employee is identified from the main PDF filename ("Last, First" before
+ * the underscore). Marks each processed email as read to avoid reprocessing.
+ */
+function processDocusealEmails_() {
+  const threads = GmailApp.search('from:info@docuseal.com is:unread', 0, 20);
+  if (!threads.length) return;
+
+  const props = PropertiesService.getScriptProperties();
+
+  threads.forEach(thread => {
+    thread.getMessages().forEach(msg => {
+      if (!msg.isUnread()) return;
+
+      const pdfs = msg.getAttachments().filter(a => a.getContentType() === 'application/pdf');
+      if (!pdfs.length) { msg.markRead(); return; }
+
+      // Use the main offer letter file (not the audit log) to parse the name
+      const mainPdf = pdfs.find(a => !a.getName().startsWith('Audit Log'));
+      if (!mainPdf) { msg.markRead(); return; }
+
+      // Parse "Last, First" from "Last, First_AKWL Offer Letter.pdf"
+      const nameMatch = mainPdf.getName().replace(/\.pdf$/i, '').match(/^(.+?)_/);
+      if (!nameMatch) {
+        MailApp.sendEmail(CFG.INFO_EMAIL, 'DocuSeal: could not parse name from attachment',
+          `File: ${mainPdf.getName()}\nSubject: ${msg.getSubject()}`);
+        msg.markRead();
+        return;
+      }
+
+      const nameParts = nameMatch[1].trim().split(/,\s*/);
+      if (nameParts.length < 2) {
+        MailApp.sendEmail(CFG.INFO_EMAIL, 'DocuSeal: expected "Last, First" format in filename',
+          `Parsed: "${nameMatch[1].trim()}"\nFile: ${mainPdf.getName()}`);
+        msg.markRead();
+        return;
+      }
+
+      const last  = nameParts[0].trim();
+      const first = nameParts[1].trim();
+
+      const folderId = props.getProperty(PROP_FOLDER_PREFIX + employeeKey_(first, last));
+      if (!folderId) {
+        MailApp.sendEmail(CFG.INFO_EMAIL, `DocuSeal: no onboarding folder found for ${first} ${last}`,
+          `Received signed offer letter but no Drive folder is on record.\n` +
+          `Please save the attachments manually.\nSubject: ${msg.getSubject()}`);
+        msg.markRead();
+        return;
+      }
+
+      const folder = DriveApp.getFolderById(folderId);
+      pdfs.forEach(pdf => {
+        folder.createFile(pdf);
+        Logger.log(`DocuSeal: saved "${pdf.getName()}" to ${first} ${last}'s folder`);
+      });
+
+      msg.markRead();
+    });
+  });
 }
 
 

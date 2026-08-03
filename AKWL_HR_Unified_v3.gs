@@ -352,9 +352,10 @@ function processFormResponseRow_(formSheet, row) {
     if (drivingRecUrl)  moveFileToEmployeeFolder_(drivingRecUrl,  folderId, `Driving Record_${last}`);
   }
 
-  // Add to Google Contacts now that personal email is confirmed on file
+  // Add to Google Contacts now that both email and phone are confirmed on file
   const personalEmail = getFormVal('Email');
-  if (personalEmail) addContactSafely_(first, last, personalEmail);
+  const phone         = getFormVal('Phone Number');
+  if (personalEmail) addContactSafely_(first, last, personalEmail, phone);
 
   Logger.log(`Form row ${row} applied to employee row ${empRow} (${first} ${last}).`);
 }
@@ -465,7 +466,7 @@ function runOnboarding(sheet, headerMap, row) {
     GmailApp.createDraft(email, 'Welcome to Alaska Wild Lights!', welcomeBody);
   }
 
-  addContactSafely_(first, last, email);
+  // Contact added later in processFormResponseRow_ once email + phone arrive via the form
 
   scheduleDocDeletion_(offerCopy.getId(), 5);
   scheduleDocDeletion_(checklistCopy.getId(), 15);
@@ -831,14 +832,16 @@ function processStaleSchedules_(props) {
 // ─────────────────────────────────────────────────────────────
 // GOOGLE CONTACTS  (replaces "0040")
 // ─────────────────────────────────────────────────────────────
-function addContactSafely_(first, last, email) {
+function addContactSafely_(first, last, email, phone) {
   if (!isValidEmail_(email)) return;
   try {
     if (getContactResourceName_(email)) return;
-    const contact = People.People.createContact({
-      names        : [{ givenName: first, familyName: last, displayName: `${first} ${last}` }],
+    const body = {
+      names         : [{ givenName: first, familyName: last, displayName: `${first} ${last}` }],
       emailAddresses: [{ value: email, type: 'work' }],
-    });
+    };
+    if (phone) body.phoneNumbers = [{ value: phone, type: 'mobile' }];
+    const contact = People.People.createContact(body);
     addToTeamGroup_(contact.resourceName);
     Logger.log(`Contact added: ${first} ${last} <${email}>`);
   } catch (err) {

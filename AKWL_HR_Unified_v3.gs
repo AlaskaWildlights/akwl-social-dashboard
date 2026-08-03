@@ -789,8 +789,9 @@ function checkMissingOnboardingDocs_() {
     hireDate.setHours(0, 0, 0, 0);
     if ((today - hireDate) / 86400000 < 7) continue;  // less than 7 days — too early
 
-    const propKey = 'REMINDER_DOCS_' + employeeKey_(first, last);
-    if (props.getProperty(propKey)) continue;  // reminder already sent
+    const propKey  = 'REMINDER_DOCS_' + employeeKey_(first, last);
+    const lastSent = props.getProperty(propKey);
+    if (lastSent && (today - new Date(lastSent)) / 86400000 < 30) continue;  // sent within last 30 days
 
     const missing = [];
     if (!getByField_(sheet, headerMap, row, 'CONTRACT_DOCUSEAL')) missing.push('Offer Letter (Docuseal signature)');
@@ -803,33 +804,27 @@ function checkMissingOnboardingDocs_() {
     const bulletList    = missing.map(m => `  • ${m}`).join('\n');
 
     if (isValidEmail_(employeeEmail)) {
-      MailApp.sendEmail({
-        to      : employeeEmail,
-        cc      : CFG.INFO_EMAIL,
-        subject : 'Action Required: Complete Your Onboarding — Alaska Wild Lights',
-        body    :
-          `Hi ${first},\n\n` +
-          `We noticed a few items are still pending in your onboarding. ` +
-          `Please complete the following as soon as possible:\n\n` +
-          `${bulletList}\n\n` +
-          `You can submit these through your onboarding form or upload directly ` +
-          `to your onboarding folder. If you have any questions, don't hesitate to reach out.\n\n` +
-          `Best,\nAlaska Wild Lights`,
-      });
+      GmailApp.createDraft(employeeEmail,
+        'Action Required: Complete Your Onboarding — Alaska Wild Lights',
+        `Hi ${first},\n\n` +
+        `We noticed a few items are still pending in your onboarding. ` +
+        `Please complete the following as soon as possible:\n\n` +
+        `${bulletList}\n\n` +
+        `You can submit these through your onboarding form or upload directly ` +
+        `to your onboarding folder. If you have any questions, don't hesitate to reach out.\n\n` +
+        `Best,\nAlaska Wild Lights`,
+        { cc: CFG.INFO_EMAIL });
     } else {
-      MailApp.sendEmail({
-        to      : CFG.INFO_EMAIL,
-        subject : `Reminder: Missing onboarding docs — ${first} ${last}`,
-        body    :
-          `${first} ${last} is missing the following onboarding items ` +
-          `(7 days since Date of Hire):\n\n` +
-          `${bulletList}\n\n` +
-          `No email on file — please follow up with them directly.`,
-      });
+      GmailApp.createDraft(CFG.INFO_EMAIL,
+        `Reminder: Missing onboarding docs — ${first} ${last}`,
+        `${first} ${last} is missing the following onboarding items ` +
+        `(7 days since Date of Hire):\n\n` +
+        `${bulletList}\n\n` +
+        `No email on file — please follow up with them directly.`);
     }
 
-    props.setProperty(propKey, new Date().toISOString());
-    Logger.log(`Onboarding reminder sent for ${first} ${last}. Missing: ${missing.join(', ')}`);
+    props.setProperty(propKey, today.toISOString());
+    Logger.log(`Onboarding reminder draft created for ${first} ${last}. Missing: ${missing.join(', ')}`);
   }
 }
 
@@ -877,7 +872,7 @@ function validateFormResponseProcessing_() {
 
     if (unprocessedRows.length > 0) {
       MailApp.sendEmail({
-        to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
+        to: CFG.MAIL_TO,
         subject: `Form Response Validation: Found and reprocessed ${unprocessedRows.length} missed row(s)`,
         body: `The following Form Responses rows were unprocessed and have been reprocessed:\n\n` +
           `Rows: ${unprocessedRows.join(', ')}\n\n` +
@@ -1110,7 +1105,7 @@ function processDocusealEmails_() {
 
       const nameMatch = mainPdf.getName().replace(/\.pdf$/i, '').match(/^(.+?)_/);
       if (!nameMatch) {
-        MailApp.sendEmail({ to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
+        MailApp.sendEmail({ to: CFG.MAIL_TO,
           subject: 'DocuSeal: could not parse name from attachment',
           body: `File: ${mainPdf.getName()}\nSubject: ${msg.getSubject()}` });
         props.setProperty(msgKey, new Date().toISOString());
@@ -1130,7 +1125,7 @@ function processDocusealEmails_() {
         last  = namePart;
         first = findFirstNameByLast_(last);
         if (!first) {
-          MailApp.sendEmail({ to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
+          MailApp.sendEmail({ to: CFG.MAIL_TO,
             subject: `DocuSeal: could not find employee with last name "${last}"`,
             body: `File: ${mainPdf.getName()}\nSubject: ${msg.getSubject()}\n\nPlease save the attachments manually.` });
           props.setProperty(msgKey, new Date().toISOString());
@@ -1140,7 +1135,7 @@ function processDocusealEmails_() {
 
       const folderId = props.getProperty(PROP_FOLDER_PREFIX + employeeKey_(first, last));
       if (!folderId) {
-        MailApp.sendEmail({ to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
+        MailApp.sendEmail({ to: CFG.MAIL_TO,
           subject: `DocuSeal: no onboarding folder found for ${first} ${last}`,
           body: `Received signed offer letter but no Drive folder is on record.\n` +
             `Please save the attachments manually.\nSubject: ${msg.getSubject()}` });
@@ -1258,7 +1253,7 @@ function checkUpcomingBirthdays_() {
     if (lastYear === String(birthday.getFullYear())) continue;  // already sent this year
 
     MailApp.sendEmail({
-      to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
+      to: CFG.MAIL_TO,
       subject: `Birthday in 3 days: ${first} ${last}`,
       body: `${first} ${last}'s birthday is on ${formatDate_(birthday)}.\n\nConsider sending a birthday message!`,
     });

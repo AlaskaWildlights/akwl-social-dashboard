@@ -1,5 +1,5 @@
 /**
- * AKWL HR — Onboarding & Offboarding Automation  v3.7
+ * AKWL HR — Onboarding & Offboarding Automation  v3.8
  * Setup: run installTriggers(), authorize when prompted, delete triggers on old scripts.
  */
 
@@ -14,7 +14,7 @@ const CFG = {
 
   COMPANY_NAME : 'Alaska Wild Lights',
 
-  // Guides — folder name: "First Last"
+  // Guides — folder name: "Last, First"
   GUIDES_PARENT_FOLDER_ID     : '1Ya0e276RRvVasEcOBchsqAW3cEVNMo1w',
   GUIDE_CHECKLIST_TEMPLATE_ID : '1Tr9jDUBoocBKGM2IvJoYwZDMVk2wyH_WHnkN-qnp_kA',
 
@@ -26,6 +26,8 @@ const CFG = {
 
   // Non-guide checklist (maintenance + office) — "adapt before sharing" warning sent for non-guides
   NON_GUIDE_CHECKLIST_TEMPLATE_ID : '19LzGeqpE4eMnFJIuw7oXUy-Farw1dPNc_QbC-ZhyjvM',
+
+  ONBOARDING_FORM_URL : 'https://forms.gle/MxgzP6iRrko2bibX9',
 
   // Fallback offer letter for unrecognized roles — must adapt Scope of Work + Compensation before sending
   OFFER_LETTER_FALLBACK_ID : '1EOu2zyZEoUEuDg2vd9T4vHOSsmBZgn0VFVuCQEMiCzg',
@@ -52,7 +54,6 @@ const CFG = {
   CONTACT_GROUP_NAME : 'AKWL Team',
 
   FOLLOW_UP_BUSINESS_DAYS : 5,
-  STALE_SCHEDULE_MAX_DAYS : 30,
 
   TIMEZONE : 'America/Anchorage',
 
@@ -368,9 +369,9 @@ function processFormResponseRow_(formSheet, row) {
   const drivingRecUrl = getFormVal('Driving Record');
   const profilePicUrl = getFormVal('Profile Picture');
 
-  if (licenseUrl)    setByField_(empSheet, headerMap, empRow, 'DRIVERS_LICENSE', '✓');
-  if (drivingRecUrl) setByField_(empSheet, headerMap, empRow, 'DRIVING_HISTORY',  '✓');
-  if (profilePicUrl) setByField_(empSheet, headerMap, empRow, 'PHOTO_BIO',        '✓');
+  setByField_(empSheet, headerMap, empRow, 'DRIVERS_LICENSE', licenseUrl    ? '✓' : '✕');
+  setByField_(empSheet, headerMap, empRow, 'DRIVING_HISTORY',  drivingRecUrl ? '✓' : '✕');
+  setByField_(empSheet, headerMap, empRow, 'PHOTO_BIO',        profilePicUrl ? '✓' : '✕');
 
   const docusealAnswer = getFormVal('Just a quick reminder! Have you signed your Offer Letter via Docuseal yet?');
   if      (/yes/i.test(docusealAnswer))     setByField_(empSheet, headerMap, empRow, 'CONTRACT_DOCUSEAL', '✓');  // "Yes, all signed!"
@@ -433,8 +434,8 @@ function runOnboarding(sheet, headerMap, row) {
   // Checklist: guides get their own template; everyone else shares the non-guide one
   const checklistId = isGuide ? CFG.GUIDE_CHECKLIST_TEMPLATE_ID : CFG.NON_GUIDE_CHECKLIST_TEMPLATE_ID;
 
-  // Folder name: guides = "First Last", everyone else = "Last, First (Role)"
-  const folderName = isGuide ? `${first} ${last}` : `${last}, ${first} (${position})`;
+  // Folder name: all employees = "Last, First" for guides, "Last, First (Role)" for everyone else
+  const folderName = isGuide ? `${last}, ${first}` : `${last}, ${first} (${position})`;
 
   const parentFolder = DriveApp.getFolderById(parentFolderId);
   const personFolder = parentFolder.createFolder(folderName);
@@ -456,9 +457,6 @@ function runOnboarding(sheet, headerMap, row) {
   // Checklist file name: "Last, First_Onboarding Checklist"
   const checklistCopy = DriveApp.getFileById(checklistId)
     .makeCopy(`${last}, ${first}_Onboarding Checklist`, personFolder);
-
-  DriveApp.getFileById(CFG.TERM_LETTER_TEMPLATE_ID)
-    .makeCopy(`Termination Letter_${last}`, personFolder);
 
   const startDate = getByField_(sheet, headerMap, row, 'START_DATE');
   fillOfferLetterPlaceholders_(offerCopy.getId(), first, last, startDate || null);
@@ -497,43 +495,67 @@ function runOnboarding(sheet, headerMap, row) {
 
   GmailApp.createDraft(CFG.INSURANCE_EMAIL, `Insurance Update: New Hire — ${first} ${last}`,
     `Tabatha,\n\nPlease see attached for documentation regarding our new hire ` +
-    `(${first} ${last}) to update our insurance.\n\n` +
-    `Thanks in advance!\n\n---\nNote for sender: please CC ${CFG.MAIL_CC} before sending.`);
+    `(${first} ${last}) to update our insurance.\n\nThanks in advance!`,
+    { cc: CFG.MAIL_CC });
 
   const email = getByField_(sheet, headerMap, row, 'PERSONAL_EMAIL');
   if (email) {
     GmailApp.createDraft(email, 'Welcome to Alaska Wild Lights!',
-      `Welcome to Alaska Wild Lights, ${first}!\n\n` +
-      `We're excited to have you join our team. To complete your onboarding, please follow these steps:\n\n` +
-      `STEP 1: CHECK YOUR EMAIL (INCLUDING SPAM) FOR YOUR DOCUSEAL INVITE\n` +
-      `You should receive a DocuSeal email invitation to sign your Offer Letter digitally. ` +
-      `Check your inbox and spam folder and sign it as soon as possible.\n\n` +
-      `STEP 2: COMPLETE THE ONBOARDING FORM\n` +
-      `After signing your offer letter, please complete this form: https://forms.gle/DqnBvSXfjzeDzeiw9\n\n` +
-      `When filling out the form, please have these items ready:\n` +
-      `• Mailing address (street, city, state, ZIP)\n` +
-      `• Phone number\n` +
-      `• Emergency contact name and phone number\n` +
-      `• Driver's license or state ID\n` +
-      `• Proof of driving history\n` +
-      `• Professional headshot/bio photo\n` +
-      `• Any documents listed in your Onboarding Checklist\n\n` +
-      `STEP 3: COMPLETE YOUR ONBOARDING CHECKLIST (DUE WITHIN 15 DAYS OF YOUR START DATE)\n` +
-      `Your Onboarding Checklist is in your onboarding folder. Please complete all items ` +
-      `within 15 days of your start date.\n\n` +
-      `YOUR ONBOARDING FOLDER:\n` +
-      `${personFolder.getUrl()}\n\n` +
-      `Questions? Reach out to info@alaskawildlights.com\n\n` +
-      `Welcome aboard!\nAlaska Wild Lights Team`);
+      `Hi ${first}!\n\n` +
+      `Welcome to Alaska Wild Lights. We're thrilled to have you on the team!\n\n` +
+      `Here's everything you need to get started. There are three things to complete before Day 1, ` +
+      `and we've made it as straightforward as possible.\n\n` +
+      `STEP 1 — SIGN YOUR OFFER LETTER\n` +
+      `You'll receive a separate email from DocuSeal with your offer letter. Please check your inbox ` +
+      `(and your spam folder — just in case!) and sign it at your earliest convenience. ` +
+      `Once that's done, move on to Step 2.\n\n` +
+      `STEP 2 — COMPLETE YOUR ONBOARDING FORM\n` +
+      `Complete Your Onboarding Form Here: ${CFG.ONBOARDING_FORM_URL}\n\n` +
+      `Before you sit down to fill it out, have the following ready — it'll take about 5 minutes if you do:\n\n` +
+      `• A headshot photo (clear, good lighting — this is what guests see)\n` +
+      `• Your driver's license (photo or scan to upload)\n` +
+      `• Your driving record (you can request it from the DMV)\n` +
+      `• License details: state of issue, license number, years licensed\n` +
+      `• Your general availability\n\n` +
+      `Important: Please only upload the documents requested. If you don't yet have a specific ` +
+      `document (for example, your driving record), do not substitute another document in its place. ` +
+      `Instead, let us know as soon as possible so we can start your processing right away ` +
+      `and get you enrolled in our insurance without delay.\n\n` +
+      `STEP 3 — COMPLETE YOUR ONBOARDING CHECKLIST (WITHIN 15 DAYS OF YOUR START DATE)\n` +
+      `Your Onboarding Checklist walks you through everything to complete before your first tour. ` +
+      `You can find it in your onboarding folder below. Please complete all items within 15 days of your start date.\n` +
+      `${checklistCopy.getUrl()}\n\n` +
+      `YOUR ONBOARDING FOLDER\n` +
+      `Review everything at your own pace: ${personFolder.getUrl()}\n` +
+      `You already have contributor access. Once you submit your onboarding form, all necessary ` +
+      `documents will be added automatically — please make sure everything is in order.\n\n` +
+      `YOUR FIRST MEETING\n` +
+      `Our operations manager will reach out once we have your official first tour date confirmed.\n\n` +
+      `A few things to have ready before Day 1:\n\n` +
+      `• Review the Employee Handbook in your onboarding folder.\n` +
+      `• Log in to FareHarbor and SimplyFleet using the credentials you'll receive separately.\n` +
+      `• Come with questions — we want you to feel confident before your first solo tour.\n\n` +
+      `If anything comes up before then, don't hesitate to reach out.\n\n` +
+      `Best regards,\n` +
+      `Alaska Wild Lights Recruiting Team\n` +
+      `--\n` +
+      `Saray\n` +
+      `Office Assistant\n` +
+      `alaskawildlights.com\n` +
+      `+1 (907) 712-4529`);
 
     // 15-day checklist reminder draft — send manually when the time comes
-    GmailApp.createDraft(email, `Reminder: Complete Your Onboarding Checklist — Alaska Wild Lights`,
+    GmailApp.createDraft(email, `Reminder: Your Onboarding Checklist Is Due Soon`,
       `Hi ${first},\n\n` +
-      `This is a reminder that your Onboarding Checklist is due within 15 days of your start date. ` +
-      `Please make sure all items are completed.\n\n` +
-      `Your onboarding folder: ${personFolder.getUrl()}\n\n` +
-      `If you have any questions, don't hesitate to reach out.\n\n` +
-      `Best,\nAlaska Wild Lights Team`);
+      `Hope everything's going well! Just a friendly reminder that your Onboarding Checklist ` +
+      `is due within 15 days of your start date.\n\n` +
+      `If you haven't had a chance to go through it yet, no worries — you can find it here:\n` +
+      `${checklistCopy.getUrl()}\n\n` +
+      `And your full onboarding folder is here:\n` +
+      `${personFolder.getUrl()}\n\n` +
+      `Feel free to reach out if you have any questions. We're happy to help!\n\n` +
+      `Warm regards,\n` +
+      `Alaska Wild Lights Team`);
   }
 
   // Contact added later in processFormResponseRow_ once email + phone arrive via the form
@@ -615,7 +637,6 @@ function dailyHRTasks() {
     }
   });
 
-  processStaleSchedules_(props);
   cleanupScheduledDocDeletions_();
   checkMissingOnboardingDocs_();
   validateFormResponseProcessing_();
@@ -632,23 +653,22 @@ function executeOffboarding_(entry) {
     const row       = findEmployeeRow_(sheet, headerMap, entry.first, entry.last);
 
     if (!row) {
-      MailApp.sendEmail({
-        to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
-        subject: `CRITICAL: offboarding due for ${entry.first} ${entry.last}, but row not found`,
-        body: `Their End Date arrived but their row isn't in "${CFG.TAB_CURRENT}" anymore. ` +
-          `Please offboard them manually. This will repeat daily until resolved ` +
-          `(stops automatically after ${CFG.STALE_SCHEDULE_MAX_DAYS} days).`,
-      });
+      Logger.log(`executeOffboarding_: row not found for ${entry.first} ${entry.last} — skipping.`);
       return false;
     }
 
     const endDateFormatted = formatDate_(new Date(entry.endDate + 'T00:00:00'));
+    const folderPropKey    = PROP_FOLDER_PREFIX + employeeKey_(entry.first, entry.last);
+    const employeeFolderId = PropertiesService.getScriptProperties().getProperty(folderPropKey);
 
+    // Termination letter goes into the employee's own folder (moves to Former Employees with it)
+    const termDest = employeeFolderId
+      ? DriveApp.getFolderById(employeeFolderId)
+      : DriveApp.getFolderById(CFG.FORMER_DOCS_FOLDER_ID);  // fallback if no folder on record
     const newFile = DriveApp.getFileById(CFG.TERM_LETTER_TEMPLATE_ID)
-      .makeCopy(`Termination Letter_${entry.last}`, DriveApp.getFolderById(CFG.FORMER_DOCS_FOLDER_ID));
+      .makeCopy(`Termination Letter_${entry.last}`, termDest);
     const doc  = DocumentApp.openById(newFile.getId());
     const body = doc.getBody();
-    // Placeholders: {{MONTH, DAY, YEAR}} (letter date + effective date), {{FIRST_NAME}}, {{LAST_NAME}}
     body.replaceText('\\{\\{MONTH, DAY, YEAR\\}\\}', endDateFormatted);
     body.replaceText('\\{\\{FIRST_NAME\\}\\}',        entry.first);
     body.replaceText('\\{\\{LAST_NAME\\}\\}',         entry.last);
@@ -668,13 +688,12 @@ function executeOffboarding_(entry) {
 
     GmailApp.createDraft(CFG.INSURANCE_EMAIL, `Employee Off-Boarded — ${entry.first} ${entry.last}`,
       `Tabatha,\n\n${entry.first} ${entry.last} has been off-boarded effective ${endDateFormatted}.\n\n` +
-      `Please remove them from our insurance policy accordingly.\n\nThank you!`);
+      `Please remove them from our insurance policy accordingly.\n\nThank you!`,
+      { cc: CFG.MAIL_CC });
 
     removeContactSafely_(getByField_(sheet, headerMap, row, 'PERSONAL_EMAIL'));
 
     // Move the employee's Drive folder into the Former Employees personnel folder
-    const folderPropKey      = PROP_FOLDER_PREFIX + employeeKey_(entry.first, entry.last);
-    const employeeFolderId   = PropertiesService.getScriptProperties().getProperty(folderPropKey);
     if (employeeFolderId) {
       try {
         DriveApp.getFolderById(employeeFolderId)
@@ -879,28 +898,6 @@ function sendFollowUpReminder_(entry) {
   });
 }
 
-function processStaleSchedules_(props) {
-  const all = props.getProperties();
-  const now = new Date();
-  Object.keys(all).forEach(key => {
-    if (!key.startsWith(PROP_OFFBOARD_PREFIX)) return;
-    let entry;
-    try { entry = JSON.parse(all[key]); } catch (e) { return; }
-    if (entry.executed || entry.staleAlertSent) return;
-    const daysOld = (now - new Date(entry.scheduledOn)) / 86400000;
-    if (daysOld > CFG.STALE_SCHEDULE_MAX_DAYS) {
-      MailApp.sendEmail({
-        to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
-        subject: `AKWL HR: stuck offboarding entry for ${entry.first} ${entry.last}`,
-        body: `This offboarding has failed to execute for over ${CFG.STALE_SCHEDULE_MAX_DAYS} days ` +
-          `(row likely deleted or renamed manually). This is the LAST automated alert — ` +
-          `clear it manually in Script Properties (key: ${key}) if no longer needed.`,
-      });
-      entry.staleAlertSent = true;
-      props.setProperty(key, JSON.stringify(entry));
-    }
-  });
-}
 
 
 // ─────────────────────────────────────────────────────────────

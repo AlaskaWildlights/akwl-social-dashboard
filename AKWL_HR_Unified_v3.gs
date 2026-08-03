@@ -1313,28 +1313,41 @@ function markExistingEmployeesAsOnboarded() {
 
     // Try to locate and register their existing Drive folder so offboarding
     // puts the termination letter in the right place (not the generic fallback).
+    // Uses fuzzy match (last name + first 4 chars of first name) to handle
+    // inconsistent naming: trailing spaces, underscores, "Josh" vs "Joshua", etc.
     const folderKey = PROP_FOLDER_PREFIX + empKey;
     if (!props.getProperty(folderKey)) {
-      const position = String(getByField_(empSheet, headerMap, row, 'POSITION') || '').trim();
-      const isGuide  = /guide/i.test(position);
-      const parentId = isGuide
-        ? CFG.GUIDES_PARENT_FOLDER_ID
+      const position  = String(getByField_(empSheet, headerMap, row, 'POSITION') || '').trim();
+      const isGuide   = /guide/i.test(position);
+      const parentIds = isGuide
+        ? [CFG.GUIDES_PARENT_FOLDER_ID]
         : /lead\s*mechanic|\bmechanic\b|detailer/i.test(position)
-          ? CFG.MAINTENANCE_PARENT_FOLDER_ID
-          : CFG.OFFICE_PARENT_FOLDER_ID;
-      const expectedName = isGuide
-        ? `${last}, ${first}`
-        : `${last}, ${first} (${position})`;
-      try {
-        const iter = DriveApp.getFolderById(parentId).getFoldersByName(expectedName);
-        if (iter.hasNext()) {
-          props.setProperty(folderKey, iter.next().getId());
-          Logger.log(`    Folder found and registered: "${expectedName}"`);
-        } else {
-          Logger.log(`    ⚠️  No folder found for "${expectedName}" — set FOLDER_${empKey} manually in Script Properties if needed.`);
+          ? [CFG.MAINTENANCE_PARENT_FOLDER_ID]
+          : [CFG.OFFICE_PARENT_FOLDER_ID];
+
+      const lastLower   = last.trim().toLowerCase();
+      const firstShort  = first.trim().toLowerCase().substring(0, 4);  // "Josh" matches "Joshua", etc.
+      let found = null;
+
+      for (const parentId of parentIds) {
+        try {
+          const iter = DriveApp.getFolderById(parentId).getFolders();
+          while (iter.hasNext()) {
+            const f    = iter.next();
+            const name = f.getName().trim().toLowerCase();
+            if (name.includes(lastLower) && name.includes(firstShort)) { found = f; break; }
+          }
+        } catch (e) {
+          Logger.log(`    Could not search folder for ${first} ${last}: ${e.message}`);
         }
-      } catch (e) {
-        Logger.log(`    Could not search folder for ${first} ${last}: ${e.message}`);
+        if (found) break;
+      }
+
+      if (found) {
+        props.setProperty(folderKey, found.getId());
+        Logger.log(`    Folder found and registered: "${found.getName()}"`);
+      } else {
+        Logger.log(`    ⚠️  No folder found for ${first} ${last} — set FOLDER_${empKey} manually in Script Properties if needed.`);
       }
     }
   }

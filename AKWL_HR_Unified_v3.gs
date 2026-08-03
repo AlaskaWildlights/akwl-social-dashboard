@@ -789,10 +789,6 @@ function checkMissingOnboardingDocs_() {
     hireDate.setHours(0, 0, 0, 0);
     if ((today - hireDate) / 86400000 < 7) continue;  // less than 7 days — too early
 
-    // Skip employees who pre-dated this script — they are established and their
-    // sheet fields may simply be blank because the old system never wrote checkmarks.
-    if (props.getProperty(PROP_ONBOARDED_PREFIX + employeeKey_(first, last)) === 'LEGACY') continue;
-
     const propKey = 'REMINDER_DOCS_' + employeeKey_(first, last);
     if (props.getProperty(propKey)) continue;  // reminder already sent
 

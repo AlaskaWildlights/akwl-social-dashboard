@@ -410,6 +410,13 @@ function runOnboarding(sheet, headerMap, row) {
   PropertiesService.getScriptProperties()
     .setProperty(PROP_FOLDER_PREFIX + employeeKey_(first, last), personFolder.getId());
 
+  // Insert folder hyperlink into the First Name cell (col A) so HR can click straight to the folder
+  const firstNameCol = col_(headerMap, 'FIRST_NAME');
+  if (firstNameCol) {
+    sheet.getRange(row, firstNameCol)
+      .setFormula(`=HYPERLINK("${personFolder.getUrl()}","${first.replace(/"/g, '""')}")`);
+  }
+
   const offerCopy     = DriveApp.getFileById(offerTemplateId).makeCopy(`Offer Letter_${last}`, personFolder);
   const checklistCopy = DriveApp.getFileById(checklistId).makeCopy(`Onboarding Checklist_${last}`, personFolder);
   DriveApp.getFileById(CFG.TERM_LETTER_TEMPLATE_ID).makeCopy(`Termination Letter_${last}`, personFolder);

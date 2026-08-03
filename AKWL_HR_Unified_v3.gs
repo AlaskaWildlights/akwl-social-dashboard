@@ -418,6 +418,16 @@ function runOnboarding(sheet, headerMap, row) {
   const last     = getByField_(sheet, headerMap, row, 'LAST_NAME');
   if (!first || !last) return;
 
+  // Guard: if this employee already has a folder on record, onboarding already ran — skip.
+  // This prevents re-processing existing employees when triggers are first installed,
+  // or if HR accidentally re-edits the Date of Hire cell.
+  const key   = employeeKey_(first, last);
+  const props = PropertiesService.getScriptProperties();
+  if (props.getProperty(PROP_FOLDER_PREFIX + key)) {
+    Logger.log(`runOnboarding: skipping ${first} ${last} — already onboarded (FOLDER_ property exists).`);
+    return;
+  }
+
   const position = String(getByField_(sheet, headerMap, row, 'POSITION') || '');
   const isGuide  = /guide/i.test(position);
 
@@ -440,8 +450,6 @@ function runOnboarding(sheet, headerMap, row) {
   const parentFolder = DriveApp.getFolderById(parentFolderId);
   const personFolder = parentFolder.createFolder(folderName);
 
-  const key = employeeKey_(first, last);
-  const props = PropertiesService.getScriptProperties();
   props.setProperty(PROP_FOLDER_PREFIX + key, personFolder.getId());
 
   // Hyperlink First Name cell → folder
@@ -1260,6 +1268,64 @@ function checkUpcomingBirthdays_() {
 // DEBUG / MANUAL TEST HELPERS
 // Run these from the Apps Script editor to verify setup.
 // ─────────────────────────────────────────────────────────────
+
+/**
+ * ONE-TIME SETUP — Run this ONCE before installing triggers for the first time.
+ *
+ * Marks all existing employees and all existing Form Responses rows as already
+ * processed so the script never re-runs onboarding on them.
+ *
+ * What it does:
+ *   1. For every employee in Current Employees who has a Date of Hire → sets
+ *      FOLDER_<key> = 'LEGACY' so runOnboarding skips them permanently.
+ *      (If an employee already has a real folder ID in Script Properties from a
+ *      previous script version, this does NOT overwrite it.)
+ *   2. For every row in Form Responses (row 2+) → sets FORM_ROW_<n> = timestamp
+ *      so validateFormResponseProcessing_ never retries those old submissions.
+ *
+ * Safe to re-run: it never overwrites an existing property value.
+ */
+function markExistingEmployeesAsOnboarded() {
+  const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+  const empSheet  = ss.getSheetByName(CFG.TAB_CURRENT);
+  const headerMap = getHeaderMap_(empSheet);
+  const props     = PropertiesService.getScriptProperties();
+  const now       = new Date().toISOString();
+
+  // ── 1. Mark existing employees ───────────────────────────────
+  const lastEmpRow = empSheet.getLastRow();
+  let markedEmp = 0;
+  for (let row = CFG.DATA_START_ROW; row <= lastEmpRow; row++) {
+    const first      = String(getByField_(empSheet, headerMap, row, 'FIRST_NAME')  || '').trim();
+    const last       = String(getByField_(empSheet, headerMap, row, 'LAST_NAME')   || '').trim();
+    const dateOfHire = getByField_(empSheet, headerMap, row, 'DATE_OF_HIRE');
+    if (!first || !last || !dateOfHire) continue;
+
+    const folderKey = PROP_FOLDER_PREFIX + employeeKey_(first, last);
+    if (!props.getProperty(folderKey)) {
+      props.setProperty(folderKey, 'LEGACY');  // placeholder — prevents onboarding re-run
+      markedEmp++;
+      Logger.log(`  Marked as legacy: ${first} ${last}`);
+    } else {
+      Logger.log(`  Already has folder property: ${first} ${last} — skipped.`);
+    }
+  }
+
+  // ── 2. Mark existing Form Responses rows ────────────────────
+  const formSheet  = ss.getSheetByName(CFG.TAB_FORM_RESPONSES);
+  const lastFormRow = formSheet ? formSheet.getLastRow() : 0;
+  let markedForm = 0;
+  for (let row = 2; row <= lastFormRow; row++) {
+    const rowKey = PROP_FORM_ROW_PREFIX + row;
+    if (!props.getProperty(rowKey)) {
+      props.setProperty(rowKey, now);
+      markedForm++;
+    }
+  }
+
+  Logger.log(`markExistingEmployeesAsOnboarded complete: ${markedEmp} employee(s) marked as legacy, ${markedForm} form row(s) marked as processed.`);
+  Logger.log('You can now safely run installTriggers().');
+}
 
 /** Logs the detected header map for "current employees". Run this first to verify column detection. */
 function testShowHeaderMap() {

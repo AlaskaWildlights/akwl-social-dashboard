@@ -1379,3 +1379,45 @@ function testProcessFormRow() {
   if (!formSheet) { Logger.log('Form Responses tab not found.'); return; }
   processFormResponseRow_(formSheet, ROW_NUMBER);
 }
+
+/**
+ * ONE-TIME — Run this BEFORE markExistingEmployeesAsOnboarded() if you suspect
+ * any Form Response rows were never processed (e.g., trigger wasn't installed yet).
+ *
+ * Scans every row in Form Responses, finds any without a FORM_ROW_<n> lock,
+ * and processes them now. Logs exactly which rows were found and what happened.
+ * No throttle — runs fully every time.
+ */
+function processUnhandledFormResponses() {
+  const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+  const formSheet = ss.getSheetByName(CFG.TAB_FORM_RESPONSES);
+  if (!formSheet) { Logger.log('Form Responses tab not found.'); return; }
+
+  const props   = PropertiesService.getScriptProperties();
+  const lastRow = formSheet.getLastRow();
+  if (lastRow < 2) { Logger.log('Form Responses is empty.'); return; }
+
+  const unprocessed = [];
+  for (let row = 2; row <= lastRow; row++) {
+    if (!props.getProperty(PROP_FORM_ROW_PREFIX + row)) unprocessed.push(row);
+  }
+
+  if (!unprocessed.length) {
+    Logger.log('All Form Response rows are already processed. Nothing to do.');
+    return;
+  }
+
+  Logger.log(`Found ${unprocessed.length} unprocessed row(s): ${unprocessed.join(', ')}`);
+
+  unprocessed.forEach(row => {
+    Logger.log(`Processing row ${row}...`);
+    try {
+      handleFormResponseRow_(formSheet, row);
+      Logger.log(`  ✓ Row ${row} processed successfully.`);
+    } catch (err) {
+      Logger.log(`  ✗ Row ${row} failed: ${err.message}`);
+    }
+  });
+
+  Logger.log('processUnhandledFormResponses complete. Now safe to run markExistingEmployeesAsOnboarded().');
+}

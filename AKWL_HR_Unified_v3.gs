@@ -1,55 +1,62 @@
 /**
- * AKWL HR — Onboarding & Offboarding Automation  v3.6
+ * AKWL HR — Onboarding & Offboarding Automation  v3.7
  * Setup: run installTriggers(), authorize when prompted, delete triggers on old scripts.
- * TODO: fill OFFICE_PARENT_FOLDER_ID and OFFICE_OFFER_LETTER_TEMPLATE_ID in CFG.
  */
 
 // ─────────────────────────────────────────────────────────────
 // CONFIG
 // ─────────────────────────────────────────────────────────────
 const CFG = {
-  EMPLOYEE_SHEET_ID : '1lhB25hdKfARc6nGjbN9AwYGHQ_bsLRdGkeCuQA7Ow9w',
-  TAB_CURRENT        : 'Current Employees',   // exact case -- getSheetByName is case-sensitive
-  TAB_FORMER         : 'Former Employees',    // exact case -- getSheetByName is case-sensitive
-  TAB_FORM_RESPONSES : 'Form Responses',      // exact case -- the tab linked to the Onboarding Form
+  EMPLOYEE_SHEET_ID  : '1lhB25hdKfARc6nGjbN9AwYGHQ_bsLRdGkeCuQA7Ow9w',
+  TAB_CURRENT        : 'Current Employees',
+  TAB_FORMER         : 'Former Employees',
+  TAB_FORM_RESPONSES : 'Form Responses',
 
-  // Guides
-  GUIDES_PARENT_FOLDER_ID        : '1Ya0e276RRvVasEcOBchsqAW3cEVNMo1w',
-  GUIDE_OFFER_LETTER_TEMPLATE_ID : '1W1MAQhVm4nXu9RUrGS8UocD_Lf3UlsWjGwAra4d80XI',
-  GUIDE_CHECKLIST_TEMPLATE_ID    : '1Tr9jDUBoocBKGM2IvJoYwZDMVk2wyH_WHnkN-qnp_kA',
+  COMPANY_NAME : 'Alaska Wild Lights',
 
-  // Maintenance team (detailer, mechanic, lead mechanic)
-  // Folder naming: "Last Name, First Name (Role)"
-  MAINTENANCE_PARENT_FOLDER_ID        : '1NfaBoAoDSKqZI-PzQnPBhCXyzFoUPurm',
-  MAINTENANCE_OFFER_LETTER_TEMPLATE_ID: '1S0DzKnLOcSmEY6Xv-WDYO9JluxtSQeDCFJNmbWRrEk0',
+  // Guides — folder name: "First Last"
+  GUIDES_PARENT_FOLDER_ID     : '1Ya0e276RRvVasEcOBchsqAW3cEVNMo1w',
+  GUIDE_CHECKLIST_TEMPLATE_ID : '1Tr9jDUBoocBKGM2IvJoYwZDMVk2wyH_WHnkN-qnp_kA',
 
-  // Checklist for all non-guide employees (maintenance + future office staff)
-  NON_GUIDE_CHECKLIST_TEMPLATE_ID: '19LzGeqpE4eMnFJIuw7oXUy-Farw1dPNc_QbC-ZhyjvM',
+  // Maintenance (Lead Mechanic, Mechanic, Detailer) — folder name: "Last, First (Role)"
+  MAINTENANCE_PARENT_FOLDER_ID : '1NfaBoAoDSKqZI-PzQnPBhCXyzFoUPurm',
 
-  // TODO: office-staff onboarding (offer letter + parent folder) -- fill in once available
-  OFFICE_PARENT_FOLDER_ID        : '',
-  OFFICE_OFFER_LETTER_TEMPLATE_ID: '',
-  COMPANY_PROPERTY_TEMPLATE_ID   : '',
+  // Office (Office Assistant, Operations Manager, Social Media Lead) — folder name: "Last, First (Role)"
+  OFFICE_PARENT_FOLDER_ID : '1xAlbB72BLWaF49WiUz9AdQEWDyNgyuwr',
+
+  // Non-guide checklist (maintenance + office) — "adapt before sharing" warning sent for non-guides
+  NON_GUIDE_CHECKLIST_TEMPLATE_ID : '19LzGeqpE4eMnFJIuw7oXUy-Farw1dPNc_QbC-ZhyjvM',
+
+  // Fallback offer letter for unrecognized roles — must adapt Scope of Work + Compensation before sending
+  OFFER_LETTER_FALLBACK_ID : '1EOu2zyZEoUEuDg2vd9T4vHOSsmBZgn0VFVuCQEMiCzg',
+  OFFER_LETTERS_FOLDER_URL : 'https://drive.google.com/drive/folders/1MNpbdRWoqa_9ey6sqUepiv5uowsQw5pV',
+
+  // TODO: office comp calculator + bonus overview templates — fill when available
+  OFFICE_COMP_CALC_TEMPLATE_ID      : '',
+  OFFICE_BONUS_OVERVIEW_TEMPLATE_ID : '',
 
   TERM_LETTER_TEMPLATE_ID    : '1dS4FAsCporrVLiYXJZvP2g8sPTuKV9wJuOex5ulN0Bc',
-  FORMER_DOCS_FOLDER_ID      : '14A65GrTTV737kDOwEKd2IFk457CjzhpC',   // termination letters
-  FORMER_PERSONNEL_FOLDER_ID : '1pqlCfTXlkN707XANQap77RHg3qkPYkDN',  // all employee folders moved here at offboarding
+  FORMER_DOCS_FOLDER_ID      : '14A65GrTTV737kDOwEKd2IFk457CjzhpC',
+  FORMER_PERSONNEL_FOLDER_ID : '1pqlCfTXlkN707XANQap77RHg3qkPYkDN',  // Former Employees folder
 
   HR_CHECKLIST_URL          : 'https://docs.google.com/document/d/1gtcQ0adsPUIUZhDcA48cZhYCCaxeNL5XMSsSnYAD-d0/edit?tab=t.0',
   OFFBOARDING_CHECKLIST_URL : 'https://docs.google.com/document/d/1fBUM13Qmr4IcuV_kAVxs0MUyol1e6SqZ79toqi6OQ3k/edit?usp=drive_link',
 
-  INFO_EMAIL      : 'info@alaskawildlights.com',
-  JOSH_EMAIL      : 'joshuamcneal@alaskawildlights.com',
+  // Email routing — ALL HR notifications go TO MAIL_TO, CC MAIL_CC. Change here to reroute everything.
+  MAIL_TO  : 'info@alaskawildlights.com',
+  MAIL_CC  : 'joshuamcneal@alaskawildlights.com',
+
+  INFO_EMAIL      : 'info@alaskawildlights.com',  // script error emails only — keep in sync with MAIL_TO
   INSURANCE_EMAIL : 'Tabatha.Wilson@trucordia.com',
 
   CONTACT_GROUP_NAME : 'AKWL Team',
 
-  FOLLOW_UP_BUSINESS_DAYS : 9,
+  FOLLOW_UP_BUSINESS_DAYS : 5,
   STALE_SCHEDULE_MAX_DAYS : 30,
 
   TIMEZONE : 'America/Anchorage',
 
-  HEADER_ROWS    : [2, 3],  // rows where header text can live (group label row, field name row)
+  HEADER_ROWS    : [2, 3],
   DATA_START_ROW : 4,
 };
 
@@ -80,8 +87,21 @@ const FIELD = {
 };
 
 const PROP_OFFBOARD_PREFIX  = 'OFFBOARD_';
-const PROP_FOLDER_PREFIX    = 'FOLDER_';    // stores employee folder ID: FOLDER_jane_doe → driveId
-const PROP_FORM_ROW_PREFIX  = 'FORM_ROW_';  // tracks processed Form Responses rows: FORM_ROW_5 → ISO timestamp
+const PROP_FOLDER_PREFIX    = 'FOLDER_';      // FOLDER_<key>      → Drive folder ID
+const PROP_FORM_ROW_PREFIX  = 'FORM_ROW_';    // FORM_ROW_<n>      → ISO timestamp (processed lock)
+const PROP_OFFER_FILE_PREFIX = 'OFFER_FILE_'; // OFFER_FILE_<key>  → offer letter file ID (for start-date deletion)
+
+// Role → offer letter template ID. Checked in order; first match wins.
+// Lead Mechanic must come before plain Mechanic to avoid partial-match shadowing.
+const OFFER_LETTER_ROLES = [
+  { match: /guide/i,                          id: '1W1MAQhVm4nXu9RUrGS8UocD_Lf3UlsWjGwAra4d80XI' },
+  { match: /lead\s*mechanic/i,                id: '1S0DzKnLOcSmEY6Xv-WDYO9JluxtSQeDCFJNmbWRrEk0' },
+  { match: /\bmechanic\b/i,                   id: '1cQvtrPKuUOCeS86bGWi3oU1fDWMFqaobRrgY7o1gPOE'  },
+  { match: /detailer/i,                       id: '1GrxpLXicg5G7vIytDM2056nEv-68SnsKlPdYCz5v5kk'  },
+  { match: /office\s*assistant/i,             id: '18a0z-1XJZJMMvr6uaC0Gda9CseFcfsWkYkaLT1xBrgA'  },
+  { match: /operations?\s*manager/i,          id: '1hxrf6uVr_j32nN0rOlMbxCjS37VrT_s8tQX5p-rVv6w'  },
+  { match: /social\s*media|content\s*lead/i,  id: '10y99_HFjQQc0TVTbLlY2BU-0_HQWlkVUktdv77crUNE'  },
+];
 
 
 // ─────────────────────────────────────────────────────────────
@@ -281,7 +301,12 @@ function processFormResponseRow_(formSheet, row) {
   const first = String(rowValues[2] || '').trim();  // col C
   const last  = String(rowValues[3] || '').trim();  // col D
   if (!first || !last) {
-    Logger.log(`processFormResponseRow_: row ${row} has no name — skipping.`);
+    MailApp.sendEmail({
+      to: CFG.MAIL_TO,
+      subject: `AKWL HR: Form response row ${row} has no name`,
+      body: `Row ${row} in Form Responses was submitted but columns C (First Name) and/or D (Last Name) are empty. ` +
+        `Please check the Form Responses tab manually.\n\nTimestamp: ${timestamp}`,
+    });
     return;
   }
 
@@ -299,16 +324,24 @@ function processFormResponseRow_(formSheet, row) {
   const empRow     = findEmployeeRow_(empSheet, headerMap, first, last);
 
   if (!empRow) {
-    // Dump the full row so HR can copy it manually
-    const rawData = {};
-    headerRow.forEach((h, i) => { if (h) rawData[h] = rowValues[i]; });
-    MailApp.sendEmail(CFG.INFO_EMAIL, 'AKWL HR script: Form submitted for unknown employee',
-      `${first} ${last} submitted the onboarding form (row ${row} in Form Responses), ` +
-      `but no matching row was found in "${CFG.TAB_CURRENT}".\n\n` +
-      `Add them manually (Position + Date of Hire), then either:\n` +
-      `  a) Delete Script Property "FORM_ROW_${row}" and have them resubmit, or\n` +
-      `  b) Copy their answers below by hand.\n\n` +
-      `Form data:\n${JSON.stringify(rawData, null, 2)}`);
+    const lines = [];
+    headerRow.forEach((h, i) => {
+      if (!h) return;
+      const v = rowValues[i];
+      if (v !== '' && v !== null && v !== undefined) lines.push(`${h}: ${v}`);
+    });
+    MailApp.sendEmail({
+      to: CFG.MAIL_TO,
+      subject: `AKWL HR: Form submitted for unknown employee — ${first} ${last}`,
+      body: `${first} ${last} submitted the onboarding form (row ${row} in Form Responses), ` +
+        `but no matching row was found in "${CFG.TAB_CURRENT}".\n\n` +
+        `Add them manually (Position + Date of Hire), then either:\n` +
+        `  a) Delete Script Property "FORM_ROW_${row}" and have them resubmit, or\n` +
+        `  b) Copy their answers below by hand.\n\n` +
+        `─────────────────────────────────\n` +
+        `${lines.join('\n')}\n` +
+        `─────────────────────────────────`,
+    });
     return;
   }
 
@@ -339,9 +372,9 @@ function processFormResponseRow_(formSheet, row) {
   if (drivingRecUrl) setByField_(empSheet, headerMap, empRow, 'DRIVING_HISTORY',  '✓');
   if (profilePicUrl) setByField_(empSheet, headerMap, empRow, 'PHOTO_BIO',        '✓');
 
-  if (/^yes/i.test(getFormVal('Just a quick reminder! Have you signed your Offer Letter via Docuseal yet?'))) {
-    setByField_(empSheet, headerMap, empRow, 'CONTRACT_DOCUSEAL', '✓');
-  }
+  const docusealAnswer = getFormVal('Just a quick reminder! Have you signed your Offer Letter via Docuseal yet?');
+  if      (/^yes/i.test(docusealAnswer)) setByField_(empSheet, headerMap, empRow, 'CONTRACT_DOCUSEAL', '✓');
+  else if (/^no/i.test(docusealAnswer))  setByField_(empSheet, headerMap, empRow, 'CONTRACT_DOCUSEAL', '✕');
 
   // ── Move uploaded files into the employee's onboarding folder ─
   const folderId = PropertiesService.getScriptProperties()
@@ -353,10 +386,24 @@ function processFormResponseRow_(formSheet, row) {
     if (drivingRecUrl)  moveFileToEmployeeFolder_(drivingRecUrl,  folderId, `Driving Record_${last}`);
   }
 
-  // Add to Google Contacts now that both email and phone are confirmed on file
+  // Reschedule offer letter deletion to 5 days after confirmed start date
+  const startDateVal = getFormVal('Start date');
+  if (startDateVal) {
+    const offerFileId = PropertiesService.getScriptProperties()
+      .getProperty(PROP_OFFER_FILE_PREFIX + employeeKey_(first, last));
+    if (offerFileId) {
+      const deleteOn = new Date(startDateVal);
+      deleteOn.setDate(deleteOn.getDate() + 5);
+      scheduleDocDeletionOn_(offerFileId, deleteOn);
+    }
+  }
+
+  // Add to Google Contacts with role, DOB, and company
   const personalEmail = getFormVal('Email');
   const phone         = getFormVal('Phone Number');
-  if (personalEmail) addContactSafely_(first, last, personalEmail, phone);
+  const role          = String(getByField_(empSheet, headerMap, empRow, 'POSITION') || '').trim();
+  const dob           = getFormVal('Date of Birth');
+  if (personalEmail) addContactSafely_(first, last, personalEmail, phone || undefined, role || undefined, dob || undefined, CFG.COMPANY_NAME);
 
   Logger.log(`Form row ${row} applied to employee row ${empRow} (${first} ${last}).`);
 }
@@ -370,88 +417,97 @@ function runOnboarding(sheet, headerMap, row) {
   const last     = getByField_(sheet, headerMap, row, 'LAST_NAME');
   if (!first || !last) return;
 
-  const position     = String(getByField_(sheet, headerMap, row, 'POSITION') || '');
-  const isGuide      = /guide/i.test(position);
-  const isMaintenance = /detailer|mechanic/i.test(position);  // covers detailer, mechanic, lead mechanic
+  const position = String(getByField_(sheet, headerMap, row, 'POSITION') || '');
+  const isGuide  = /guide/i.test(position);
 
-  let parentFolderId, offerTemplateId, checklistId, folderName;
+  // Determine parent folder based on role category
+  const parentFolderId = isGuide                                   ? CFG.GUIDES_PARENT_FOLDER_ID
+    : /lead\s*mechanic|\bmechanic\b|detailer/i.test(position)      ? CFG.MAINTENANCE_PARENT_FOLDER_ID
+    : CFG.OFFICE_PARENT_FOLDER_ID;  // office roles + unknown fallback
 
-  if (isGuide) {
-    parentFolderId  = CFG.GUIDES_PARENT_FOLDER_ID;
-    offerTemplateId = CFG.GUIDE_OFFER_LETTER_TEMPLATE_ID;
-    checklistId     = CFG.GUIDE_CHECKLIST_TEMPLATE_ID;
-    folderName      = `${first} ${last}`;
-  } else if (isMaintenance) {
-    parentFolderId  = CFG.MAINTENANCE_PARENT_FOLDER_ID;
-    offerTemplateId = CFG.MAINTENANCE_OFFER_LETTER_TEMPLATE_ID;
-    checklistId     = CFG.NON_GUIDE_CHECKLIST_TEMPLATE_ID;
-    folderName      = `${last}, ${first} (${position})`;
-  } else {
-    // Office staff — offer letter + parent folder still TODO
-    parentFolderId  = CFG.OFFICE_PARENT_FOLDER_ID;
-    offerTemplateId = CFG.OFFICE_OFFER_LETTER_TEMPLATE_ID;
-    checklistId     = CFG.NON_GUIDE_CHECKLIST_TEMPLATE_ID;
-    folderName      = `${last}, ${first} (${position})`;
-  }
+  // Determine offer letter: first matching role wins, else use generic fallback
+  const roleEntry       = OFFER_LETTER_ROLES.find(r => r.match.test(position));
+  const offerTemplateId = roleEntry ? roleEntry.id : CFG.OFFER_LETTER_FALLBACK_ID;
+  const isFallback      = !roleEntry;
 
-  if (!parentFolderId || !offerTemplateId || !checklistId) {
-    MailApp.sendEmail(CFG.INFO_EMAIL, `Action needed: manual onboarding folder for ${first} ${last}`,
-      `${first} ${last} (${position}) has a Date of Hire, but the onboarding templates ` +
-      `for this role aren't fully configured in the script yet.\n\n` +
-      `Please build their onboarding folder manually for now.\n\n` +
-      `Add the OFFICE_* template IDs to CFG and this step runs automatically next time.`);
-    return;
-  }
+  // Checklist: guides get their own template; everyone else shares the non-guide one
+  const checklistId = isGuide ? CFG.GUIDE_CHECKLIST_TEMPLATE_ID : CFG.NON_GUIDE_CHECKLIST_TEMPLATE_ID;
 
-  const parentFolder  = DriveApp.getFolderById(parentFolderId);
-  const personFolder  = parentFolder.createFolder(folderName);
+  // Folder name: guides = "First Last", everyone else = "Last, First (Role)"
+  const folderName = isGuide ? `${first} ${last}` : `${last}, ${first} (${position})`;
 
-  // Store folder ID so onEmployeeFormSubmit can move uploaded files here later
-  PropertiesService.getScriptProperties()
-    .setProperty(PROP_FOLDER_PREFIX + employeeKey_(first, last), personFolder.getId());
+  const parentFolder = DriveApp.getFolderById(parentFolderId);
+  const personFolder = parentFolder.createFolder(folderName);
 
-  // Insert folder hyperlink into the First Name cell (col A) so HR can click straight to the folder
+  const key = employeeKey_(first, last);
+  const props = PropertiesService.getScriptProperties();
+  props.setProperty(PROP_FOLDER_PREFIX + key, personFolder.getId());
+
+  // Hyperlink First Name cell → folder
   const firstNameCol = col_(headerMap, 'FIRST_NAME');
   if (firstNameCol) {
     sheet.getRange(row, firstNameCol)
       .setFormula(`=HYPERLINK("${personFolder.getUrl()}","${first.replace(/"/g, '""')}")`);
   }
 
-  const offerCopy     = DriveApp.getFileById(offerTemplateId).makeCopy(`Offer Letter_${last}`, personFolder);
-  const checklistCopy = DriveApp.getFileById(checklistId).makeCopy(`Onboarding Checklist_${last}`, personFolder);
-  DriveApp.getFileById(CFG.TERM_LETTER_TEMPLATE_ID).makeCopy(`Termination Letter_${last}`, personFolder);
+  const offerCopy = DriveApp.getFileById(offerTemplateId)
+    .makeCopy(`Offer Letter_${last}`, personFolder);
 
-  // Start Date may already be filled when HR sets Date of Hire — use it if available
+  // Checklist file name: "Last, First_Onboarding Checklist"
+  const checklistCopy = DriveApp.getFileById(checklistId)
+    .makeCopy(`${last}, ${first}_Onboarding Checklist`, personFolder);
+
+  DriveApp.getFileById(CFG.TERM_LETTER_TEMPLATE_ID)
+    .makeCopy(`Termination Letter_${last}`, personFolder);
+
   const startDate = getByField_(sheet, headerMap, row, 'START_DATE');
   fillOfferLetterPlaceholders_(offerCopy.getId(), first, last, startDate || null);
-  // Checklist is a straight copy — no placeholders to fill.
+
+  // Store offer file ID so form submit can reschedule deletion once start date is confirmed
+  props.setProperty(PROP_OFFER_FILE_PREFIX + key, offerCopy.getId());
+  if (startDate) {
+    const deleteOn = new Date(startDate);
+    deleteOn.setDate(deleteOn.getDate() + 5);
+    scheduleDocDeletionOn_(offerCopy.getId(), deleteOn);
+  }
+  // Checklist expires 15 days from today (not start-date based)
+  scheduleDocDeletion_(checklistCopy.getId(), 15);
+
+  // HR notification
+  const fallbackNote = isFallback
+    ? `\n⚠️  UNKNOWN ROLE: No offer letter template exists for "${position}". ` +
+      `A generic adaptable template was used — please update the Scope of Work and ` +
+      `Compensation sections before sending.\nAll offer letters: ${CFG.OFFER_LETTERS_FOLDER_URL}\n`
+    : '';
+  const checklistNote = !isGuide
+    ? `\n⚠️  CHECKLIST: The non-guide checklist template must be adapted for ${first}'s role ` +
+      `(${position}) before sharing with the employee.\n`
+    : '';
 
   MailApp.sendEmail({
-    to: CFG.INFO_EMAIL, cc: CFG.JOSH_EMAIL,
+    to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
     subject: `New Employee Onboarding — ${first} ${last}`,
     body: `${first} ${last} (${position}) has a Date of Hire entered.\n\n` +
       `Folder:               ${personFolder.getUrl()}\n` +
       `Offer Letter:         ${offerCopy.getUrl()}\n` +
-      `Onboarding Checklist: ${checklistCopy.getUrl()}\n\n` +
-      `To complete the onboarding process, remember to complete each step on this checklist:\n` +
-      `${CFG.HR_CHECKLIST_URL}`,
+      `Onboarding Checklist: ${checklistCopy.getUrl()}\n` +
+      `${fallbackNote}${checklistNote}\n` +
+      `HR onboarding checklist:\n${CFG.HR_CHECKLIST_URL}`,
   });
 
   GmailApp.createDraft(CFG.INSURANCE_EMAIL, `Insurance Update: New Hire — ${first} ${last}`,
     `Tabatha,\n\nPlease see attached for documentation regarding our new hire ` +
     `(${first} ${last}) to update our insurance.\n\n` +
-    `Thanks in advance!\n\n---\nNote for sender: please CC ${CFG.JOSH_EMAIL} before sending.`);
+    `Thanks in advance!\n\n---\nNote for sender: please CC ${CFG.MAIL_CC} before sending.`);
 
   const email = getByField_(sheet, headerMap, row, 'PERSONAL_EMAIL');
-
   if (email) {
-    const welcomeBody =
+    GmailApp.createDraft(email, 'Welcome to Alaska Wild Lights!',
       `Welcome to Alaska Wild Lights, ${first}!\n\n` +
       `We're excited to have you join our team. To complete your onboarding, please follow these steps:\n\n` +
-      `STEP 1: SIGN YOUR OFFER LETTER (DUE WITHIN 5 DAYS)\n` +
-      `Open your onboarding folder (see link below) and review your Offer Letter document. ` +
-      `Please sign and date it and return it within 5 days of receiving this email. ` +
-      `After 5 days, the document will expire.\n\n` +
+      `STEP 1: CHECK YOUR EMAIL (INCLUDING SPAM) FOR YOUR DOCUSEAL INVITE\n` +
+      `You should receive a DocuSeal email invitation to sign your Offer Letter digitally. ` +
+      `Check your inbox and spam folder and sign it as soon as possible.\n\n` +
       `STEP 2: COMPLETE THE ONBOARDING FORM\n` +
       `After signing your offer letter, please complete this form: https://forms.gle/DqnBvSXfjzeDzeiw9\n\n` +
       `When filling out the form, please have these items ready:\n` +
@@ -460,27 +516,29 @@ function runOnboarding(sheet, headerMap, row) {
       `• Emergency contact name and phone number\n` +
       `• Driver's license or state ID\n` +
       `• Proof of driving history\n` +
-      `• Professional headshot/bio photo (for guides)\n` +
+      `• Professional headshot/bio photo\n` +
       `• Any documents listed in your Onboarding Checklist\n\n` +
+      `STEP 3: COMPLETE YOUR ONBOARDING CHECKLIST (DUE WITHIN 15 DAYS OF YOUR START DATE)\n` +
+      `Your Onboarding Checklist is in your onboarding folder. Please complete all items ` +
+      `within 15 days of your start date.\n\n` +
       `YOUR ONBOARDING FOLDER:\n` +
       `${personFolder.getUrl()}\n\n` +
-      `This folder contains:\n` +
-      `• Offer Letter (sign within 5 days)\n` +
-      `• Onboarding Checklist (shows all requirements)\n` +
-      `• Any role-specific documents\n\n` +
       `Questions? Reach out to info@alaskawildlights.com\n\n` +
-      `Welcome aboard!\n` +
-      `Alaska Wild Lights Team`;
+      `Welcome aboard!\nAlaska Wild Lights Team`);
 
-    GmailApp.createDraft(email, 'Welcome to Alaska Wild Lights!', welcomeBody);
+    // 15-day checklist reminder draft — send manually when the time comes
+    GmailApp.createDraft(email, `Reminder: Complete Your Onboarding Checklist — Alaska Wild Lights`,
+      `Hi ${first},\n\n` +
+      `This is a reminder that your Onboarding Checklist is due within 15 days of your start date. ` +
+      `Please make sure all items are completed.\n\n` +
+      `Your onboarding folder: ${personFolder.getUrl()}\n\n` +
+      `If you have any questions, don't hesitate to reach out.\n\n` +
+      `Best,\nAlaska Wild Lights Team`);
   }
 
   // Contact added later in processFormResponseRow_ once email + phone arrive via the form
 
-  scheduleDocDeletion_(offerCopy.getId(), 5);
-  scheduleDocDeletion_(checklistCopy.getId(), 15);
-
-  Logger.log(`Onboarding complete for ${first} ${last}.`);
+  Logger.log(`Onboarding complete for ${first} ${last} (${position})${isFallback ? ' — FALLBACK template' : ''}.`);
 }
 
 /**
@@ -574,11 +632,13 @@ function executeOffboarding_(entry) {
     const row       = findEmployeeRow_(sheet, headerMap, entry.first, entry.last);
 
     if (!row) {
-      MailApp.sendEmail(CFG.INFO_EMAIL,
-        `CRITICAL: offboarding due for ${entry.first} ${entry.last}, but row not found`,
-        `Their End Date arrived but their row isn't in "${CFG.TAB_CURRENT}" anymore. ` +
-        `Please offboard them manually. This will repeat daily until resolved ` +
-        `(stops automatically after ${CFG.STALE_SCHEDULE_MAX_DAYS} days).`);
+      MailApp.sendEmail({
+        to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
+        subject: `CRITICAL: offboarding due for ${entry.first} ${entry.last}, but row not found`,
+        body: `Their End Date arrived but their row isn't in "${CFG.TAB_CURRENT}" anymore. ` +
+          `Please offboard them manually. This will repeat daily until resolved ` +
+          `(stops automatically after ${CFG.STALE_SCHEDULE_MAX_DAYS} days).`,
+      });
       return false;
     }
 
@@ -595,7 +655,7 @@ function executeOffboarding_(entry) {
     doc.saveAndClose();
 
     MailApp.sendEmail({
-      to: CFG.JOSH_EMAIL, cc: CFG.INFO_EMAIL,
+      to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
       subject: `Employee Off-Boarding — ${entry.first} ${entry.last}`,
       body: `${entry.first} ${entry.last}'s employment ends ${endDateFormatted}.\n\n` +
         `Termination letter: ${newFile.getUrl()}\n\n` +
@@ -807,7 +867,7 @@ function validateFormResponseProcessing_() {
 
 function sendFollowUpReminder_(entry) {
   MailApp.sendEmail({
-    to: CFG.INFO_EMAIL, cc: CFG.JOSH_EMAIL,
+    to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
     subject: `Action Required: Final Off-Boarding Steps — ${entry.first} ${entry.last}`,
     body: `This is the ${CFG.FOLLOW_UP_BUSINESS_DAYS}-business-day follow-up for ` +
       `${entry.first} ${entry.last} (terminated ${formatDate_(new Date(entry.endDate + 'T00:00:00'))}).\n\nPlease:\n` +
@@ -827,11 +887,13 @@ function processStaleSchedules_(props) {
     if (entry.executed || entry.staleAlertSent) return;
     const daysOld = (now - new Date(entry.scheduledOn)) / 86400000;
     if (daysOld > CFG.STALE_SCHEDULE_MAX_DAYS) {
-      MailApp.sendEmail(CFG.INFO_EMAIL,
-        `AKWL HR script: stuck offboarding entry for ${entry.first} ${entry.last}`,
-        `This offboarding has failed to execute for over ${CFG.STALE_SCHEDULE_MAX_DAYS} days ` +
-        `(row likely deleted or renamed manually). This is the LAST automated alert -- ` +
-        `clear it manually in Script Properties (key: ${key}) if no longer needed.`);
+      MailApp.sendEmail({
+        to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
+        subject: `AKWL HR: stuck offboarding entry for ${entry.first} ${entry.last}`,
+        body: `This offboarding has failed to execute for over ${CFG.STALE_SCHEDULE_MAX_DAYS} days ` +
+          `(row likely deleted or renamed manually). This is the LAST automated alert — ` +
+          `clear it manually in Script Properties (key: ${key}) if no longer needed.`,
+      });
       entry.staleAlertSent = true;
       props.setProperty(key, JSON.stringify(entry));
     }
@@ -842,7 +904,7 @@ function processStaleSchedules_(props) {
 // ─────────────────────────────────────────────────────────────
 // GOOGLE CONTACTS  (replaces "0040")
 // ─────────────────────────────────────────────────────────────
-function addContactSafely_(first, last, email, phone) {
+function addContactSafely_(first, last, email, phone, role, dob, company) {
   if (!isValidEmail_(email)) return;
   try {
     if (getContactResourceName_(email)) return;
@@ -851,6 +913,11 @@ function addContactSafely_(first, last, email, phone) {
       emailAddresses: [{ value: email, type: 'work' }],
     };
     if (phone) body.phoneNumbers = [{ value: phone, type: 'mobile' }];
+    if (company || role) body.organizations = [{ name: company || '', title: role || '', type: 'work', current: true }];
+    if (dob) {
+      const d = new Date(dob);
+      if (!isNaN(d.getTime())) body.birthdays = [{ date: { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() } }];
+    }
     const contact = People.People.createContact(body);
     addToTeamGroup_(contact.resourceName);
     Logger.log(`Contact added: ${first} ${last} <${email}>`);
@@ -954,10 +1021,19 @@ function scheduleDocDeletion_(fileId, daysFromNow) {
   PropertiesService.getScriptProperties().setProperty('DELETE_DOC_' + fileId, deleteOn.toISOString());
 }
 
+function scheduleDocDeletionOn_(fileId, date) {
+  PropertiesService.getScriptProperties().setProperty('DELETE_DOC_' + fileId, new Date(date).toISOString());
+}
+
 function cleanupScheduledDocDeletions_() {
   const props = PropertiesService.getScriptProperties();
-  const all   = props.getProperties();
-  const now   = new Date();
+  const lastCheckKey = 'CLEANUP_DOCS_LAST_CHECK';
+  const lastCheck = props.getProperty(lastCheckKey);
+  const now = new Date();
+  if (lastCheck && (now - new Date(lastCheck)) / (1000 * 60 * 60 * 24) < 3) return;
+  props.setProperty(lastCheckKey, now.toISOString());
+
+  const all = props.getProperties();
   Object.keys(all).forEach(key => {
     if (!key.startsWith('DELETE_DOC_')) return;
     if (new Date(all[key]) <= now) {
@@ -1028,8 +1104,9 @@ function processDocusealEmails_() {
 
       const nameMatch = mainPdf.getName().replace(/\.pdf$/i, '').match(/^(.+?)_/);
       if (!nameMatch) {
-        MailApp.sendEmail(CFG.INFO_EMAIL, 'DocuSeal: could not parse name from attachment',
-          `File: ${mainPdf.getName()}\nSubject: ${msg.getSubject()}`);
+        MailApp.sendEmail({ to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
+          subject: 'DocuSeal: could not parse name from attachment',
+          body: `File: ${mainPdf.getName()}\nSubject: ${msg.getSubject()}` });
         props.setProperty(msgKey, new Date().toISOString());
         return;
       }
@@ -1047,8 +1124,9 @@ function processDocusealEmails_() {
         last  = namePart;
         first = findFirstNameByLast_(last);
         if (!first) {
-          MailApp.sendEmail(CFG.INFO_EMAIL, `DocuSeal: could not find employee with last name "${last}"`,
-            `File: ${mainPdf.getName()}\nSubject: ${msg.getSubject()}\n\nPlease save the attachments manually.`);
+          MailApp.sendEmail({ to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
+            subject: `DocuSeal: could not find employee with last name "${last}"`,
+            body: `File: ${mainPdf.getName()}\nSubject: ${msg.getSubject()}\n\nPlease save the attachments manually.` });
           props.setProperty(msgKey, new Date().toISOString());
           return;
         }
@@ -1056,9 +1134,10 @@ function processDocusealEmails_() {
 
       const folderId = props.getProperty(PROP_FOLDER_PREFIX + employeeKey_(first, last));
       if (!folderId) {
-        MailApp.sendEmail(CFG.INFO_EMAIL, `DocuSeal: no onboarding folder found for ${first} ${last}`,
-          `Received signed offer letter but no Drive folder is on record.\n` +
-          `Please save the attachments manually.\nSubject: ${msg.getSubject()}`);
+        MailApp.sendEmail({ to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
+          subject: `DocuSeal: no onboarding folder found for ${first} ${last}`,
+          body: `Received signed offer letter but no Drive folder is on record.\n` +
+            `Please save the attachments manually.\nSubject: ${msg.getSubject()}` });
         props.setProperty(msgKey, new Date().toISOString());
         return;
       }
@@ -1123,9 +1202,11 @@ function checkEmployeeContacts_() {
     const last  = String(getByField_(sheet, headerMap, row, 'LAST_NAME')      || '').trim();
     const email = String(getByField_(sheet, headerMap, row, 'PERSONAL_EMAIL') || '').trim();
     const phone = String(getByField_(sheet, headerMap, row, 'PHONE')          || '').trim();
+    const role  = String(getByField_(sheet, headerMap, row, 'POSITION')       || '').trim();
+    const dob   = getByField_(sheet, headerMap, row, 'DOB');
     if (!first || !last || !isValidEmail_(email)) continue;
     if (!getContactResourceName_(email)) {
-      addContactSafely_(first, last, email, phone || undefined);
+      addContactSafely_(first, last, email, phone || undefined, role || undefined, dob || undefined, CFG.COMPANY_NAME);
       added++;
     }
   }
@@ -1171,10 +1252,9 @@ function checkUpcomingBirthdays_() {
     if (lastYear === String(birthday.getFullYear())) continue;  // already sent this year
 
     MailApp.sendEmail({
-      to      : CFG.INFO_EMAIL,
-      subject : `Birthday in 3 days: ${first} ${last}`,
-      body    : `${first} ${last}'s birthday is on ${formatDate_(birthday)}.\n\n` +
-                `Consider sending a birthday message!`,
+      to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
+      subject: `Birthday in 3 days: ${first} ${last}`,
+      body: `${first} ${last}'s birthday is on ${formatDate_(birthday)}.\n\nConsider sending a birthday message!`,
     });
 
     props.setProperty(propKey, String(birthday.getFullYear()));

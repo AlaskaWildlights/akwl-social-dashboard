@@ -1310,13 +1310,41 @@ function markExistingEmployeesAsOnboarded() {
     const dateOfHire = getByField_(empSheet, headerMap, row, 'DATE_OF_HIRE');
     if (!first || !last || !dateOfHire) continue;
 
-    const onboardedKey = PROP_ONBOARDED_PREFIX + employeeKey_(first, last);
+    const empKey       = employeeKey_(first, last);
+    const onboardedKey = PROP_ONBOARDED_PREFIX + empKey;
     if (!props.getProperty(onboardedKey)) {
       props.setProperty(onboardedKey, 'LEGACY');
       markedEmp++;
       Logger.log(`  Marked as legacy: ${first} ${last}`);
     } else {
       Logger.log(`  Already marked: ${first} ${last} — skipped.`);
+    }
+
+    // Try to locate and register their existing Drive folder so offboarding
+    // puts the termination letter in the right place (not the generic fallback).
+    const folderKey = PROP_FOLDER_PREFIX + empKey;
+    if (!props.getProperty(folderKey)) {
+      const position = String(getByField_(empSheet, headerMap, row, 'POSITION') || '').trim();
+      const isGuide  = /guide/i.test(position);
+      const parentId = isGuide
+        ? CFG.GUIDES_PARENT_FOLDER_ID
+        : /lead\s*mechanic|\bmechanic\b|detailer/i.test(position)
+          ? CFG.MAINTENANCE_PARENT_FOLDER_ID
+          : CFG.OFFICE_PARENT_FOLDER_ID;
+      const expectedName = isGuide
+        ? `${last}, ${first}`
+        : `${last}, ${first} (${position})`;
+      try {
+        const iter = DriveApp.getFolderById(parentId).getFoldersByName(expectedName);
+        if (iter.hasNext()) {
+          props.setProperty(folderKey, iter.next().getId());
+          Logger.log(`    Folder found and registered: "${expectedName}"`);
+        } else {
+          Logger.log(`    ⚠️  No folder found for "${expectedName}" — set FOLDER_${empKey} manually in Script Properties if needed.`);
+        }
+      } catch (e) {
+        Logger.log(`    Could not search folder for ${first} ${last}: ${e.message}`);
+      }
     }
   }
 

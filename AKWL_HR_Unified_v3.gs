@@ -1366,36 +1366,6 @@ function testDebugProperties() {
   Logger.log(JSON.stringify(PropertiesService.getScriptProperties().getProperties(), null, 2));
 }
 
-/**
- * Simulates processing a specific row from Form Responses.
- * Change ROW_NUMBER to the actual row you want to re-process.
- * Make sure to delete the FORM_ROW_<n> Script Property first
- * (Project Settings → Script Properties) otherwise it will skip.
- */
-/** Lists all FORM_ROW_ locks in the logs so you can see which rows are marked as processed. */
-function debugListFormRowLocks() {
-  const props = PropertiesService.getScriptProperties().getProperties();
-  const locks = Object.keys(props).filter(k => k.startsWith(PROP_FORM_ROW_PREFIX)).sort();
-  if (!locks.length) { Logger.log('No FORM_ROW_ locks found.'); return; }
-  locks.forEach(k => Logger.log(`${k} → ${props[k]}`));
-  Logger.log(`Total: ${locks.length} row(s) marked as processed.`);
-}
-
-/** Clears the lock for a specific Form Response row so it can be reprocessed. */
-function debugClearFormRowLock() {
-  const ROW_NUMBER = 2;  // ← change to the row number you want to unlock
-  const key = PROP_FORM_ROW_PREFIX + ROW_NUMBER;
-  PropertiesService.getScriptProperties().deleteProperty(key);
-  Logger.log(`Cleared lock: ${key}. Now run processUnhandledFormResponses() to reprocess it.`);
-}
-
-function testProcessFormRow() {
-  const ROW_NUMBER = 2;  // change to the row you want to process
-  const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
-  const formSheet = ss.getSheetByName(CFG.TAB_FORM_RESPONSES);
-  if (!formSheet) { Logger.log('Form Responses tab not found.'); return; }
-  processFormResponseRow_(formSheet, ROW_NUMBER);
-}
 
 /**
  * Run this BEFORE markExistingEmployeesAsOnboarded() and any time you suspect

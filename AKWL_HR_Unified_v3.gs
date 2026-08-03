@@ -46,7 +46,7 @@ const CFG = {
 
   // Email routing — ALL HR notifications go TO MAIL_TO, CC MAIL_CC. Change here to reroute everything.
   MAIL_TO  : 'info@alaskawildlights.com',
-  MAIL_CC  : 'joshuamcneal@alaskawildlights.com',
+  MAIL_CC  : 'info@alaskawildlights.com',  // TEST MODE — change back to joshuamcneal@alaskawildlights.com for production
 
   INFO_EMAIL      : 'info@alaskawildlights.com',  // script error emails only — keep in sync with MAIL_TO
   INSURANCE_EMAIL : 'Tabatha.Wilson@trucordia.com',
@@ -78,7 +78,7 @@ const FIELD = {
   UNIFORM_SIZE      : 'Uniform Size',
   CONTRACT_DOCUSEAL : 'Contract (Docuseal)',
   PHOTO_BIO         : 'Photo + Bio',
-  DRIVING_HISTORY   : 'Driving History',
+  DRIVING_HISTORY   : 'Driving Record',
   DRIVERS_LICENSE   : "Driver's License",
   STATE_OF_ISSUE    : 'State of Issue',
   LICENSE_NUMBER    : 'License #',

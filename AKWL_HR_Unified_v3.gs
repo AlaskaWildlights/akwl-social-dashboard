@@ -998,10 +998,15 @@ function moveFileToEmployeeFolder_(driveUrl, destFolderId, newName) {
  *   "Last_AKWL Offer Letter.pdf"         → looks up first name from sheet
  */
 function processDocusealEmails_() {
+  const props = PropertiesService.getScriptProperties();
+  const lastCheckKey = 'DOCUSEAL_LAST_CHECK';
+  const lastCheck = props.getProperty(lastCheckKey);
+  const now = new Date();
+  if (lastCheck && (now - new Date(lastCheck)) / (1000 * 60 * 60 * 24) < 15) return;
+  props.setProperty(lastCheckKey, now.toISOString());
+
   const threads = GmailApp.search('from:info@docuseal.com newer_than:60d', 0, 50);
   if (!threads.length) return;
-
-  const props = PropertiesService.getScriptProperties();
 
   threads.forEach(thread => {
     thread.getMessages().forEach(msg => {

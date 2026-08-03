@@ -1372,6 +1372,23 @@ function testDebugProperties() {
  * Make sure to delete the FORM_ROW_<n> Script Property first
  * (Project Settings → Script Properties) otherwise it will skip.
  */
+/** Lists all FORM_ROW_ locks in the logs so you can see which rows are marked as processed. */
+function debugListFormRowLocks() {
+  const props = PropertiesService.getScriptProperties().getProperties();
+  const locks = Object.keys(props).filter(k => k.startsWith(PROP_FORM_ROW_PREFIX)).sort();
+  if (!locks.length) { Logger.log('No FORM_ROW_ locks found.'); return; }
+  locks.forEach(k => Logger.log(`${k} → ${props[k]}`));
+  Logger.log(`Total: ${locks.length} row(s) marked as processed.`);
+}
+
+/** Clears the lock for a specific Form Response row so it can be reprocessed. */
+function debugClearFormRowLock() {
+  const ROW_NUMBER = 2;  // ← change to the row number you want to unlock
+  const key = PROP_FORM_ROW_PREFIX + ROW_NUMBER;
+  PropertiesService.getScriptProperties().deleteProperty(key);
+  Logger.log(`Cleared lock: ${key}. Now run processUnhandledFormResponses() to reprocess it.`);
+}
+
 function testProcessFormRow() {
   const ROW_NUMBER = 2;  // change to the row you want to process
   const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);

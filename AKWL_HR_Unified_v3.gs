@@ -382,10 +382,16 @@ function processFormResponseRow_(formSheet, row) {
   const folderId = PropertiesService.getScriptProperties()
     .getProperty(PROP_FOLDER_PREFIX + employeeKey_(first, last));
 
+  // Signed offer letter uploaded directly in the form
+  // Form field must be named exactly: "Signed Offer Letter (PDF)"
+  const signedOfferUrl = getFormVal('Signed Offer Letter (PDF)');
+  if (signedOfferUrl) setByField_(empSheet, headerMap, empRow, 'CONTRACT_DOCUSEAL', '✓');
+
   if (folderId) {
-    if (profilePicUrl)  moveFileToEmployeeFolder_(profilePicUrl,  folderId, `Profile Picture_${last}`);
-    if (licenseUrl)     moveFileToEmployeeFolder_(licenseUrl,     folderId, `Driver License_${last}`);
-    if (drivingRecUrl)  moveFileToEmployeeFolder_(drivingRecUrl,  folderId, `Driving Record_${last}`);
+    if (profilePicUrl)   moveFileToEmployeeFolder_(profilePicUrl,   folderId, `Profile Picture_${last}`);
+    if (licenseUrl)      moveFileToEmployeeFolder_(licenseUrl,      folderId, `Driver License_${last}`);
+    if (drivingRecUrl)   moveFileToEmployeeFolder_(drivingRecUrl,   folderId, `Driving Record_${last}`);
+    if (signedOfferUrl)  moveFileToEmployeeFolder_(signedOfferUrl,  folderId, `Signed Offer Letter_${last}`);
   }
 
   // Reschedule offer letter deletion to 5 days after confirmed start date
@@ -517,12 +523,14 @@ function runOnboarding(sheet, headerMap, row) {
       `Here's everything you need to get started. There are three things to complete before Day 1, ` +
       `and we've made it as straightforward as possible.\n\n` +
       `STEP 1 — SIGN YOUR OFFER LETTER\n` +
-      `You'll receive a separate email from DocuSeal with your offer letter. Please check your inbox ` +
-      `(and your spam folder — just in case!) and sign it at your earliest convenience. ` +
-      `Once that's done, move on to Step 2.\n\n` +
+      `Check your inbox for an email from DocuSeal with your offer letter (check your spam folder too). ` +
+      `Sign it electronically at your earliest convenience. ` +
+      `Once signed, DocuSeal will send you a confirmation email with your signed PDF attached — ` +
+      `download and save that file. You will upload it in Step 2.\n\n` +
       `STEP 2 — COMPLETE YOUR ONBOARDING FORM\n` +
       `Complete Your Onboarding Form Here: ${CFG.ONBOARDING_FORM_URL}\n\n` +
-      `Before you sit down to fill it out, have the following ready — it'll take about 5 minutes if you do:\n\n` +
+      `Before you sit down to fill it out, have the following ready — it'll take about 5 minutes:\n\n` +
+      `• Your signed Offer Letter PDF (from DocuSeal's confirmation email — save it first)\n` +
       `• A headshot photo (clear, good lighting — this is what guests see)\n` +
       `• Your driver's license (photo or scan to upload)\n` +
       `• Your driving record (you can request it from the DMV)\n` +
@@ -648,7 +656,6 @@ function dailyHRTasks() {
   cleanupScheduledDocDeletions_();
   checkMissingOnboardingDocs_();
   validateFormResponseProcessing_();
-  processDocusealEmails_();
   checkEmployeeContacts_();
   checkUpcomingBirthdays_();
 }
@@ -1113,112 +1120,6 @@ function moveFileToEmployeeFolder_(driveUrl, destFolderId, newName) {
 
 
 // ─────────────────────────────────────────────────────────────
-// DOCUSEAL — save signed PDFs to onboarding folder
-// ─────────────────────────────────────────────────────────────
-
-/**
- * Runs daily. Scans last 60 days of DocuSeal emails from info@docuseal.com,
- * saves signed PDFs to the matching employee's onboarding folder.
- *
- * Tracking: stores DOCUSEAL_MSG_<messageId> in Script Properties so already-
- * processed emails are skipped regardless of read/unread state.
- *
- * Name formats handled (both end with _AKWL Offer Letter.pdf):
- *   "Last, First_AKWL Offer Letter.pdf"  → parses first + last directly
- *   "Last_AKWL Offer Letter.pdf"         → looks up first name from sheet
- */
-function processDocusealEmails_() {
-  const props = PropertiesService.getScriptProperties();
-  const lastCheckKey = 'DOCUSEAL_LAST_CHECK';
-  const lastCheck = props.getProperty(lastCheckKey);
-  const now = new Date();
-  if (lastCheck && (now - new Date(lastCheck)) / (1000 * 60 * 60 * 24) < 15) return;
-  props.setProperty(lastCheckKey, now.toISOString());
-
-  const threads = GmailApp.search('from:info@docuseal.com newer_than:60d', 0, 50);
-  if (!threads.length) return;
-
-  threads.forEach(thread => {
-    thread.getMessages().forEach(msg => {
-      const msgKey = 'DOCUSEAL_MSG_' + msg.getId();
-      if (props.getProperty(msgKey)) return;  // already processed
-
-      const pdfs = msg.getAttachments().filter(a => a.getContentType() === 'application/pdf');
-      if (!pdfs.length) { props.setProperty(msgKey, new Date().toISOString()); return; }
-
-      const mainPdf = pdfs.find(a => !a.getName().startsWith('Audit Log'));
-      if (!mainPdf) { props.setProperty(msgKey, new Date().toISOString()); return; }
-
-      const nameMatch = mainPdf.getName().replace(/\.pdf$/i, '').match(/^(.+?)_/);
-      if (!nameMatch) {
-        MailApp.sendEmail({ to: CFG.MAIL_TO,
-          subject: 'DocuSeal: could not parse name from attachment',
-          body: `File: ${mainPdf.getName()}\nSubject: ${msg.getSubject()}` });
-        props.setProperty(msgKey, new Date().toISOString());
-        return;
-      }
-
-      const namePart = nameMatch[1].trim();
-      let first, last;
-
-      if (namePart.includes(',')) {
-        // "Last, First" format
-        const parts = namePart.split(/,\s*/);
-        last  = parts[0].trim();
-        first = parts[1].trim();
-      } else {
-        // Last name only — look up first name from Current Employees
-        last  = namePart;
-        first = findFirstNameByLast_(last);
-        if (!first) {
-          MailApp.sendEmail({ to: CFG.MAIL_TO,
-            subject: `DocuSeal: could not find employee with last name "${last}"`,
-            body: `File: ${mainPdf.getName()}\nSubject: ${msg.getSubject()}\n\nPlease save the attachments manually.` });
-          props.setProperty(msgKey, new Date().toISOString());
-          return;
-        }
-      }
-
-      const folderId = props.getProperty(PROP_FOLDER_PREFIX + employeeKey_(first, last));
-      if (!folderId) {
-        MailApp.sendEmail({ to: CFG.MAIL_TO,
-          subject: `DocuSeal: no onboarding folder found for ${first} ${last}`,
-          body: `Received signed offer letter but no Drive folder is on record.\n` +
-            `Please save the attachments manually.\nSubject: ${msg.getSubject()}` });
-        props.setProperty(msgKey, new Date().toISOString());
-        return;
-      }
-
-      const folder = DriveApp.getFolderById(folderId);
-      pdfs.forEach(pdf => {
-        folder.createFile(pdf);
-        Logger.log(`DocuSeal: saved "${pdf.getName()}" to ${first} ${last}'s folder`);
-      });
-
-      props.setProperty(msgKey, new Date().toISOString());
-    });
-  });
-}
-
-/** Finds the first name of an employee by last name in Current Employees. */
-function findFirstNameByLast_(last) {
-  const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
-  const sheet     = ss.getSheetByName(CFG.TAB_CURRENT);
-  const headerMap = getHeaderMap_(sheet);
-  const lastRow   = sheet.getLastRow();
-  if (lastRow < CFG.DATA_START_ROW) return null;
-
-  for (let row = CFG.DATA_START_ROW; row <= lastRow; row++) {
-    const rowLast = String(getByField_(sheet, headerMap, row, 'LAST_NAME') || '').trim();
-    if (rowLast.toLowerCase() === last.toLowerCase()) {
-      return String(getByField_(sheet, headerMap, row, 'FIRST_NAME') || '').trim() || null;
-    }
-  }
-  return null;
-}
-
-
-// ─────────────────────────────────────────────────────────────
 // CONTACTS HEALTH CHECK + BIRTHDAY REMINDERS
 // ─────────────────────────────────────────────────────────────
 
@@ -1565,17 +1466,6 @@ function runContactSyncNow() {
   PropertiesService.getScriptProperties().deleteProperty('CONTACTS_LAST_CHECK');
   Logger.log('Cleared CONTACTS_LAST_CHECK. Running contact sync now...');
   checkEmployeeContacts_();
-}
-
-/**
- * Forces an immediate DocuSeal email scan, bypassing the 15-day throttle.
- * Run this to save signed offer letter PDFs to employee folders right now
- * without waiting for the next dailyHRTasks cycle.
- */
-function runDocusealNow() {
-  PropertiesService.getScriptProperties().deleteProperty('DOCUSEAL_LAST_CHECK');
-  Logger.log('Cleared DOCUSEAL_LAST_CHECK. Scanning DocuSeal emails now...');
-  processDocusealEmails_();
 }
 
 function cleanOffboardingFolder_(folderId) {

@@ -532,12 +532,13 @@ function runOnboarding(sheet, headerMap, row) {
     `STEP 1 — SIGN YOUR OFFER LETTER\n` +
     `Check your inbox for an email from DocuSeal with your offer letter (check your spam folder too). ` +
     `Sign it electronically at your earliest convenience. ` +
-    `Once signed, DocuSeal will send you a confirmation email with your signed PDF attached — ` +
-    `download and save that file. You will upload it in Step 2.\n\n` +
+    `Once signed, DocuSeal will send you a confirmation email with your signed PDF attached. ` +
+    `Download and save that PDF to your device — you will need to upload it in Step 2. ` +
+    `The onboarding form cannot be submitted without it.\n\n` +
     `STEP 2 — COMPLETE YOUR ONBOARDING FORM\n` +
     `Complete Your Onboarding Form Here: ${CFG.ONBOARDING_FORM_URL}\n\n` +
     `Before you sit down to fill it out, have the following ready — it'll take about 5 minutes:\n\n` +
-    `• Your signed Offer Letter PDF (from DocuSeal's confirmation email — save it first)\n` +
+    `• Your signed Offer Letter PDF (required — the form will not submit without this)\n` +
     `• A headshot photo (clear, good lighting — this is what guests see)\n` +
     `• Your driver's license (photo or scan to upload)\n` +
     `• Your driving record (you can request it from the DMV)\n` +

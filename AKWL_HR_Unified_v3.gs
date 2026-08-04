@@ -725,7 +725,24 @@ function executeOffboarding_(entry) {
       `Please remove them from our insurance policy accordingly.\n\nThank you!`,
       { cc: CFG.MAIL_CC });
 
-    removeContactSafely_(getByField_(sheet, headerMap, row, 'PERSONAL_EMAIL'));
+    // Farewell email to the employee — review and send manually
+    const empPersonalEmail = getByField_(sheet, headerMap, row, 'PERSONAL_EMAIL');
+    const farewellTo       = isValidEmail_(empPersonalEmail) ? String(empPersonalEmail).trim() : CFG.INFO_EMAIL;
+    const noEmpEmailNote   = isValidEmail_(empPersonalEmail) ? ''
+      : `⚠️  No personal email on file for ${entry.first} ${entry.last}. Update the "To:" field before sending.\n\n`;
+
+    GmailApp.createDraft(farewellTo, `Thank You — ${entry.first} ${entry.last}`,
+      noEmpEmailNote +
+      `Hi ${entry.first},\n\n` +
+      `As your time with Alaska Wild Lights comes to a close, we just wanted to take a moment to say ` +
+      `thank you. It has been a genuine pleasure having you as part of our team, and we truly appreciate ` +
+      `the effort and care you brought to your work.\n\n` +
+      `We wish you all the best in your future endeavors — we have no doubt you'll do great things.\n\n` +
+      `Please don't hesitate to reach out if you ever need anything from us.\n\n` +
+      `Warmly,\n` +
+      `Alaska Wild Lights Team`);
+
+    removeContactSafely_(empPersonalEmail);
 
     // Move the employee's Drive folder into the Former Employees personnel folder
     if (employeeFolderId) {

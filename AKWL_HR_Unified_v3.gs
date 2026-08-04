@@ -681,11 +681,17 @@ function executeOffboarding_(entry) {
     body.replaceText('\\{\\{LAST_NAME\\}\\}',         entry.last);
     doc.saveAndClose();
 
+    let formerFolderLine = '';
+    if (employeeFolderId) {
+      try { formerFolderLine = `Former employee folder: ${DriveApp.getFolderById(employeeFolderId).getUrl()}\n`; } catch (e) {}
+    }
+
     MailApp.sendEmail({
       to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
       subject: `Employee Off-Boarding — ${entry.first} ${entry.last}`,
       body: `${entry.first} ${entry.last}'s employment ends ${endDateFormatted}.\n\n` +
-        `Termination letter: ${newFile.getUrl()}\n\n` +
+        `Termination letter: ${newFile.getUrl()}\n` +
+        formerFolderLine + '\n' +
         `Please ensure Pathway processes their final paycheck within 3 business days, ` +
         `and confirm Tabatha Wilson (Trucordia) has been notified to remove them from insurance.\n\n` +
         `HIGH IMPORTANCE — Complete the offboarding checklist for ${entry.first} ${entry.last} based on their role. ` +
@@ -703,6 +709,7 @@ function executeOffboarding_(entry) {
     // Move the employee's Drive folder into the Former Employees personnel folder
     if (employeeFolderId) {
       try {
+        cleanOffboardingFolder_(employeeFolderId);  // delete profile picture before archiving
         DriveApp.getFolderById(employeeFolderId)
           .moveTo(DriveApp.getFolderById(CFG.FORMER_PERSONNEL_FOLDER_ID));
         PropertiesService.getScriptProperties().deleteProperty(folderPropKey);
@@ -779,6 +786,17 @@ function checkMissingOnboardingDocs_() {
   const lastRow = sheet.getLastRow();
   if (lastRow < CFG.DATA_START_ROW) return;
 
+  // ✕ and — both mean "not applicable / skip" — no reminder sent for those fields
+  const isMissing_ = v => !v || ['✕', '—'].includes(String(v).trim());
+
+  // HR summary — collected across ALL employees with missing docs (regardless of 30-day throttle)
+  const summaryByType = {
+    'Offer Letter (Docuseal)': [],
+    "Driver's License":        [],
+    'Driving Record':          [],
+    'Profile Photo':           [],
+  };
+
   for (let row = CFG.DATA_START_ROW; row <= lastRow; row++) {
     const first      = getByField_(sheet, headerMap, row, 'FIRST_NAME');
     const last       = getByField_(sheet, headerMap, row, 'LAST_NAME');
@@ -790,17 +808,18 @@ function checkMissingOnboardingDocs_() {
     hireDate.setHours(0, 0, 0, 0);
     if ((today - hireDate) / 86400000 < 7) continue;  // less than 7 days — too early
 
+    // Collect missing items (always, so they appear in the HR summary)
+    const missing = [];
+    if (isMissing_(getByField_(sheet, headerMap, row, 'CONTRACT_DOCUSEAL'))) { missing.push('Offer Letter (Docuseal signature)'); summaryByType['Offer Letter (Docuseal)'].push(`${first} ${last}`); }
+    if (isMissing_(getByField_(sheet, headerMap, row, 'DRIVERS_LICENSE')))   { missing.push("Driver's License");                  summaryByType["Driver's License"].push(`${first} ${last}`); }
+    if (isMissing_(getByField_(sheet, headerMap, row, 'DRIVING_HISTORY')))   { missing.push('Driving Record');                    summaryByType['Driving Record'].push(`${first} ${last}`); }
+    if (isMissing_(getByField_(sheet, headerMap, row, 'PHOTO_BIO')))         { missing.push('Profile Photo');                     summaryByType['Profile Photo'].push(`${first} ${last}`); }
+    if (!missing.length) continue;
+
+    // 30-day throttle for employee-facing draft only
     const propKey  = 'REMINDER_DOCS_' + employeeKey_(first, last);
     const lastSent = props.getProperty(propKey);
-    if (lastSent && (today - new Date(lastSent)) / 86400000 < 30) continue;  // sent within last 30 days
-
-    const isMissing_ = v => !v || String(v).trim() === '✕';
-    const missing = [];
-    if (isMissing_(getByField_(sheet, headerMap, row, 'CONTRACT_DOCUSEAL'))) missing.push('Offer Letter (Docuseal signature)');
-    if (isMissing_(getByField_(sheet, headerMap, row, 'DRIVERS_LICENSE')))   missing.push("Driver's License");
-    if (isMissing_(getByField_(sheet, headerMap, row, 'DRIVING_HISTORY')))   missing.push('Driving Record');
-    if (isMissing_(getByField_(sheet, headerMap, row, 'PHOTO_BIO')))         missing.push('Profile Photo');
-    if (!missing.length) continue;  // nothing missing — skip
+    if (lastSent && (today - new Date(lastSent)) / 86400000 < 30) continue;
 
     const employeeEmail = getByField_(sheet, headerMap, row, 'PERSONAL_EMAIL');
     const bulletList    = missing.map(m => `  • ${m}`).join('\n');
@@ -827,6 +846,27 @@ function checkMissingOnboardingDocs_() {
 
     props.setProperty(propKey, today.toISOString());
     Logger.log(`Onboarding reminder draft created for ${first} ${last}. Missing: ${missing.join(', ')}`);
+  }
+
+  // HR summary email — sent at most once every 7 days (cleared by testMissingDocsNow)
+  const summaryThrottleKey = 'REMINDER_DOCS_SUMMARY_SENT';
+  const lastSummary        = props.getProperty(summaryThrottleKey);
+  const summaryDue         = !lastSummary || (today - new Date(lastSummary)) / 86400000 >= 7;
+  const summaryLines       = Object.entries(summaryByType)
+    .filter(([, names]) => names.length > 0)
+    .map(([type, names]) => `• Missing ${type}:\n    ${names.join('\n    ')}`);
+
+  if (summaryLines.length > 0 && summaryDue) {
+    MailApp.sendEmail({
+      to: CFG.MAIL_TO,
+      subject: 'AKWL HR: Missing Onboarding Documents',
+      body: `Missing onboarding documents as of ${Utilities.formatDate(new Date(), CFG.TIMEZONE, 'MMMM d, yyyy')}:\n\n` +
+        summaryLines.join('\n\n') + '\n\n' +
+        `Individual reminder drafts are created for employees not reminded in the last 30 days. ` +
+        `Check Gmail Drafts before sending.`,
+    });
+    props.setProperty(summaryThrottleKey, today.toISOString());
+    Logger.log('HR missing docs summary email sent.');
   }
 }
 
@@ -1505,4 +1545,25 @@ function processUnhandledFormResponses() {
   });
 
   Logger.log('processUnhandledFormResponses complete.');
+}
+
+/**
+ * Deletes the profile picture from an employee folder before it's archived to
+ * Former Employees. Keeps offer letter (PDF), driving record, and driver's license.
+ * Matches any file whose name starts with "Profile Picture" (case-insensitive).
+ */
+function cleanOffboardingFolder_(folderId) {
+  try {
+    const folder = DriveApp.getFolderById(folderId);
+    const files  = folder.getFiles();
+    while (files.hasNext()) {
+      const file = files.next();
+      if (/^profile\s*picture/i.test(file.getName())) {
+        file.setTrashed(true);
+        Logger.log(`cleanOffboardingFolder_: deleted "${file.getName()}"`);
+      }
+    }
+  } catch (e) {
+    Logger.log('cleanOffboardingFolder_ error: ' + e.message);
+  }
 }

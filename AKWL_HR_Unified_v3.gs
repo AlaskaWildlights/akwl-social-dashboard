@@ -457,8 +457,9 @@ function runOnboarding(sheet, headerMap, row) {
   // Hyperlink First Name cell → folder
   const firstNameCol = col_(headerMap, 'FIRST_NAME');
   if (firstNameCol) {
-    sheet.getRange(row, firstNameCol)
-      .setFormula(`=HYPERLINK("${personFolder.getUrl()}","${first.replace(/"/g, '""')}")`);
+    const linkCell = sheet.getRange(row, firstNameCol);
+    linkCell.setFormula(`=HYPERLINK("${personFolder.getUrl()}","${first.replace(/"/g, '""')}")`);
+    linkCell.setFontColor('#1155CC');
   }
 
   const offerCopy = DriveApp.getFileById(offerTemplateId)
@@ -783,13 +784,20 @@ function checkMissingOnboardingDocs_() {
   const today     = new Date();
   today.setHours(0, 0, 0, 0);
 
+  // Global 15-day throttle — the full check runs at most once every 15 days.
+  // testMissingDocsNow() clears REMINDER_DOCS_LAST_RUN so it always fires immediately when testing.
+  const globalThrottleKey = 'REMINDER_DOCS_LAST_RUN';
+  const lastRun           = props.getProperty(globalThrottleKey);
+  if (lastRun && (today - new Date(lastRun)) / 86400000 < 15) return;
+  props.setProperty(globalThrottleKey, today.toISOString());
+
   const lastRow = sheet.getLastRow();
   if (lastRow < CFG.DATA_START_ROW) return;
 
-  // ✕ and — both mean "not applicable / skip" — no reminder sent for those fields
-  const isMissing_ = v => !v || ['✕', '—'].includes(String(v).trim());
+  // ✕ or empty = doc is missing → reminder; — = not applicable → skipped automatically (not ✕, not empty)
+  const isMissing_ = v => !v || String(v).trim() === '✕';
 
-  // HR summary — collected across ALL employees with missing docs (regardless of 30-day throttle)
+  // HR summary — collected across ALL employees with missing docs
   const summaryByType = {
     'Offer Letter (Docuseal)': [],
     "Driver's License":        [],
@@ -848,15 +856,12 @@ function checkMissingOnboardingDocs_() {
     Logger.log(`Onboarding reminder draft created for ${first} ${last}. Missing: ${missing.join(', ')}`);
   }
 
-  // HR summary email — sent at most once every 7 days (cleared by testMissingDocsNow)
-  const summaryThrottleKey = 'REMINDER_DOCS_SUMMARY_SENT';
-  const lastSummary        = props.getProperty(summaryThrottleKey);
-  const summaryDue         = !lastSummary || (today - new Date(lastSummary)) / 86400000 >= 7;
-  const summaryLines       = Object.entries(summaryByType)
+  // HR summary email — timing controlled by the 15-day global throttle above
+  const summaryLines = Object.entries(summaryByType)
     .filter(([, names]) => names.length > 0)
     .map(([type, names]) => `• Missing ${type}:\n    ${names.join('\n    ')}`);
 
-  if (summaryLines.length > 0 && summaryDue) {
+  if (summaryLines.length > 0) {
     MailApp.sendEmail({
       to: CFG.MAIL_TO,
       subject: 'AKWL HR: Missing Onboarding Documents',
@@ -865,7 +870,6 @@ function checkMissingOnboardingDocs_() {
         `Individual reminder drafts are created for employees not reminded in the last 30 days. ` +
         `Check Gmail Drafts before sending.`,
     });
-    props.setProperty(summaryThrottleKey, today.toISOString());
     Logger.log('HR missing docs summary email sent.');
   }
 }
@@ -1552,15 +1556,44 @@ function processUnhandledFormResponses() {
  * Former Employees. Keeps offer letter (PDF), driving record, and driver's license.
  * Matches any file whose name starts with "Profile Picture" (case-insensitive).
  */
+/**
+ * Forces an immediate Google Contacts sync, bypassing the 45-day throttle.
+ * Run this when you suspect contacts are out of sync (CONTACTS_LAST_CHECK not in Script Properties
+ * means the sync has never run since installation — this will run it).
+ */
+function runContactSyncNow() {
+  PropertiesService.getScriptProperties().deleteProperty('CONTACTS_LAST_CHECK');
+  Logger.log('Cleared CONTACTS_LAST_CHECK. Running contact sync now...');
+  checkEmployeeContacts_();
+}
+
+/**
+ * Forces an immediate DocuSeal email scan, bypassing the 15-day throttle.
+ * Run this to save signed offer letter PDFs to employee folders right now
+ * without waiting for the next dailyHRTasks cycle.
+ */
+function runDocusealNow() {
+  PropertiesService.getScriptProperties().deleteProperty('DOCUSEAL_LAST_CHECK');
+  Logger.log('Cleared DOCUSEAL_LAST_CHECK. Scanning DocuSeal emails now...');
+  processDocusealEmails_();
+}
+
 function cleanOffboardingFolder_(folderId) {
   try {
     const folder = DriveApp.getFolderById(folderId);
     const files  = folder.getFiles();
     while (files.hasNext()) {
-      const file = files.next();
-      if (/^profile\s*picture/i.test(file.getName())) {
+      const file     = files.next();
+      const name     = file.getName();
+      const mime     = file.getMimeType();
+      const isGDoc   = mime === 'application/vnd.google-apps.document';
+      // Delete: profile picture, onboarding checklist, unsigned offer letter Google Doc
+      // Keep:   signed offer letter PDF (DocuSeal), driving record, driver's license
+      if (/^profile\s*picture/i.test(name) ||
+          /_onboarding checklist/i.test(name) ||
+          (/^offer letter_/i.test(name) && isGDoc)) {
         file.setTrashed(true);
-        Logger.log(`cleanOffboardingFolder_: deleted "${file.getName()}"`);
+        Logger.log(`cleanOffboardingFolder_: deleted "${name}"`);
       }
     }
   } catch (e) {

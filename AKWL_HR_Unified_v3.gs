@@ -739,6 +739,8 @@ function executeOffboarding_(entry) {
       `the effort and care you brought to your work.\n\n` +
       `We wish you all the best in your future endeavors — we have no doubt you'll do great things.\n\n` +
       `Please don't hesitate to reach out if you ever need anything from us.\n\n` +
+      `Please find your termination letter attached below:\n` +
+      `${newFile.getUrl()}\n\n` +
       `Warmly,\n` +
       `Alaska Wild Lights Team`);
 

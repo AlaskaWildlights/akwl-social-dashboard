@@ -394,16 +394,20 @@ function processFormResponseRow_(formSheet, row) {
     if (signedOfferUrl)  moveFileToEmployeeFolder_(signedOfferUrl,  folderId, `Signed Offer Letter_${last}`);
   }
 
-  // Reschedule offer letter deletion to 5 days after confirmed start date
-  const startDateVal = getFormVal('Start date');
-  if (startDateVal) {
-    const offerFileId = PropertiesService.getScriptProperties()
-      .getProperty(PROP_OFFER_FILE_PREFIX + employeeKey_(first, last));
-    if (offerFileId) {
-      const deleteOn = new Date(startDateVal);
-      deleteOn.setDate(deleteOn.getDate() + 5);
-      scheduleDocDeletionOn_(offerFileId, deleteOn);
+  // Employee uploaded their signed PDF in this form — delete the unsigned offer letter Google Doc now.
+  // (No need to wait; the signed copy is already in their Drive folder.)
+  const offerFileIdNow = PropertiesService.getScriptProperties()
+    .getProperty(PROP_OFFER_FILE_PREFIX + employeeKey_(first, last));
+  if (offerFileIdNow) {
+    try {
+      DriveApp.getFileById(offerFileIdNow).setTrashed(true);
+      Logger.log(`Deleted unsigned offer letter doc (${offerFileIdNow}) on form submit.`);
+    } catch (e) {
+      Logger.log('Could not delete unsigned offer letter doc: ' + e.message);
     }
+    // Remove the property and any previously scheduled deletion entry
+    PropertiesService.getScriptProperties().deleteProperty(PROP_OFFER_FILE_PREFIX + employeeKey_(first, last));
+    PropertiesService.getScriptProperties().deleteProperty('DELETE_DOC_' + offerFileIdNow);
   }
 
   // Add to Google Contacts with role, DOB, and company
@@ -478,7 +482,8 @@ function runOnboarding(sheet, headerMap, row) {
   const startDate = getByField_(sheet, headerMap, row, 'START_DATE');
   fillOfferLetterPlaceholders_(offerCopy.getId(), first, last, startDate || null);
 
-  // Store offer file ID so form submit can reschedule deletion once start date is confirmed
+  // Store offer file ID so form submit can delete it immediately once the signed PDF is uploaded.
+  // Also schedule a fallback deletion 5 days after start date in case the form is never submitted.
   props.setProperty(PROP_OFFER_FILE_PREFIX + key, offerCopy.getId());
   if (startDate) {
     const deleteOn = new Date(startDate);

@@ -515,61 +515,68 @@ function runOnboarding(sheet, headerMap, row) {
     `(${first} ${last}) to update our insurance.\n\nThanks in advance!`,
     { cc: CFG.MAIL_CC });
 
-  const email = getByField_(sheet, headerMap, row, 'PERSONAL_EMAIL');
-  if (email) {
-    GmailApp.createDraft(email, 'Welcome to Alaska Wild Lights!',
-      `Hi ${first}!\n\n` +
-      `Welcome to Alaska Wild Lights. We're thrilled to have you on the team!\n\n` +
-      `Here's everything you need to get started. There are three things to complete before Day 1, ` +
-      `and we've made it as straightforward as possible.\n\n` +
-      `STEP 1 — SIGN YOUR OFFER LETTER\n` +
-      `Check your inbox for an email from DocuSeal with your offer letter (check your spam folder too). ` +
-      `Sign it electronically at your earliest convenience. ` +
-      `Once signed, DocuSeal will send you a confirmation email with your signed PDF attached — ` +
-      `download and save that file. You will upload it in Step 2.\n\n` +
-      `STEP 2 — COMPLETE YOUR ONBOARDING FORM\n` +
-      `Complete Your Onboarding Form Here: ${CFG.ONBOARDING_FORM_URL}\n\n` +
-      `Before you sit down to fill it out, have the following ready — it'll take about 5 minutes:\n\n` +
-      `• Your signed Offer Letter PDF (from DocuSeal's confirmation email — save it first)\n` +
-      `• A headshot photo (clear, good lighting — this is what guests see)\n` +
-      `• Your driver's license (photo or scan to upload)\n` +
-      `• Your driving record (you can request it from the DMV)\n` +
-      `• License details: state of issue, license number, years licensed\n` +
-      `• Your general availability\n\n` +
-      `Important: Please only upload the documents requested. If you don't yet have a specific ` +
-      `document (for example, your driving record), do not substitute another document in its place. ` +
-      `Instead, let us know as soon as possible.\n\n` +
-      `STEP 3 — COMPLETE YOUR ONBOARDING CHECKLIST (WITHIN 15 DAYS OF YOUR START DATE)\n` +
-      `Your Onboarding Checklist walks you through everything to complete before your first tour. ` +
-      `You can find it in your onboarding folder below. Please complete all items within 15 days of your start date.\n` +
-      `${checklistCopy.getUrl()}\n\n` +
-      `YOUR ONBOARDING FOLDER\n` +
-      `Review everything at your own pace: ${personFolder.getUrl()}\n` +
-      `You already have contributor access. Once you submit your onboarding form, all necessary ` +
-      `documents will be added automatically — please make sure everything is in order.\n\n` +
-      `YOUR FIRST MEETING\n` +
-      `Our operations manager will reach out once we have your official first tour date confirmed.\n\n` +
-      `A few things to have ready before Day 1:\n\n` +
-      `• Review the Employee Handbook in your onboarding folder.\n` +
-      `• Log in to FareHarbor and SimplyFleet using the credentials you'll receive separately.\n` +
-      `• Come with questions — we want you to feel confident before your first solo tour.\n\n` +
-      `If anything comes up before then, don't hesitate to reach out.\n\n` +
-      `Best regards,\n` +
-      `Alaska Wild Lights Team`);
+  const email            = getByField_(sheet, headerMap, row, 'PERSONAL_EMAIL');
+  const hasEmail         = isValidEmail_(email);
+  const welcomeTo        = hasEmail ? String(email).trim() : CFG.INFO_EMAIL;
+  // When no email on file: draft goes to info@ so HR can forward it once they have the address
+  const noEmailNote      = hasEmail ? ''
+    : `⚠️  No personal email on file for ${first} ${last}.\n` +
+      `Update the "To:" field with their email address before sending.\n\n`;
 
-    // 15-day checklist reminder draft — send manually when the time comes
-    GmailApp.createDraft(email, `Reminder: Your Onboarding Checklist Is Due Soon`,
-      `Hi ${first},\n\n` +
-      `Hope everything's going well! Just a friendly reminder that your Onboarding Checklist ` +
-      `is due within 15 days of your start date.\n\n` +
-      `If you haven't had a chance to go through it yet, no worries — you can find it here:\n` +
-      `${checklistCopy.getUrl()}\n\n` +
-      `And your full onboarding folder is here:\n` +
-      `${personFolder.getUrl()}\n\n` +
-      `Feel free to reach out if you have any questions. We're happy to help!\n\n` +
-      `Warm regards,\n` +
-      `Alaska Wild Lights Team`);
-  }
+  GmailApp.createDraft(welcomeTo, 'Welcome to Alaska Wild Lights!',
+    noEmailNote +
+    `Hi ${first}!\n\n` +
+    `Welcome to Alaska Wild Lights. We're thrilled to have you on the team!\n\n` +
+    `Here's everything you need to get started. There are three things to complete before Day 1, ` +
+    `and we've made it as straightforward as possible.\n\n` +
+    `STEP 1 — SIGN YOUR OFFER LETTER\n` +
+    `Check your inbox for an email from DocuSeal with your offer letter (check your spam folder too). ` +
+    `Sign it electronically at your earliest convenience. ` +
+    `Once signed, DocuSeal will send you a confirmation email with your signed PDF attached — ` +
+    `download and save that file. You will upload it in Step 2.\n\n` +
+    `STEP 2 — COMPLETE YOUR ONBOARDING FORM\n` +
+    `Complete Your Onboarding Form Here: ${CFG.ONBOARDING_FORM_URL}\n\n` +
+    `Before you sit down to fill it out, have the following ready — it'll take about 5 minutes:\n\n` +
+    `• Your signed Offer Letter PDF (from DocuSeal's confirmation email — save it first)\n` +
+    `• A headshot photo (clear, good lighting — this is what guests see)\n` +
+    `• Your driver's license (photo or scan to upload)\n` +
+    `• Your driving record (you can request it from the DMV)\n` +
+    `• License details: state of issue, license number, years licensed\n` +
+    `• Your general availability\n\n` +
+    `Important: Please only upload the documents requested. If you don't yet have a specific ` +
+    `document (for example, your driving record), do not substitute another document in its place. ` +
+    `Instead, let us know as soon as possible.\n\n` +
+    `STEP 3 — COMPLETE YOUR ONBOARDING CHECKLIST (WITHIN 15 DAYS OF YOUR START DATE)\n` +
+    `Your Onboarding Checklist walks you through everything to complete before your first tour. ` +
+    `You can find it in your onboarding folder below. Please complete all items within 15 days of your start date.\n` +
+    `${checklistCopy.getUrl()}\n\n` +
+    `YOUR ONBOARDING FOLDER\n` +
+    `Review everything at your own pace: ${personFolder.getUrl()}\n` +
+    `You already have contributor access. Once you submit your onboarding form, all necessary ` +
+    `documents will be added automatically — please make sure everything is in order.\n\n` +
+    `YOUR FIRST MEETING\n` +
+    `Our operations manager will reach out once we have your official first tour date confirmed.\n\n` +
+    `A few things to have ready before Day 1:\n\n` +
+    `• Review the Employee Handbook in your onboarding folder.\n` +
+    `• Log in to FareHarbor and SimplyFleet using the credentials you'll receive separately.\n` +
+    `• Come with questions — we want you to feel confident before your first solo tour.\n\n` +
+    `If anything comes up before then, don't hesitate to reach out.\n\n` +
+    `Best regards,\n` +
+    `Alaska Wild Lights Team`);
+
+  // 15-day checklist reminder draft — send manually when the time comes
+  GmailApp.createDraft(welcomeTo, `Reminder: Your Onboarding Checklist Is Due Soon`,
+    noEmailNote +
+    `Hi ${first},\n\n` +
+    `Hope everything's going well! Just a friendly reminder that your Onboarding Checklist ` +
+    `is due within 15 days of your start date.\n\n` +
+    `If you haven't had a chance to go through it yet, no worries — you can find it here:\n` +
+    `${checklistCopy.getUrl()}\n\n` +
+    `And your full onboarding folder is here:\n` +
+    `${personFolder.getUrl()}\n\n` +
+    `Feel free to reach out if you have any questions. We're happy to help!\n\n` +
+    `Warm regards,\n` +
+    `Alaska Wild Lights Team`);
 
   // Contact added later in processFormResponseRow_ once email + phone arrive via the form
 

@@ -689,18 +689,26 @@ function executeOffboarding_(entry) {
     const folderPropKey    = PROP_FOLDER_PREFIX + employeeKey_(entry.first, entry.last);
     const employeeFolderId = PropertiesService.getScriptProperties().getProperty(folderPropKey);
 
-    // Termination letter goes into the employee's own folder (moves to Former Employees with it)
-    const termDest = employeeFolderId
+    // Termination letter — fill placeholders in a temp Doc, export as PDF, save to folder, delete temp Doc
+    const termDest  = employeeFolderId
       ? DriveApp.getFolderById(employeeFolderId)
       : DriveApp.getFolderById(CFG.FORMER_DOCS_FOLDER_ID);  // fallback if no folder on record
-    const newFile = DriveApp.getFileById(CFG.TERM_LETTER_TEMPLATE_ID)
-      .makeCopy(`Termination Letter_${entry.last}`, termDest);
-    const doc  = DocumentApp.openById(newFile.getId());
-    const body = doc.getBody();
-    body.replaceText('\\{\\{MONTH, DAY, YEAR\\}\\}', endDateFormatted);
-    body.replaceText('\\{\\{FIRST_NAME\\}\\}',        entry.first);
-    body.replaceText('\\{\\{LAST_NAME\\}\\}',         entry.last);
-    doc.saveAndClose();
+    const tempDoc   = DriveApp.getFileById(CFG.TERM_LETTER_TEMPLATE_ID)
+      .makeCopy(`_temp_Termination_${entry.last}`, termDest);
+    const gdoc      = DocumentApp.openById(tempDoc.getId());
+    const gdocBody  = gdoc.getBody();
+    gdocBody.replaceText('\\{\\{MONTH, DAY, YEAR\\}\\}', endDateFormatted);
+    gdocBody.replaceText('\\{\\{FIRST_NAME\\}\\}',        entry.first);
+    gdocBody.replaceText('\\{\\{LAST_NAME\\}\\}',         entry.last);
+    gdoc.saveAndClose();
+
+    // Export to PDF and save in the same folder
+    const pdfBlob = DriveApp.getFileById(tempDoc.getId()).getAs('application/pdf');
+    pdfBlob.setName(`Termination Letter_${entry.last}.pdf`);
+    const pdfFile = termDest.createFile(pdfBlob);
+
+    // Delete the temporary Google Doc
+    tempDoc.setTrashed(true);
 
     let formerFolderLine = '';
     if (employeeFolderId) {
@@ -711,7 +719,7 @@ function executeOffboarding_(entry) {
       to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
       subject: `Employee Off-Boarding — ${entry.first} ${entry.last}`,
       body: `${entry.first} ${entry.last}'s employment ends ${endDateFormatted}.\n\n` +
-        `Termination letter: ${newFile.getUrl()}\n` +
+        `Termination letter (PDF): ${pdfFile.getUrl()}\n` +
         formerFolderLine + '\n' +
         `Please ensure Pathway processes their final paycheck within 3 business days, ` +
         `and confirm Tabatha Wilson (Trucordia) has been notified to remove them from insurance.\n\n` +
@@ -725,7 +733,7 @@ function executeOffboarding_(entry) {
       `Please remove them from our insurance policy accordingly.\n\nThank you!`,
       { cc: CFG.MAIL_CC });
 
-    // Farewell email to the employee — review and send manually
+    // Farewell email to the employee — PDF attached, review and send manually
     const empPersonalEmail = getByField_(sheet, headerMap, row, 'PERSONAL_EMAIL');
     const farewellTo       = isValidEmail_(empPersonalEmail) ? String(empPersonalEmail).trim() : CFG.INFO_EMAIL;
     const noEmpEmailNote   = isValidEmail_(empPersonalEmail) ? ''
@@ -739,10 +747,10 @@ function executeOffboarding_(entry) {
       `the effort and care you brought to your work.\n\n` +
       `We wish you all the best in your future endeavors — we have no doubt you'll do great things.\n\n` +
       `Please don't hesitate to reach out if you ever need anything from us.\n\n` +
-      `Please find your termination letter attached below:\n` +
-      `${newFile.getUrl()}\n\n` +
+      `Please find your termination letter attached to this email.\n\n` +
       `Warmly,\n` +
-      `Alaska Wild Lights Team`);
+      `Alaska Wild Lights Team`,
+      { attachments: [pdfBlob] });
 
     removeContactSafely_(empPersonalEmail);
 

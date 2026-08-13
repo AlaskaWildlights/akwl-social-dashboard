@@ -1,0 +1,23 @@
+{
+  "skill_name": "social-weekly-update",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "añade la semana. IG - 758, TT - 382, FB - 191",
+      "expected_output": "Parses the zip (real dates Jul 19-25 -> W30), correctly appends W30 to index.html (which currently ends at W29), sets ig_followers=758 and fb_followers=191 from chat, but computes tt_followers from the CSV (prior 342 + net_growth from TT_Overview, NOT the user's 382). All 10 files/7 days present, no missing-data warnings needed. Commits and pushes, sends back index.html + JSON, replies with a summary table noting the TikTok number came from CSV not chat.",
+      "files": ["fixtures/w30_correct.zip", "fixtures/index_ends_W29.html"]
+    },
+    {
+      "id": 1,
+      "prompt": "tengo que actualizar la semana 31 también\n\nEsa semana supuestamente cerró con\nFB - 194\nIG - 761\nTT - 423,\n\nte adjunté el zip",
+      "expected_output": "This zip is mislabeled — the CSV content inside is actually week Jul 19-25 (W30) data, not Jul 26-Aug 1 (W31), even though the folder/file names say W31. The skill should catch this by reading actual dates from GA_Traffic/IG/FB/TikTok CSVs, notice the mismatch against what's expected (current dashboard already ends at W30, so the next week should start Jul 26), and STOP to ask the user for the correct zip rather than appending duplicate/wrong data. Should NOT silently append anything.",
+      "files": ["fixtures/w31_mislabeled_actually_w30.zip", "fixtures/index_ends_W30.html"]
+    },
+    {
+      "id": 2,
+      "prompt": "me equivoqué, aqui la data correcta de la w31\n\nIG - 761\nTT - 423\nFB - 194",
+      "expected_output": "This zip has correct W31 (Jul 26-Aug 1) CSV content. Skill appends W31 to index.html (currently ends at W30), sets ig_followers=761 and fb_followers=194 from chat, but computes tt_followers from CSV as prior(378 from the fixture's last week) + net_growth (37) = 415, explicitly NOT using the user's stated 423. Mentions this substitution in the summary. Commits, pushes, delivers files.",
+      "files": ["fixtures/w31_correct.zip", "fixtures/index_ends_W30.html"]
+    }
+  ]
+}

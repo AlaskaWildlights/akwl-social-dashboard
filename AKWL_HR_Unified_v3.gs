@@ -107,6 +107,20 @@ const OFFER_LETTER_ROLES = [
 
 
 // ─────────────────────────────────────────────────────────────
+// UI MENU — Add custom menu to spreadsheet
+// ─────────────────────────────────────────────────────────────
+function onOpen() {
+  const ui = SpreadsheetApp.getUi();
+  ui.createMenu('HR Tools')
+    .addItem('↩️ Undo Offboarding', 'selectOffboardingToUndo')
+    .addSeparator()
+    .addItem('🚀 Run Pending Offboardings Now', 'runPendingOffboardingsNow')
+    .addItem('📞 Sync Contacts Now', 'runContactSyncNow')
+    .addToUi();
+}
+
+
+// ─────────────────────────────────────────────────────────────
 // HEADER LOOKUP — the fix for the recurring "columns moved" bug
 // ─────────────────────────────────────────────────────────────
 

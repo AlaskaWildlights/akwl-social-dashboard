@@ -1508,6 +1508,75 @@ function runContactSyncNow() {
   checkEmployeeContacts_();
 }
 
+/**
+ * Undo a completed offboarding. Restores the folder from Former Employees back to Personnel
+ * and moves the row from Former Employees tab back to Current Employees tab.
+ * Call this if you accidentally offboarded the wrong employee.
+ *
+ * Usage: In the GAS editor console, run:
+ *   undoOffboarding('First', 'Last')
+ */
+function undoOffboarding(firstName, lastName) {
+  const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+  const curSheet  = ss.getSheetByName(CFG.TAB_CURRENT);
+  const forSheet  = ss.getSheetByName(CFG.TAB_FORMER);
+  const props     = PropertiesService.getScriptProperties();
+  const key       = employeeKey_(firstName, lastName);
+
+  // 1. Find and remove the OFFBOARD_ property (if still scheduled)
+  const offboardKey = PROP_OFFBOARD_PREFIX + key;
+  if (props.getProperty(offboardKey)) {
+    props.deleteProperty(offboardKey);
+    Logger.log(`Removed scheduled offboarding for ${firstName} ${lastName}.`);
+  } else {
+    Logger.log(`No scheduled offboarding found for ${firstName} ${lastName}.`);
+  }
+
+  // 2. Find row in Former Employees sheet and restore to Current Employees
+  const forHeaderMap = getHeaderMap_(forSheet);
+  const forRow = findEmployeeRow_(forSheet, forHeaderMap, firstName, lastName);
+
+  if (!forRow) {
+    Logger.log(`WARNING: ${firstName} ${lastName} not found in Former Employees tab. Folder may still be archived.`);
+    return;
+  }
+
+  // Copy entire row data back to Current Employees
+  const curHeaderMap = getHeaderMap_(curSheet);
+  const numCols = forSheet.getLastColumn();
+  for (let col = 1; col <= numCols; col++) {
+    const val = forSheet.getRange(forRow, col).getValue();
+    if (val) curSheet.appendRow(Array(col).fill(null).concat(val));
+  }
+
+  // Find the newly appended row
+  const newRow = curSheet.getLastRow();
+  for (let col = 1; col <= numCols; col++) {
+    const val = forSheet.getRange(forRow, col).getValue();
+    curSheet.getRange(newRow, col).setValue(val);
+  }
+
+  // 3. Restore folder from Former Employees back to Personnel
+  const folderKey = PROP_FOLDER_PREFIX + key;
+  const folderId = props.getProperty(folderKey);
+  if (folderId) {
+    try {
+      const folder = DriveApp.getFolderById(folderId);
+      folder.moveTo(DriveApp.getFolderById(CFG.PERSONNEL_FOLDER_ID));
+      Logger.log(`✓ Restored folder to Personnel.`);
+    } catch (e) {
+      Logger.log(`✗ Could not restore folder: ${e.message}`);
+    }
+  } else {
+    Logger.log(`WARNING: No folder ID on record for ${firstName} ${lastName}.`);
+  }
+
+  // 4. Delete the row from Former Employees
+  forSheet.deleteRow(forRow);
+  Logger.log(`✓ Moved ${firstName} ${lastName} back to Current Employees.`);
+  Logger.log(`Done! Check the sheet and verify all data is correct.`);
+}
+
 function cleanOffboardingFolder_(folderId) {
   try {
     const folder = DriveApp.getFolderById(folderId);

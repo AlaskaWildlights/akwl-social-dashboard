@@ -1585,72 +1585,102 @@ function selectOffboardingToUndo() {
 }
 
 /**
- * Undo a completed offboarding. Restores the folder from Former Employees back to Personnel
- * and moves the row from Former Employees tab back to Current Employees tab.
+ * Undo a completed offboarding. Restores EVERYTHING:
+ * - Folder back to correct parent (Guides/Maintenance/Office) from Former Employees
+ * - Row back to Current Employees from Former Employees
+ * - Google Contact (recreated with all data from the sheet)
+ * - Clears any scheduled offboarding state
+ *
  * Call this if you accidentally offboarded the wrong employee.
  *
  * Usage: In the GAS editor console, run:
  *   undoOffboarding('First', 'Last')
  */
 function undoOffboarding(firstName, lastName) {
-  const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
-  const curSheet  = ss.getSheetByName(CFG.TAB_CURRENT);
-  const forSheet  = ss.getSheetByName(CFG.TAB_FORMER);
-  const props     = PropertiesService.getScriptProperties();
-  const key       = employeeKey_(firstName, lastName);
+  try {
+    const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+    const curSheet  = ss.getSheetByName(CFG.TAB_CURRENT);
+    const forSheet  = ss.getSheetByName(CFG.TAB_FORMER);
+    const props     = PropertiesService.getScriptProperties();
+    const key       = employeeKey_(firstName, lastName);
 
-  // 1. Find and remove the OFFBOARD_ property (if still scheduled)
-  const offboardKey = PROP_OFFBOARD_PREFIX + key;
-  if (props.getProperty(offboardKey)) {
-    props.deleteProperty(offboardKey);
-    Logger.log(`Removed scheduled offboarding for ${firstName} ${lastName}.`);
-  } else {
-    Logger.log(`No scheduled offboarding found for ${firstName} ${lastName}.`);
-  }
+    // 1. Find row in Former Employees sheet
+    const forHeaderMap = getHeaderMap_(forSheet);
+    const forRow = findEmployeeRow_(forSheet, forHeaderMap, firstName, lastName);
 
-  // 2. Find row in Former Employees sheet and restore to Current Employees
-  const forHeaderMap = getHeaderMap_(forSheet);
-  const forRow = findEmployeeRow_(forSheet, forHeaderMap, firstName, lastName);
-
-  if (!forRow) {
-    Logger.log(`WARNING: ${firstName} ${lastName} not found in Former Employees tab. Folder may still be archived.`);
-    return;
-  }
-
-  // Copy entire row data back to Current Employees
-  const curHeaderMap = getHeaderMap_(curSheet);
-  const numCols = forSheet.getLastColumn();
-  for (let col = 1; col <= numCols; col++) {
-    const val = forSheet.getRange(forRow, col).getValue();
-    if (val) curSheet.appendRow(Array(col).fill(null).concat(val));
-  }
-
-  // Find the newly appended row
-  const newRow = curSheet.getLastRow();
-  for (let col = 1; col <= numCols; col++) {
-    const val = forSheet.getRange(forRow, col).getValue();
-    curSheet.getRange(newRow, col).setValue(val);
-  }
-
-  // 3. Restore folder from Former Employees back to Personnel
-  const folderKey = PROP_FOLDER_PREFIX + key;
-  const folderId = props.getProperty(folderKey);
-  if (folderId) {
-    try {
-      const folder = DriveApp.getFolderById(folderId);
-      folder.moveTo(DriveApp.getFolderById(CFG.PERSONNEL_FOLDER_ID));
-      Logger.log(`✓ Restored folder to Personnel.`);
-    } catch (e) {
-      Logger.log(`✗ Could not restore folder: ${e.message}`);
+    if (!forRow) {
+      Logger.log(`❌ ${firstName} ${lastName} not found in Former Employees tab.`);
+      return;
     }
-  } else {
-    Logger.log(`WARNING: No folder ID on record for ${firstName} ${lastName}.`);
-  }
 
-  // 4. Delete the row from Former Employees
-  forSheet.deleteRow(forRow);
-  Logger.log(`✓ Moved ${firstName} ${lastName} back to Current Employees.`);
-  Logger.log(`Done! Check the sheet and verify all data is correct.`);
+    // 2. Read ALL employee data from Former Employees row (needed for contact restoration)
+    const getData = (fieldKey) => getByField_(forSheet, forHeaderMap, forRow, fieldKey);
+    const position      = getData('POSITION');
+    const email         = getData('PERSONAL_EMAIL');
+    const phone         = getData('PHONE');
+    const dob           = getData('DOB');
+
+    // 3. Append new row to Current Employees with all data from Former Employees
+    const curHeaderMap = getHeaderMap_(curSheet);
+    const numCols = Math.max(forSheet.getLastColumn(), curSheet.getLastColumn());
+    const newRow = curSheet.getLastRow() + 1;
+
+    for (let col = 1; col <= numCols; col++) {
+      const val = forSheet.getRange(forRow, col).getValue();
+      if (val) curSheet.getRange(newRow, col).setValue(val);
+    }
+    Logger.log(`✓ Row restored to Current Employees.`);
+
+    // 4. Remove scheduled offboarding property
+    const offboardKey = PROP_OFFBOARD_PREFIX + key;
+    if (props.getProperty(offboardKey)) {
+      props.deleteProperty(offboardKey);
+      Logger.log(`✓ Cleared scheduled offboarding state.`);
+    }
+
+    // 5. Restore Google Contact (using data from the restored row)
+    if (isValidEmail_(email)) {
+      addContactSafely_(firstName, lastName, email, phone || undefined, position || undefined, dob || undefined, CFG.COMPANY_NAME);
+      Logger.log(`✓ Google Contact restored.`);
+    } else {
+      Logger.log(`⚠️  No personal email on file — Google Contact NOT restored. Add email to sheet if needed.`);
+    }
+
+    // 6. Restore folder from Former Employees back to correct parent folder
+    const folderKey = PROP_FOLDER_PREFIX + key;
+    const folderId = props.getProperty(folderKey);
+    if (folderId) {
+      try {
+        const folder = DriveApp.getFolderById(folderId);
+        // Determine correct parent folder based on position
+        const isGuide = /guide/i.test(position || '');
+        const isMaint = /lead\s*mechanic|\bmechanic\b|detailer/i.test(position || '');
+        const parentId = isGuide ? CFG.GUIDES_PARENT_FOLDER_ID
+                        : isMaint ? CFG.MAINTENANCE_PARENT_FOLDER_ID
+                        : CFG.OFFICE_PARENT_FOLDER_ID;
+
+        folder.moveTo(DriveApp.getFolderById(parentId));
+        Logger.log(`✓ Folder restored to ${isGuide ? 'Guides' : isMaint ? 'Maintenance' : 'Office'} folder.`);
+      } catch (e) {
+        Logger.log(`⚠️  Could not restore folder: ${e.message}`);
+      }
+    } else {
+      Logger.log(`⚠️  No folder ID on record for ${firstName} ${lastName}.`);
+    }
+
+    // 7. Delete the row from Former Employees
+    forSheet.deleteRow(forRow);
+
+    Logger.log(`\n✅ UNDO COMPLETE for ${firstName} ${lastName}!`);
+    Logger.log(`   ✓ Row back in Current Employees`);
+    Logger.log(`   ✓ Folder restored`);
+    Logger.log(`   ✓ Google Contact recreated`);
+    Logger.log(`   ✓ Scheduling cleared`);
+    Logger.log(`\nFuture offboardings will work normally if needed. Verify the sheet looks correct.`);
+  } catch (err) {
+    Logger.log(`❌ undoOffboarding error: ${err.message}`);
+    MailApp.sendEmail(CFG.INFO_EMAIL, `AKWL HR script error (undoOffboarding)`, err.message + '\n' + err.stack);
+  }
 }
 
 function cleanOffboardingFolder_(folderId) {

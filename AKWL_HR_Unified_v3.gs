@@ -1509,6 +1509,62 @@ function runContactSyncNow() {
 }
 
 /**
+ * List all completed offboardings. Run this first to see which employees are in Former Employees,
+ * then use undoOffboardingByIndex(n) to undo one by its number.
+ *
+ * Usage:
+ *   listOffboardings()  — shows all offboarded employees with index numbers
+ *   undoOffboardingByIndex(0)  — undoes the first one
+ */
+function listOffboardings() {
+  const ss = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+  const forSheet = ss.getSheetByName(CFG.TAB_FORMER);
+  const headerMap = getHeaderMap_(forSheet);
+  const lastRow = forSheet.getLastRow();
+
+  if (lastRow <= 1) {
+    Logger.log('No offboarded employees found.');
+    return;
+  }
+
+  Logger.log('===== OFFBOARDED EMPLOYEES =====');
+  for (let row = 2; row <= lastRow; row++) {
+    const first = getByField_(forSheet, headerMap, row, 'FIRST_NAME');
+    const last = getByField_(forSheet, headerMap, row, 'LAST_NAME');
+    const endDate = getByField_(forSheet, headerMap, row, 'END_DATE');
+    Logger.log(`[${row - 2}] ${first} ${last} — ended ${endDate}`);
+  }
+  Logger.log('');
+  Logger.log(`Run: undoOffboardingByIndex(0)  to undo the first, undoOffboardingByIndex(1) for the second, etc.`);
+}
+
+/**
+ * Undo a specific offboarding by its index. First run listOffboardings() to see the list.
+ *
+ * Usage:
+ *   undoOffboardingByIndex(0)  — undoes employee at index 0
+ *   undoOffboardingByIndex(2)  — undoes employee at index 2
+ */
+function undoOffboardingByIndex(index) {
+  const ss = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+  const forSheet = ss.getSheetByName(CFG.TAB_FORMER);
+  const headerMap = getHeaderMap_(forSheet);
+  const lastRow = forSheet.getLastRow();
+
+  const actualRow = index + 2;  // row 0 = header row + 1 + index
+  if (actualRow > lastRow || actualRow < 2) {
+    Logger.log(`ERROR: Index ${index} out of range. Run listOffboardings() to see valid indices.`);
+    return;
+  }
+
+  const firstName = getByField_(forSheet, headerMap, actualRow, 'FIRST_NAME');
+  const lastName = getByField_(forSheet, headerMap, actualRow, 'LAST_NAME');
+
+  Logger.log(`Undoing offboarding for ${firstName} ${lastName}...`);
+  undoOffboarding(firstName, lastName);
+}
+
+/**
  * Undo a completed offboarding. Restores the folder from Former Employees back to Personnel
  * and moves the row from Former Employees tab back to Current Employees tab.
  * Call this if you accidentally offboarded the wrong employee.

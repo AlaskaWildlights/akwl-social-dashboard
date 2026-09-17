@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AKWL HR Script - GAS Code Completo</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #f5f5f5; }
+    .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h1 { color: #333; margin-bottom: 10px; }
+    .instructions { background: #e3f2fd; padding: 15px; border-left: 4px solid #2196F3; margin-bottom: 20px; border-radius: 4px; }
+    .instructions strong { color: #1976D2; }
+    pre {
+      background: #f8f8f8;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      overflow: auto;
+      line-height: 1.4;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 80vh;
+    }
+    button {
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 15px;
+    }
+    button:hover { background: #1976D2; }
+    .copied { color: #4CAF50; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📋 AKWL HR Script Completo (v3.8 - 1722 líneas)</h1>
+
+    <div class="instructions">
+      <strong>✅ Pasos:</strong>
+      <ol>
+        <li>Abre Google Apps Script de tu Google Sheet</li>
+        <li>Borra TODO lo que hay en <strong>Code.gs</strong></li>
+        <li>Selecciona TODO el código abajo (Ctrl+A)</li>
+        <li>Cópialo (Ctrl+C)</li>
+        <li>Pégalo en Code.gs (Ctrl+V)</li>
+        <li>Guarda (Ctrl+S)</li>
+        <li>Recarga la hoja (F5)</li>
+        <li>Verifica que aparezca el menú "HR Tools" en la barra de menú</li>
+      </ol>
+    </div>
+
+    <button onclick="copiarTodo()">📋 Copiar todo el código</button>
+    <span id="copiadoMsg" style="display:none;" class="copied">✓ ¡Copiado!</span>
+    <pre id="codeBlock">/**
+ * AKWL HR — Onboarding &amp; Offboarding Automation  v3.8
+ * Setup: run installTriggers(), authorize when prompted, delete triggers on old scripts.
+ */
+
+// ─────────────────────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────────────────────
+const CFG = {
+  EMPLOYEE_SHEET_ID  : &#x27;1lhB25hdKfARc6nGjbN9AwYGHQ_bsLRdGkeCuQA7Ow9w&#x27;,
+  TAB_CURRENT        : &#x27;Current Employees&#x27;,
+  TAB_FORMER         : &#x27;Former Employees&#x27;,
+  TAB_FORM_RESPONSES : &#x27;Form Responses&#x27;,
+
+  COMPANY_NAME : &#x27;Alaska Wild Lights&#x27;,
+
+  // Guides — folder name: &quot;Last, First&quot;
+  GUIDES_PARENT_FOLDER_ID     : &#x27;1Ya0e276RRvVasEcOBchsqAW3cEVNMo1w&#x27;,
+  GUIDE_CHECKLIST_TEMPLATE_ID : &#x27;1Tr9jDUBoocBKGM2IvJoYwZDMVk2wyH_WHnkN-qnp_kA&#x27;,
+
+  // Maintenance (Lead Mechanic, Mechanic, Detailer) — folder name: &quot;Last, First (Role)&quot;
+  MAINTENANCE_PARENT_FOLDER_ID : &#x27;1NfaBoAoDSKqZI-PzQnPBhCXyzFoUPurm&#x27;,
+
+  // Office (Office Assistant, Operations Manager, Social Media Lead) — folder name: &quot;Last, First (Role)&quot;
+  OFFICE_PARENT_FOLDER_ID : &#x27;1xAlbB72BLWaF49WiUz9AdQEWDyNgyuwr&#x27;,
+
+  // Non-guide checklist (maintenance + office) — &quot;adapt before sharing&quot; warning sent for non-guides
+  NON_GUIDE_CHECKLIST_TEMPLATE_ID : &#x27;19LzGeqpE4eMnFJIuw7oXUy-Farw1dPNc_QbC-ZhyjvM&#x27;,
+
+  ONBOARDING_FORM_URL : &#x27;https://forms.gle/MxgzP6iRrko2bibX9&#x27;,
+
+  // Fallback offer letter for unrecognized roles — must adapt Scope of Work + Compensation before sending
+  OFFER_LETTER_FALLBACK_ID : &#x27;1EOu2zyZEoUEuDg2vd9T4vHOSsmBZgn0VFVuCQEMiCzg&#x27;,
+  OFFER_LETTERS_FOLDER_URL : &#x27;https://drive.google.com/drive/folders/1MNpbdRWoqa_9ey6sqUepiv5uowsQw5pV&#x27;,
+
+  // TODO: office comp calculator + bonus overview templates — fill when available
+  OFFICE_COMP_CALC_TEMPLATE_ID      : &#x27;&#x27;,
+  OFFICE_BONUS_OVERVIEW_TEMPLATE_ID : &#x27;&#x27;,
+
+  TERM_LETTER_TEMPLATE_ID    : &#x27;1dS4FAsCporrVLiYXJZvP2g8sPTuKV9wJuOex5ulN0Bc&#x27;,
+  FORMER_DOCS_FOLDER_ID      : &#x27;14A65GrTTV737kDOwEKd2IFk457CjzhpC&#x27;,
+  FORMER_PERSONNEL_FOLDER_ID : &#x27;1pqlCfTXlkN707XANQap77RHg3qkPYkDN&#x27;,  // Former Employees folder
+
+  HR_CHECKLIST_URL          : &#x27;https://docs.google.com/document/d/1gtcQ0adsPUIUZhDcA48cZhYCCaxeNL5XMSsSnYAD-d0/edit?tab=t.0&#x27;,
+  OFFBOARDING_CHECKLIST_URL : &#x27;https://docs.google.com/document/d/1fBUM13Qmr4IcuV_kAVxs0MUyol1e6SqZ79toqi6OQ3k/edit?usp=drive_link&#x27;,
+
+  // Email routing — ALL HR notifications go TO MAIL_TO, CC MAIL_CC. Change here to reroute everything.
+  MAIL_TO  : &#x27;info@alaskawildlights.com&#x27;,
+  MAIL_CC  : &#x27;info@alaskawildlights.com&#x27;,  // TEST MODE — change back to joshuamcneal@alaskawildlights.com for production
+
+  INFO_EMAIL      : &#x27;info@alaskawildlights.com&#x27;,  // script error emails only — keep in sync with MAIL_TO
+  INSURANCE_EMAIL : &#x27;Tabatha.Wilson@trucordia.com&#x27;,
+
+  CONTACT_GROUP_NAME : &#x27;AKWL Team&#x27;,
+
+  FOLLOW_UP_BUSINESS_DAYS : 5,
+
+  TIMEZONE : &#x27;America/Anchorage&#x27;,
+
+  HEADER_ROWS    : [2, 3],
+  DATA_START_ROW : 4,
+};
+
+// Canonical field keys -&gt; exact header text in the sheet.
+// If a header is renamed in the sheet, update the string here;
+// everything else in the script keeps working off these keys.
+const FIELD = {
+  FIRST_NAME        : &#x27;First Name&#x27;,
+  LAST_NAME         : &#x27;Last Name&#x27;,
+  POSITION          : &#x27;Position / Role&#x27;,
+  DATE_OF_HIRE      : &#x27;Date of Hire&#x27;,       // onboarding trigger
+  START_DATE        : &#x27;Start Date&#x27;,
+  END_DATE          : &#x27;End Date&#x27;,            // offboarding trigger
+  AVAILABILITY      : &#x27;Availability&#x27;,
+  PHONE             : &#x27;Phone&#x27;,
+  PERSONAL_EMAIL    : &#x27;Personal Email&#x27;,
+  DOB               : &#x27;DOB&#x27;,
+  UNIFORM_SIZE      : &#x27;Uniform Size&#x27;,
+  CONTRACT_DOCUSEAL : &#x27;Contract (Docuseal)&#x27;,
+  PHOTO_BIO         : &#x27;Photo + Bio&#x27;,
+  DRIVING_HISTORY   : &#x27;Driving Record&#x27;,
+  DRIVERS_LICENSE   : &quot;Driver&#x27;s License&quot;,
+  STATE_OF_ISSUE    : &#x27;State of Issue&#x27;,
+  LICENSE_NUMBER    : &#x27;License #&#x27;,
+  YRS_LICENSED      : &#x27;Yrs Licensed&#x27;,
+  EMERGENCY_CONTACT : &#x27;Emergency Contact&#x27;,
+  NOTES             : &#x27;Notes&#x27;,
+};
+
+const PROP_OFFBOARD_PREFIX   = &#x27;OFFBOARD_&#x27;;
+const PROP_FOLDER_PREFIX     = &#x27;FOLDER_&#x27;;      // FOLDER_&lt;key&gt;      → Drive folder ID (real ID or absent)
+const PROP_FORM_ROW_PREFIX   = &#x27;FORM_ROW_&#x27;;    // FORM_ROW_&lt;n&gt;      → ISO timestamp (processed lock)
+const PROP_OFFER_FILE_PREFIX = &#x27;OFFER_FILE_&#x27;;  // OFFER_FILE_&lt;key&gt;  → offer letter file ID (for start-date deletion)
+const PROP_ONBOARDED_PREFIX  = &#x27;ONBOARDED_&#x27;;   // ONBOARDED_&lt;key&gt;   → &#x27;true&#x27; (ran through this script) | &#x27;LEGACY&#x27; (pre-existing)
+
+// Role → offer letter template ID. Checked in order; first match wins.
+// Lead Mechanic must come before plain Mechanic to avoid partial-match shadowing.
+const OFFER_LETTER_ROLES = [
+  { match: /guide/i,                          id: &#x27;1W1MAQhVm4nXu9RUrGS8UocD_Lf3UlsWjGwAra4d80XI&#x27; },
+  { match: /lead\s*mechanic/i,                id: &#x27;1S0DzKnLOcSmEY6Xv-WDYO9JluxtSQeDCFJNmbWRrEk0&#x27; },
+  { match: /\bmechanic\b/i,                   id: &#x27;1cQvtrPKuUOCeS86bGWi3oU1fDWMFqaobRrgY7o1gPOE&#x27;  },
+  { match: /detailer/i,                       id: &#x27;1GrxpLXicg5G7vIytDM2056nEv-68SnsKlPdYCz5v5kk&#x27;  },
+  { match: /office\s*assistant/i,             id: &#x27;18a0z-1XJZJMMvr6uaC0Gda9CseFcfsWkYkaLT1xBrgA&#x27;  },
+  { match: /operations?\s*manager/i,          id: &#x27;1hxrf6uVr_j32nN0rOlMbxCjS37VrT_s8tQX5p-rVv6w&#x27;  },
+  { match: /social\s*media|content\s*lead/i,  id: &#x27;10y99_HFjQQc0TVTbLlY2BU-0_HQWlkVUktdv77crUNE&#x27;  },
+];
+
+
+// ─────────────────────────────────────────────────────────────
+// UI MENU — Add custom menu to spreadsheet
+// ─────────────────────────────────────────────────────────────
+function onOpen() {
+  const ui = SpreadsheetApp.getUi();
+  ui.createMenu(&#x27;HR Tools&#x27;)
+    .addItem(&#x27;↩️ Undo Offboarding&#x27;, &#x27;selectOffboardingToUndo&#x27;)
+    .addSeparator()
+    .addItem(&#x27;🚀 Run Pending Offboardings Now&#x27;, &#x27;runPendingOffboardingsNow&#x27;)
+    .addItem(&#x27;📞 Sync Contacts Now&#x27;, &#x27;runContactSyncNow&#x27;)
+    .addToUi();
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// HEADER LOOKUP — the fix for the recurring &quot;columns moved&quot; bug
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Scans header rows and returns { &quot;Header Text&quot;: columnNumber }.
+ * Row 3 (field names) wins; row 2 (group labels) fills any gaps
+ * row 3 left blank (e.g. &quot;Notes&quot; only has a label in row 2).
+ */
+function getHeaderMap_(sheet) {
+  const lastCol = sheet.getLastColumn();
+  const rows = {};
+  CFG.HEADER_ROWS.forEach(r =&gt; { rows[r] = sheet.getRange(r, 1, 1, lastCol).getValues()[0]; });
+
+  const map = {};
+  for (let ri = CFG.HEADER_ROWS.length - 1; ri &gt;= 0; ri--) {
+    const rowVals = rows[CFG.HEADER_ROWS[ri]];
+    rowVals.forEach((val, i) =&gt; {
+      const col = i + 1;
+      const text = String(val || &#x27;&#x27;).trim();
+      if (text &amp;&amp; !Object.values(map).includes(col)) map[text] = col;
+    });
+  }
+  return map;
+}
+
+/** Returns the column number for a FIELD key, or null if that header doesn&#x27;t exist. */
+function col_(headerMap, fieldKey) {
+  return headerMap[FIELD[fieldKey]] || null;
+}
+
+/** Reads a cell by field key; returns null if the column doesn&#x27;t exist. */
+function getByField_(sheet, headerMap, row, fieldKey) {
+  const c = col_(headerMap, fieldKey);
+  return c ? sheet.getRange(row, c).getValue() : null;
+}
+
+/** Writes a cell by field key. No-ops silently if the column doesn&#x27;t exist. */
+function setByField_(sheet, headerMap, row, fieldKey, value) {
+  const c = col_(headerMap, fieldKey);
+  if (c) sheet.getRange(row, c).setValue(value);
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// ONE-TIME SETUP
+// ─────────────────────────────────────────────────────────────
+
+function installTriggers() {
+  ScriptApp.getProjectTriggers().forEach(t =&gt; {
+    const fn = t.getHandlerFunction();
+    if ([&#x27;onEmployeeSheetEdit&#x27;, &#x27;onEmployeeFormSubmit&#x27;, &#x27;onFormSubmit&#x27;, &#x27;dailyHRTasks&#x27;].includes(fn)) ScriptApp.deleteTrigger(t);
+  });
+
+  const ss = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+  // onEdit: HR edits to Current Employees (Date of Hire → onboarding, End Date → offboarding)
+  ScriptApp.newTrigger(&#x27;onEmployeeSheetEdit&#x27;).forSpreadsheet(ss).onEdit().create();
+  // onFormSubmit: fires when the Onboarding Form is submitted — onEdit does NOT fire for form submissions
+  ScriptApp.newTrigger(&#x27;onEmployeeFormSubmit&#x27;).forSpreadsheet(ss).onFormSubmit().create();
+  ScriptApp.newTrigger(&#x27;dailyHRTasks&#x27;).timeBased().everyDays(1).atHour(8).inTimezone(CFG.TIMEZONE).create();
+
+  Logger.log(&#x27;Triggers installed. Now delete the triggers on the OLD scripts (0039, 0042, 049, 0040).&#x27;);
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// FORM SUBMIT TRIGGER — fires when the Onboarding Form is submitted
+// ─────────────────────────────────────────────────────────────
+function onEmployeeFormSubmit(e) {
+  try {
+    const sheet = e.range.getSheet();
+    const row   = e.range.getRow();
+    handleFormResponseRow_(sheet, row);
+  } catch (err) {
+    Logger.log(&#x27;onEmployeeFormSubmit error: &#x27; + err.message);
+    MailApp.sendEmail(CFG.INFO_EMAIL, &#x27;AKWL HR script error (onFormSubmit)&#x27;, err.message + &#x27;\n&#x27; + err.stack);
+  }
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// EDIT TRIGGER — onboarding (Date of Hire) + offboarding (End Date)
+// ─────────────────────────────────────────────────────────────
+function onEmployeeSheetEdit(e) {
+  try {
+    const sheet     = e.range.getSheet();
+    const sheetName = sheet.getName();
+
+    // Only act on Current Employees edits (onboarding / offboarding triggers)
+    if (sheetName !== CFG.TAB_CURRENT) return;
+
+    const row = e.range.getRow();
+    if (row &lt; CFG.DATA_START_ROW) return;
+
+    const headerMap    = getHeaderMap_(sheet);
+    const dateOfHireCol = col_(headerMap, &#x27;DATE_OF_HIRE&#x27;);
+    const endDateCol    = col_(headerMap, &#x27;END_DATE&#x27;);
+
+    const editedCols = [];
+    for (let c = e.range.getColumn(); c &lt; e.range.getColumn() + e.range.getNumColumns(); c++) editedCols.push(c);
+
+    const lock = LockService.getScriptLock();
+    lock.waitLock(10000);
+    try {
+      if (dateOfHireCol &amp;&amp; editedCols.includes(dateOfHireCol)) {
+        const dateOfHire = sheet.getRange(row, dateOfHireCol).getValue();
+        if (dateOfHire) runOnboarding(sheet, headerMap, row);
+      }
+      if (endDateCol &amp;&amp; editedCols.includes(endDateCol)) {
+        const endDate = sheet.getRange(row, endDateCol).getValue();
+        if (endDate) scheduleOffboarding(sheet, headerMap, row, new Date(endDate));
+      }
+    } finally {
+      lock.releaseLock();
+    }
+  } catch (err) {
+    Logger.log(&#x27;onEmployeeSheetEdit error: &#x27; + err.message);
+    MailApp.sendEmail(CFG.INFO_EMAIL, &#x27;AKWL HR script error (onEdit)&#x27;, err.message + &#x27;\n&#x27; + err.stack);
+  }
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// FORM RESPONSES — detect new row, read it, sync to Current Employees
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Called by onEmployeeSheetEdit when the edited sheet is Form Responses.
+ * The installable onEdit trigger fires when the form adds a new row.
+ * We read that row directly by column header text — same header-lookup
+ * pattern used everywhere else in this script.
+ *
+ * To avoid processing the same row twice (e.g., if HR edits a cell in
+ * Form Responses later), we record each processed row in Script Properties.
+ * To manually re-process a row, delete key FORM_ROW_&lt;rowNumber&gt; from
+ * Script Properties (Project Settings → Script Properties in the editor).
+ */
+function handleFormResponseRow_(formSheet, row) {
+  if (row &lt; 2) return;  // row 1 is the header
+
+  const props  = PropertiesService.getScriptProperties();
+  const rowKey = PROP_FORM_ROW_PREFIX + row;
+  if (props.getProperty(rowKey)) return;  // already processed — skip
+
+  // Confirm row has a Timestamp (column 1) — guards against accidental
+  // single-cell edits in the Form Responses tab triggering this function
+  const timestamp = formSheet.getRange(row, 1).getValue();
+  if (!timestamp) return;
+
+  // Mark as processed NOW (before any work) so a concurrent trigger
+  // firing for the same row doesn&#x27;t double-run
+  props.setProperty(rowKey, new Date().toISOString());
+
+  try {
+    processFormResponseRow_(formSheet, row);
+  } catch (err) {
+    props.deleteProperty(rowKey);  // allow retry on next edit if something crashed
+    throw err;
+  }
+}
+
+/**
+ * Reads a Form Responses row by column header text and writes the
+ * mapped values into the matching employee row in Current Employees.
+ *
+ * Form Responses headers are in row 1 only (unlike Current Employees
+ * which has group labels in row 2 and field names in row 3).
+ *
+ * Column → field mapping confirmed from the live Form Responses tab:
+ *   Timestamp, Email, First name, Last name, Date of Birth,
+ *   Phone Number, Personal Email, Mailing Address (Street only),
+ *   City, State (State code, e.g., AK, CA),
+ *   What is your preferred t-shirt size for your uniform?,
+ *   Profile Picture, Emergency Contact Name, Emergency Contact Phone,
+ *   Driver&#x27;s License, Driving Record, State of Issue, License Number,
+ *   Years Licensed,
+ *   Just a quick reminder! Have you signed your Offer Letter via Docuseal yet?,
+ *   Start date, Availabilities
+ */
+function processFormResponseRow_(formSheet, row) {
+  // Read headers (row 1) and the entire data row in 2 API calls total.
+  // All field lookups index into rowValues[] — no per-field getValue() calls.
+  // First name = col C (3), Last name = col D (4) — confirmed layout.
+  const lastCol    = formSheet.getLastColumn();
+  const headerRow  = formSheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  const rowValues  = formSheet.getRange(row, 1, 1, lastCol).getValues()[0];
+
+  const formHeaders = {};
+  headerRow.forEach((val, i) =&gt; {
+    const text = String(val || &#x27;&#x27;).trim();
+    if (text) formHeaders[text] = i + 1;
+  });
+
+  // Fast name read using known column positions (C=3, D=4) — no header scan needed
+  const first = String(rowValues[2] || &#x27;&#x27;).trim();  // col C
+  const last  = String(rowValues[3] || &#x27;&#x27;).trim();  // col D
+  if (!first || !last) {
+    MailApp.sendEmail({
+      to: CFG.MAIL_TO,
+      subject: `AKWL HR: Form response row ${row} has no name`,
+      body: `Row ${row} in Form Responses was submitted but columns C (First Name) and/or D (Last Name) are empty. ` +
+        `Please check the Form Responses tab manually.\n\nTimestamp: ${timestamp}`,
+    });
+    return;
+  }
+
+  // All other fields via header map but reading from pre-loaded rowValues[]
+  const getFormVal = (question) =&gt; {
+    const col = formHeaders[question];
+    if (!col) return &#x27;&#x27;;
+    const v = rowValues[col - 1];
+    return v ? String(v).trim() : &#x27;&#x27;;
+  };
+
+  const ss         = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+  const empSheet   = ss.getSheetByName(CFG.TAB_CURRENT);
+  const headerMap  = getHeaderMap_(empSheet);
+  const empRow     = findEmployeeRow_(empSheet, headerMap, first, last);
+
+  if (!empRow) {
+    const lines = [];
+    headerRow.forEach((h, i) =&gt; {
+      if (!h) return;
+      const v = rowValues[i];
+      if (v !== &#x27;&#x27; &amp;&amp; v !== null &amp;&amp; v !== undefined) lines.push(`${h}: ${v}`);
+    });
+    MailApp.sendEmail({
+      to: CFG.MAIL_TO,
+      subject: `AKWL HR: Form submitted for unknown employee — ${first} ${last}`,
+      body: `${first} ${last} submitted the onboarding form (row ${row} in Form Responses), ` +
+        `but no matching row was found in &quot;${CFG.TAB_CURRENT}&quot;.\n\n` +
+        `Add them manually (Position + Date of Hire), then either:\n` +
+        `  a) Delete Script Property &quot;FORM_ROW_${row}&quot; and have them resubmit, or\n` +
+        `  b) Copy their answers below by hand.\n\n` +
+        `─────────────────────────────────\n` +
+        `${lines.join(&#x27;\n&#x27;)}\n` +
+        `─────────────────────────────────`,
+    });
+    return;
+  }
+
+  // ── Write text fields ─────────────────────────────────────────
+  const set = (fieldKey, question, parseAsDate) =&gt; {
+    const v = getFormVal(question);
+    if (!v) return;
+    setByField_(empSheet, headerMap, empRow, fieldKey, parseAsDate ? new Date(v) : v);
+  };
+
+  set(&#x27;DOB&#x27;,               &#x27;Date of Birth&#x27;, true);
+  set(&#x27;PHONE&#x27;,             &#x27;Phone Number&#x27;);
+  set(&#x27;PERSONAL_EMAIL&#x27;,    &#x27;Email&#x27;);
+  set(&#x27;EMERGENCY_CONTACT&#x27;, &#x27;Emergency Contact Name&#x27;);
+  set(&#x27;STATE_OF_ISSUE&#x27;,    &#x27;State of Issue&#x27;);
+  set(&#x27;LICENSE_NUMBER&#x27;,    &#x27;License Number&#x27;);
+  set(&#x27;YRS_LICENSED&#x27;,      &#x27;Years Licensed&#x27;);
+  set(&#x27;START_DATE&#x27;,        &#x27;Start date&#x27;, true);
+  set(&#x27;AVAILABILITY&#x27;,      &#x27;Availabilities&#x27;);
+  set(&#x27;UNIFORM_SIZE&#x27;,      &#x27;What is your preferred t-shirt size for your uniform?&#x27;);
+
+  // ── Checkmark fields ──────────────────────────────────────────
+  const licenseUrl    = getFormVal(&quot;Driver&#x27;s License&quot;);
+  const drivingRecUrl = getFormVal(&#x27;Driving Record&#x27;);
+  const profilePicUrl = getFormVal(&#x27;Profile Picture&#x27;);
+
+  setByField_(empSheet, headerMap, empRow, &#x27;DRIVERS_LICENSE&#x27;, licenseUrl    ? &#x27;✓&#x27; : &#x27;✕&#x27;);
+  setByField_(empSheet, headerMap, empRow, &#x27;DRIVING_HISTORY&#x27;,  drivingRecUrl ? &#x27;✓&#x27; : &#x27;✕&#x27;);
+  setByField_(empSheet, headerMap, empRow, &#x27;PHOTO_BIO&#x27;,        profilePicUrl ? &#x27;✓&#x27; : &#x27;✕&#x27;);
+
+  const docusealAnswer = getFormVal(&#x27;Just a quick reminder! Have you signed your Offer Letter via Docuseal yet?&#x27;);
+  if      (/yes/i.test(docusealAnswer))     setByField_(empSheet, headerMap, empRow, &#x27;CONTRACT_DOCUSEAL&#x27;, &#x27;✓&#x27;);  // &quot;Yes, all signed!&quot;
+  else if (/not yet/i.test(docusealAnswer)) setByField_(empSheet, headerMap, empRow, &#x27;CONTRACT_DOCUSEAL&#x27;, &#x27;✕&#x27;);  // &quot;Not yet&quot;
+
+  // ── Move uploaded files into the employee&#x27;s onboarding folder ─
+  const folderId = PropertiesService.getScriptProperties()
+    .getProperty(PROP_FOLDER_PREFIX + employeeKey_(first, last));
+
+  // Signed offer letter uploaded directly in the form
+  // Form field must be named exactly: &quot;Signed Offer Letter (PDF)&quot;
+  const signedOfferUrl = getFormVal(&#x27;Signed Offer Letter (PDF)&#x27;);
+  if (signedOfferUrl) setByField_(empSheet, headerMap, empRow, &#x27;CONTRACT_DOCUSEAL&#x27;, &#x27;✓&#x27;);
+
+  if (folderId) {
+    if (profilePicUrl)   moveFileToEmployeeFolder_(profilePicUrl,   folderId, `Profile Picture_${last}`);
+    if (licenseUrl)      moveFileToEmployeeFolder_(licenseUrl,      folderId, `Driver License_${last}`);
+    if (drivingRecUrl)   moveFileToEmployeeFolder_(drivingRecUrl,   folderId, `Driving Record_${last}`);
+    if (signedOfferUrl)  moveFileToEmployeeFolder_(signedOfferUrl,  folderId, `Signed Offer Letter_${last}`);
+  }
+
+  // Employee uploaded their signed PDF in this form — delete the unsigned offer letter Google Doc now.
+  // (No need to wait; the signed copy is already in their Drive folder.)
+  const offerFileIdNow = PropertiesService.getScriptProperties()
+    .getProperty(PROP_OFFER_FILE_PREFIX + employeeKey_(first, last));
+  if (offerFileIdNow) {
+    try {
+      DriveApp.getFileById(offerFileIdNow).setTrashed(true);
+      Logger.log(`Deleted unsigned offer letter doc (${offerFileIdNow}) on form submit.`);
+    } catch (e) {
+      Logger.log(&#x27;Could not delete unsigned offer letter doc: &#x27; + e.message);
+    }
+    // Remove the property and any previously scheduled deletion entry
+    PropertiesService.getScriptProperties().deleteProperty(PROP_OFFER_FILE_PREFIX + employeeKey_(first, last));
+    PropertiesService.getScriptProperties().deleteProperty(&#x27;DELETE_DOC_&#x27; + offerFileIdNow);
+  }
+
+  // Add to Google Contacts with role, DOB, and company
+  const personalEmail = getFormVal(&#x27;Email&#x27;);
+  const phone         = getFormVal(&#x27;Phone Number&#x27;);
+  const role          = String(getByField_(empSheet, headerMap, empRow, &#x27;POSITION&#x27;) || &#x27;&#x27;).trim();
+  const dob           = getFormVal(&#x27;Date of Birth&#x27;);
+  if (personalEmail) addContactSafely_(first, last, personalEmail, phone || undefined, role || undefined, dob || undefined, CFG.COMPANY_NAME);
+
+  Logger.log(`Form row ${row} applied to employee row ${empRow} (${first} ${last}).`);
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// ONBOARDING
+// ─────────────────────────────────────────────────────────────
+function runOnboarding(sheet, headerMap, row) {
+  const first    = getByField_(sheet, headerMap, row, &#x27;FIRST_NAME&#x27;);
+  const last     = getByField_(sheet, headerMap, row, &#x27;LAST_NAME&#x27;);
+  if (!first || !last) return;
+
+  // Guard: skip if onboarding already ran for this employee.
+  // &#x27;LEGACY&#x27; = pre-existing employee marked by markExistingEmployeesAsOnboarded().
+  // &#x27;true&#x27;   = went through this script normally.
+  // This also protects against HR accidentally re-editing the Date of Hire cell.
+  const key   = employeeKey_(first, last);
+  const props = PropertiesService.getScriptProperties();
+  if (props.getProperty(PROP_ONBOARDED_PREFIX + key)) {
+    Logger.log(`runOnboarding: skipping ${first} ${last} — already onboarded.`);
+    return;
+  }
+
+  const position = String(getByField_(sheet, headerMap, row, &#x27;POSITION&#x27;) || &#x27;&#x27;);
+  const isGuide  = /guide/i.test(position);
+
+  // Determine parent folder based on role category
+  const parentFolderId = isGuide                                   ? CFG.GUIDES_PARENT_FOLDER_ID
+    : /lead\s*mechanic|\bmechanic\b|detailer/i.test(position)      ? CFG.MAINTENANCE_PARENT_FOLDER_ID
+    : CFG.OFFICE_PARENT_FOLDER_ID;  // office roles + unknown fallback
+
+  // Determine offer letter: first matching role wins, else use generic fallback
+  const roleEntry       = OFFER_LETTER_ROLES.find(r =&gt; r.match.test(position));
+  const offerTemplateId = roleEntry ? roleEntry.id : CFG.OFFER_LETTER_FALLBACK_ID;
+  const isFallback      = !roleEntry;
+
+  // Checklist: guides get their own template; everyone else shares the non-guide one
+  const checklistId = isGuide ? CFG.GUIDE_CHECKLIST_TEMPLATE_ID : CFG.NON_GUIDE_CHECKLIST_TEMPLATE_ID;
+
+  // Folder name: all employees = &quot;Last, First&quot; for guides, &quot;Last, First (Role)&quot; for everyone else
+  const folderName = isGuide ? `${last}, ${first}` : `${last}, ${first} (${position})`;
+
+  const parentFolder = DriveApp.getFolderById(parentFolderId);
+  const personFolder = parentFolder.createFolder(folderName);
+
+  props.setProperty(PROP_FOLDER_PREFIX + key, personFolder.getId());
+
+  // Hyperlink First Name cell → folder
+  const firstNameCol = col_(headerMap, &#x27;FIRST_NAME&#x27;);
+  if (firstNameCol) {
+    const linkCell = sheet.getRange(row, firstNameCol);
+    linkCell.setFormula(`=HYPERLINK(&quot;${personFolder.getUrl()}&quot;,&quot;${first.replace(/&quot;/g, &#x27;&quot;&quot;&#x27;)}&quot;)`);
+    linkCell.setFontColor(&#x27;#1155CC&#x27;);
+  }
+
+  const offerCopy = DriveApp.getFileById(offerTemplateId)
+    .makeCopy(`Offer Letter_${last}`, personFolder);
+
+  // Checklist file name: &quot;Last, First_Onboarding Checklist&quot;
+  const checklistCopy = DriveApp.getFileById(checklistId)
+    .makeCopy(`${last}, ${first}_Onboarding Checklist`, personFolder);
+
+  const startDate = getByField_(sheet, headerMap, row, &#x27;START_DATE&#x27;);
+  fillOfferLetterPlaceholders_(offerCopy.getId(), first, last, startDate || null);
+
+  // Store offer file ID so form submit can delete it immediately once the signed PDF is uploaded.
+  // Also schedule a fallback deletion 5 days after start date in case the form is never submitted.
+  props.setProperty(PROP_OFFER_FILE_PREFIX + key, offerCopy.getId());
+  if (startDate) {
+    const deleteOn = new Date(startDate);
+    deleteOn.setDate(deleteOn.getDate() + 5);
+    scheduleDocDeletionOn_(offerCopy.getId(), deleteOn);
+  }
+  // Checklist expires 15 days from today (not start-date based)
+  scheduleDocDeletion_(checklistCopy.getId(), 15);
+
+  // HR notification
+  const fallbackNote = isFallback
+    ? `\n⚠️  UNKNOWN ROLE: No offer letter template exists for &quot;${position}&quot;. ` +
+      `A generic adaptable template was used — please update the Scope of Work and ` +
+      `Compensation sections before sending.\nAll offer letters: ${CFG.OFFER_LETTERS_FOLDER_URL}\n`
+    : &#x27;&#x27;;
+  const checklistNote = !isGuide
+    ? `\n⚠️  CHECKLIST: The non-guide checklist template must be adapted for ${first}&#x27;s role ` +
+      `(${position}) before sharing with the employee.\n`
+    : &#x27;&#x27;;
+
+  MailApp.sendEmail({
+    to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
+    subject: `New Employee Onboarding — ${first} ${last}`,
+    body: `${first} ${last} (${position}) has a Date of Hire entered.\n\n` +
+      `Folder:               ${personFolder.getUrl()}\n` +
+      `Offer Letter:         ${offerCopy.getUrl()}\n` +
+      `Onboarding Checklist: ${checklistCopy.getUrl()}\n` +
+      `${fallbackNote}${checklistNote}\n` +
+      `HR onboarding checklist:\n${CFG.HR_CHECKLIST_URL}`,
+  });
+
+  GmailApp.createDraft(CFG.INSURANCE_EMAIL, `Insurance Update: New Hire — ${first} ${last}`,
+    `Tabatha,\n\nPlease see attached for documentation regarding our new hire ` +
+    `(${first} ${last}) to update our insurance.\n\nThanks in advance!`,
+    { cc: CFG.MAIL_CC });
+
+  const email            = getByField_(sheet, headerMap, row, &#x27;PERSONAL_EMAIL&#x27;);
+  const hasEmail         = isValidEmail_(email);
+  const welcomeTo        = hasEmail ? String(email).trim() : CFG.INFO_EMAIL;
+  // When no email on file: draft goes to info@ so HR can forward it once they have the address
+  const noEmailNote      = hasEmail ? &#x27;&#x27;
+    : `⚠️  No personal email on file for ${first} ${last}.\n` +
+      `Update the &quot;To:&quot; field with their email address before sending.\n\n`;
+
+  GmailApp.createDraft(welcomeTo, &#x27;Welcome to Alaska Wild Lights!&#x27;,
+    noEmailNote +
+    `Hi ${first}!\n\n` +
+    `Welcome to Alaska Wild Lights. We&#x27;re thrilled to have you on the team!\n\n` +
+    `Here&#x27;s everything you need to get started. There are three things to complete before Day 1, ` +
+    `and we&#x27;ve made it as straightforward as possible.\n\n` +
+    `STEP 1 — SIGN YOUR OFFER LETTER\n` +
+    `Check your inbox for an email from DocuSeal with your offer letter (check your spam folder too). ` +
+    `Sign it electronically at your earliest convenience. ` +
+    `Once signed, DocuSeal will send you a confirmation email with your signed PDF attached. ` +
+    `Download and save that PDF to your device — you will need to upload it in Step 2. ` +
+    `The onboarding form cannot be submitted without it.\n\n` +
+    `STEP 2 — COMPLETE YOUR ONBOARDING FORM\n` +
+    `Complete Your Onboarding Form Here: ${CFG.ONBOARDING_FORM_URL}\n\n` +
+    `Before you sit down to fill it out, have the following ready — it&#x27;ll take about 5 minutes:\n\n` +
+    `• Your signed Offer Letter PDF (required — the form will not submit without this)\n` +
+    `• A headshot photo (clear, good lighting — this is what guests see)\n` +
+    `• Your driver&#x27;s license (photo or scan to upload)\n` +
+    `• Your driving record (you can request it from the DMV)\n` +
+    `• License details: state of issue, license number, years licensed\n` +
+    `• Your general availability\n\n` +
+    `Important: Please only upload the documents requested. If you don&#x27;t yet have a specific ` +
+    `document (for example, your driving record), do not substitute another document in its place. ` +
+    `Instead, let us know as soon as possible.\n\n` +
+    `STEP 3 — COMPLETE YOUR ONBOARDING CHECKLIST (WITHIN 15 DAYS OF YOUR START DATE)\n` +
+    `Your Onboarding Checklist walks you through everything to complete before your first tour. ` +
+    `You can find it in your onboarding folder below. Please complete all items within 15 days of your start date.\n` +
+    `${checklistCopy.getUrl()}\n\n` +
+    `YOUR ONBOARDING FOLDER\n` +
+    `Review everything at your own pace: ${personFolder.getUrl()}\n` +
+    `You already have contributor access. Once you submit your onboarding form, all necessary ` +
+    `documents will be added automatically — please make sure everything is in order.\n\n` +
+    `YOUR FIRST MEETING\n` +
+    `Our operations manager will reach out once we have your official first tour date confirmed.\n\n` +
+    `A few things to have ready before Day 1:\n\n` +
+    `• Review the Employee Handbook in your onboarding folder.\n` +
+    `• Log in to FareHarbor and SimplyFleet using the credentials you&#x27;ll receive separately.\n` +
+    `• Come with questions — we want you to feel confident before your first solo tour.\n\n` +
+    `If anything comes up before then, don&#x27;t hesitate to reach out.\n\n` +
+    `Best regards,\n` +
+    `Alaska Wild Lights Team`);
+
+  // 15-day checklist reminder draft — send manually when the time comes
+  GmailApp.createDraft(welcomeTo, `Reminder: Your Onboarding Checklist Is Due Soon`,
+    noEmailNote +
+    `Hi ${first},\n\n` +
+    `Hope everything&#x27;s going well! Just a friendly reminder that your Onboarding Checklist ` +
+    `is due within 15 days of your start date.\n\n` +
+    `If you haven&#x27;t had a chance to go through it yet, no worries — you can find it here:\n` +
+    `${checklistCopy.getUrl()}\n\n` +
+    `And your full onboarding folder is here:\n` +
+    `${personFolder.getUrl()}\n\n` +
+    `Feel free to reach out if you have any questions. We&#x27;re happy to help!\n\n` +
+    `Warm regards,\n` +
+    `Alaska Wild Lights Team`);
+
+  // Contact added later in processFormResponseRow_ once email + phone arrive via the form
+
+  // Mark as onboarded so this never re-runs (protects against accidental Date-of-Hire re-edits)
+  props.setProperty(PROP_ONBOARDED_PREFIX + key, &#x27;true&#x27;);
+
+  Logger.log(`Onboarding complete for ${first} ${last} (${position})${isFallback ? &#x27; — FALLBACK template&#x27; : &#x27;&#x27;}.`);
+}
+
+/**
+ * Offer Letter template placeholders (verified from GUIDE_AKWL_Offer_Letter.docx):
+ *   {{FIRST_NAME}}  →  first name
+ *   {{LAST_NAME}}   →  last name
+ *   {{DATE}}        →  Start Date (the &quot;Start Date:&quot; line in the letter)
+ * If Start Date isn&#x27;t filled yet when onboarding fires, {{DATE}} stays in the
+ * document as a visible reminder for HR to fill it in manually before sending.
+ */
+function fillOfferLetterPlaceholders_(fileId, first, last, startDate) {
+  const doc  = DocumentApp.openById(fileId);
+  const body = doc.getBody();
+  body.replaceText(&#x27;\\{\\{FIRST_NAME\\}\\}&#x27;, first);
+  body.replaceText(&#x27;\\{\\{LAST_NAME\\}\\}&#x27;,  last);
+  body.replaceText(&#x27;\\{\\{DATE\\}\\}&#x27;, startDate ? formatDate_(new Date(startDate)) : &#x27;{{DATE}} — please fill in&#x27;);
+  doc.saveAndClose();
+}
+
+
+
+// ─────────────────────────────────────────────────────────────
+// OFFBOARDING — scheduling (on End Date entry) + execution (daily)
+// ─────────────────────────────────────────────────────────────
+function scheduleOffboarding(sheet, headerMap, row, endDate) {
+  const first = getByField_(sheet, headerMap, row, &#x27;FIRST_NAME&#x27;);
+  const last  = getByField_(sheet, headerMap, row, &#x27;LAST_NAME&#x27;);
+  if (!first || !last) return;
+
+  const key      = employeeKey_(first, last);
+  const props    = PropertiesService.getScriptProperties();
+  const existing = JSON.parse(props.getProperty(PROP_OFFBOARD_PREFIX + key) || &#x27;null&#x27;);
+
+  props.setProperty(PROP_OFFBOARD_PREFIX + key, JSON.stringify({
+    first, last,
+    endDate     : Utilities.formatDate(endDate, CFG.TIMEZONE, &#x27;yyyy-MM-dd&#x27;),
+    executed    : existing ? existing.executed    : false,
+    followUpSent: existing ? existing.followUpSent : false,
+    scheduledOn : existing ? existing.scheduledOn  : new Date().toISOString(),
+  }));
+
+  Logger.log(`Offboarding scheduled for ${first} ${last} on ${Utilities.formatDate(endDate, CFG.TIMEZONE, &#x27;yyyy-MM-dd&#x27;)}.`);
+}
+
+function dailyHRTasks() {
+  const props = PropertiesService.getScriptProperties();
+  const all   = props.getProperties();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  Object.keys(all).forEach(key =&gt; {
+    if (!key.startsWith(PROP_OFFBOARD_PREFIX)) return;
+    let entry;
+    try { entry = JSON.parse(all[key]); } catch (e) { return; }
+
+    const endDate = new Date(entry.endDate + &#x27;T00:00:00&#x27;);
+
+    if (!entry.executed &amp;&amp; endDate &lt;= today) {
+      const ok = executeOffboarding_(entry);
+      if (ok) {
+        entry.executed   = true;
+        entry.executedOn = Utilities.formatDate(new Date(), CFG.TIMEZONE, &#x27;yyyy-MM-dd&#x27;);
+        props.setProperty(key, JSON.stringify(entry));
+      }
+    } else if (entry.executed &amp;&amp; !entry.followUpSent) {
+      const dueDate = addBusinessDays_(new Date(entry.executedOn), CFG.FOLLOW_UP_BUSINESS_DAYS);
+      if (dueDate &lt;= today) {
+        sendFollowUpReminder_(entry);
+        entry.followUpSent = true;
+        props.setProperty(key, JSON.stringify(entry));
+      }
+    } else if (entry.followUpSent) {
+      props.deleteProperty(key);
+    }
+  });
+
+  cleanupScheduledDocDeletions_();
+  checkMissingOnboardingDocs_();
+  validateFormResponseProcessing_();
+  checkEmployeeContacts_();
+  checkUpcomingBirthdays_();
+}
+
+function executeOffboarding_(entry) {
+  try {
+    const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+    const sheet     = ss.getSheetByName(CFG.TAB_CURRENT);
+    const headerMap = getHeaderMap_(sheet);
+    const row       = findEmployeeRow_(sheet, headerMap, entry.first, entry.last);
+
+    if (!row) {
+      Logger.log(`executeOffboarding_: row not found for ${entry.first} ${entry.last} — skipping.`);
+      return false;
+    }
+
+    const endDateFormatted = formatDate_(new Date(entry.endDate + &#x27;T00:00:00&#x27;));
+    const folderPropKey    = PROP_FOLDER_PREFIX + employeeKey_(entry.first, entry.last);
+    const employeeFolderId = PropertiesService.getScriptProperties().getProperty(folderPropKey);
+
+    // Termination letter — fill placeholders in a temp Doc, export as PDF, save to folder, delete temp Doc
+    const termDest  = employeeFolderId
+      ? DriveApp.getFolderById(employeeFolderId)
+      : DriveApp.getFolderById(CFG.FORMER_DOCS_FOLDER_ID);  // fallback if no folder on record
+    const tempDoc   = DriveApp.getFileById(CFG.TERM_LETTER_TEMPLATE_ID)
+      .makeCopy(`_temp_Termination_${entry.last}`, termDest);
+    const gdoc      = DocumentApp.openById(tempDoc.getId());
+    const gdocBody  = gdoc.getBody();
+    gdocBody.replaceText(&#x27;\\{\\{MONTH, DAY, YEAR\\}\\}&#x27;, endDateFormatted);
+    gdocBody.replaceText(&#x27;\\{\\{FIRST_NAME\\}\\}&#x27;,        entry.first);
+    gdocBody.replaceText(&#x27;\\{\\{LAST_NAME\\}\\}&#x27;,         entry.last);
+    gdoc.saveAndClose();
+
+    // Export to PDF and save in the same folder
+    const pdfBlob = DriveApp.getFileById(tempDoc.getId()).getAs(&#x27;application/pdf&#x27;);
+    pdfBlob.setName(`Termination Letter_${entry.last}.pdf`);
+    const pdfFile = termDest.createFile(pdfBlob);
+
+    // Delete the temporary Google Doc
+    tempDoc.setTrashed(true);
+
+    let formerFolderLine = &#x27;&#x27;;
+    if (employeeFolderId) {
+      try { formerFolderLine = `Former employee folder: ${DriveApp.getFolderById(employeeFolderId).getUrl()}\n`; } catch (e) {}
+    }
+
+    MailApp.sendEmail({
+      to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
+      subject: `Employee Off-Boarding — ${entry.first} ${entry.last}`,
+      body: `${entry.first} ${entry.last}&#x27;s employment ends ${endDateFormatted}.\n\n` +
+        `Termination letter (PDF): ${pdfFile.getUrl()}\n` +
+        formerFolderLine + &#x27;\n&#x27; +
+        `Please ensure Pathway processes their final paycheck within 3 business days, ` +
+        `and confirm Tabatha Wilson (Trucordia) has been notified to remove them from insurance.\n\n` +
+        `HIGH IMPORTANCE — Complete the offboarding checklist for ${entry.first} ${entry.last} based on their role. ` +
+        `This checklist covers highly sensitive account access and information:\n` +
+        `${CFG.OFFBOARDING_CHECKLIST_URL}`,
+    });
+
+    GmailApp.createDraft(CFG.INSURANCE_EMAIL, `Employee Off-Boarded — ${entry.first} ${entry.last}`,
+      `Tabatha,\n\n${entry.first} ${entry.last} has been off-boarded effective ${endDateFormatted}.\n\n` +
+      `Please remove them from our insurance policy accordingly.\n\nThank you!`,
+      { cc: CFG.MAIL_CC });
+
+    // Farewell email to the employee — PDF attached, review and send manually
+    const empPersonalEmail = getByField_(sheet, headerMap, row, &#x27;PERSONAL_EMAIL&#x27;);
+    const farewellTo       = isValidEmail_(empPersonalEmail) ? String(empPersonalEmail).trim() : CFG.INFO_EMAIL;
+    const noEmpEmailNote   = isValidEmail_(empPersonalEmail) ? &#x27;&#x27;
+      : `⚠️  No personal email on file for ${entry.first} ${entry.last}. Update the &quot;To:&quot; field before sending.\n\n`;
+
+    GmailApp.createDraft(farewellTo, `Thank You — ${entry.first} ${entry.last}`,
+      noEmpEmailNote +
+      `Hi ${entry.first},\n\n` +
+      `As your time with Alaska Wild Lights comes to a close, we just wanted to take a moment to say ` +
+      `thank you. It has been a genuine pleasure having you as part of our team, and we truly appreciate ` +
+      `the effort and care you brought to your work.\n\n` +
+      `We wish you all the best in your future endeavors — we have no doubt you&#x27;ll do great things.\n\n` +
+      `Please don&#x27;t hesitate to reach out if you ever need anything from us.\n\n` +
+      `Please find your termination letter attached to this email.\n\n` +
+      `Warmly,\n` +
+      `Alaska Wild Lights Team`,
+      { attachments: [pdfBlob] });
+
+    removeContactSafely_(empPersonalEmail);
+
+    // Move the employee&#x27;s Drive folder into the Former Employees personnel folder
+    if (employeeFolderId) {
+      try {
+        cleanOffboardingFolder_(employeeFolderId);  // delete profile picture before archiving
+        DriveApp.getFolderById(employeeFolderId)
+          .moveTo(DriveApp.getFolderById(CFG.FORMER_PERSONNEL_FOLDER_ID));
+        PropertiesService.getScriptProperties().deleteProperty(folderPropKey);
+        PropertiesService.getScriptProperties().deleteProperty(&#x27;REMINDER_DOCS_&#x27; + employeeKey_(entry.first, entry.last));
+      } catch (folderErr) {
+        Logger.log(&#x27;Could not move employee folder: &#x27; + folderErr.message);
+      }
+    }
+
+    moveToFormerEmployees_(sheet, headerMap, row, ss.getSheetByName(CFG.TAB_FORMER));
+    sheet.deleteRow(row);
+
+    Logger.log(`Offboarding executed for ${entry.first} ${entry.last}.`);
+    return true;
+  } catch (err) {
+    Logger.log(&#x27;executeOffboarding_ error: &#x27; + err.message);
+    MailApp.sendEmail(CFG.INFO_EMAIL,
+      `AKWL HR script error offboarding ${entry.first} ${entry.last}`,
+      err.message + &#x27;\n&#x27; + err.stack);
+    return false;
+  }
+}
+
+/**
+ * Appends one row to the Former Employees sheet using its fixed 9-column format:
+ *   Col 1: #  (sequential number = last row in the sheet before append)
+ *   Col 2: First Name
+ *   Col 3: Last Name
+ *   Col 4: Position/Role
+ *   Col 5: Date of Hire
+ *   Col 6: End Date
+ *   Col 7: Phone
+ *   Col 8: Personal Email
+ *   Col 9: Notes
+ * This preserves the existing sheet layout rather than trying to mirror
+ * Current Employees headers (which have 20 columns and a different structure).
+ */
+function moveToFormerEmployees_(sourceSheet, sourceHeaderMap, sourceRow, formerSheet) {
+  const get = (fieldKey) =&gt; getByField_(sourceSheet, sourceHeaderMap, sourceRow, fieldKey);
+  const nextRow = Math.max(formerSheet.getLastRow() + 1, 2);  // row 1 is the header
+  const rowNum  = nextRow - 1;  // sequential # starting at 1
+
+  const values = [
+    rowNum,
+    get(&#x27;FIRST_NAME&#x27;)     || &#x27;&#x27;,
+    get(&#x27;LAST_NAME&#x27;)      || &#x27;&#x27;,
+    get(&#x27;POSITION&#x27;)       || &#x27;&#x27;,
+    get(&#x27;DATE_OF_HIRE&#x27;)   || &#x27;&#x27;,
+    get(&#x27;END_DATE&#x27;)       || &#x27;&#x27;,
+    get(&#x27;PHONE&#x27;)          || &#x27;&#x27;,
+    get(&#x27;PERSONAL_EMAIL&#x27;) || &#x27;&#x27;,
+    get(&#x27;NOTES&#x27;)          || &#x27;&#x27;,
+  ];
+
+  formerSheet.getRange(nextRow, 1, 1, values.length).setValues([values]);
+  return nextRow;
+}
+
+/**
+ * Runs daily. After 7 days from Date of Hire, checks each active employee
+ * for missing onboarding items. Sends one reminder (never repeats) tracked
+ * via Script Property REMINDER_DOCS_&lt;key&gt;.
+ * - If employee email is on file → email goes directly to them (CC info@)
+ * - If no email → email goes to info@ so HR can follow up manually
+ */
+function checkMissingOnboardingDocs_() {
+  const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+  const sheet     = ss.getSheetByName(CFG.TAB_CURRENT);
+  const headerMap = getHeaderMap_(sheet);
+  const props     = PropertiesService.getScriptProperties();
+  const today     = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Global 15-day throttle — the full check runs at most once every 15 days.
+  // testMissingDocsNow() clears REMINDER_DOCS_LAST_RUN so it always fires immediately when testing.
+  const globalThrottleKey = &#x27;REMINDER_DOCS_LAST_RUN&#x27;;
+  const lastRun           = props.getProperty(globalThrottleKey);
+  if (lastRun &amp;&amp; (today - new Date(lastRun)) / 86400000 &lt; 15) return;
+  props.setProperty(globalThrottleKey, today.toISOString());
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow &lt; CFG.DATA_START_ROW) return;
+
+  // ✕ or empty = doc is missing → reminder; — = not applicable → skipped automatically (not ✕, not empty)
+  const isMissing_ = v =&gt; !v || String(v).trim() === &#x27;✕&#x27;;
+
+  // HR summary — collected across ALL employees with missing docs
+  const summaryByType = {
+    &#x27;Offer Letter (Docuseal)&#x27;: [],
+    &quot;Driver&#x27;s License&quot;:        [],
+    &#x27;Driving Record&#x27;:          [],
+    &#x27;Profile Photo&#x27;:           [],
+  };
+
+  for (let row = CFG.DATA_START_ROW; row &lt;= lastRow; row++) {
+    const first      = getByField_(sheet, headerMap, row, &#x27;FIRST_NAME&#x27;);
+    const last       = getByField_(sheet, headerMap, row, &#x27;LAST_NAME&#x27;);
+    const dateOfHire = getByField_(sheet, headerMap, row, &#x27;DATE_OF_HIRE&#x27;);
+    if (!first || !last || !dateOfHire) continue;
+    if (/backup/i.test(String(getByField_(sheet, headerMap, row, &#x27;POSITION&#x27;) || &#x27;&#x27;))) continue;
+
+    const hireDate = new Date(dateOfHire);
+    hireDate.setHours(0, 0, 0, 0);
+    if ((today - hireDate) / 86400000 &lt; 7) continue;  // less than 7 days — too early
+
+    // Collect missing items (always, so they appear in the HR summary)
+    const missing = [];
+    if (isMissing_(getByField_(sheet, headerMap, row, &#x27;CONTRACT_DOCUSEAL&#x27;))) { missing.push(&#x27;Offer Letter (Docuseal signature)&#x27;); summaryByType[&#x27;Offer Letter (Docuseal)&#x27;].push(`${first} ${last}`); }
+    if (isMissing_(getByField_(sheet, headerMap, row, &#x27;DRIVERS_LICENSE&#x27;)))   { missing.push(&quot;Driver&#x27;s License&quot;);                  summaryByType[&quot;Driver&#x27;s License&quot;].push(`${first} ${last}`); }
+    if (isMissing_(getByField_(sheet, headerMap, row, &#x27;DRIVING_HISTORY&#x27;)))   { missing.push(&#x27;Driving Record&#x27;);                    summaryByType[&#x27;Driving Record&#x27;].push(`${first} ${last}`); }
+    if (isMissing_(getByField_(sheet, headerMap, row, &#x27;PHOTO_BIO&#x27;)))         { missing.push(&#x27;Profile Photo&#x27;);                     summaryByType[&#x27;Profile Photo&#x27;].push(`${first} ${last}`); }
+    if (!missing.length) continue;
+
+    // 30-day throttle for employee-facing draft only
+    const propKey  = &#x27;REMINDER_DOCS_&#x27; + employeeKey_(first, last);
+    const lastSent = props.getProperty(propKey);
+    if (lastSent &amp;&amp; (today - new Date(lastSent)) / 86400000 &lt; 30) continue;
+
+    const employeeEmail = getByField_(sheet, headerMap, row, &#x27;PERSONAL_EMAIL&#x27;);
+    const bulletList    = missing.map(m =&gt; `  • ${m}`).join(&#x27;\n&#x27;);
+
+    if (isValidEmail_(employeeEmail)) {
+      GmailApp.createDraft(employeeEmail,
+        &#x27;Action Required: Complete Your Onboarding — Alaska Wild Lights&#x27;,
+        `Hi ${first},\n\n` +
+        `We noticed a few items are still pending in your onboarding. ` +
+        `Please complete the following as soon as possible:\n\n` +
+        `${bulletList}\n\n` +
+        `You can submit these through your onboarding form or upload directly ` +
+        `to your onboarding folder. If you have any questions, don&#x27;t hesitate to reach out.\n\n` +
+        `Best,\nAlaska Wild Lights`,
+        { cc: CFG.INFO_EMAIL });
+    } else {
+      GmailApp.createDraft(CFG.INFO_EMAIL,
+        `Reminder: Missing onboarding docs — ${first} ${last}`,
+        `${first} ${last} is missing the following onboarding items ` +
+        `(7 days since Date of Hire):\n\n` +
+        `${bulletList}\n\n` +
+        `No email on file — please follow up with them directly.`);
+    }
+
+    props.setProperty(propKey, today.toISOString());
+    Logger.log(`Onboarding reminder draft created for ${first} ${last}. Missing: ${missing.join(&#x27;, &#x27;)}`);
+  }
+
+  // HR summary email — timing controlled by the 15-day global throttle above
+  const summaryLines = Object.entries(summaryByType)
+    .filter(([, names]) =&gt; names.length &gt; 0)
+    .map(([type, names]) =&gt; `• Missing ${type}:\n    ${names.join(&#x27;\n    &#x27;)}`);
+
+  if (summaryLines.length &gt; 0) {
+    MailApp.sendEmail({
+      to: CFG.MAIL_TO,
+      subject: &#x27;AKWL HR: Missing Onboarding Documents&#x27;,
+      body: `Missing onboarding documents as of ${Utilities.formatDate(new Date(), CFG.TIMEZONE, &#x27;MMMM d, yyyy&#x27;)}:\n\n` +
+        summaryLines.join(&#x27;\n\n&#x27;) + &#x27;\n\n&#x27; +
+        `Individual reminder drafts are created for employees not reminded in the last 30 days. ` +
+        `Check Gmail Drafts before sending.`,
+    });
+    Logger.log(&#x27;HR missing docs summary email sent.&#x27;);
+  }
+}
+
+/**
+ * Runs every 3 days to validate that all Form Responses rows have been processed
+ * and files moved to employee onboarding folders. Reprocesses any missed rows.
+ */
+function validateFormResponseProcessing_() {
+  const props = PropertiesService.getScriptProperties();
+  const lastCheckKey = &#x27;LAST_FORM_VALIDATE_CHECK&#x27;;
+  const lastCheck = props.getProperty(lastCheckKey);
+  const now = new Date();
+
+  // Only run every 3 days
+  if (lastCheck) {
+    const lastCheckDate = new Date(lastCheck);
+    const daysSinceCheck = (now - lastCheckDate) / (1000 * 60 * 60 * 24);
+    if (daysSinceCheck &lt; 3) return;
+  }
+
+  // Update last check timestamp
+  props.setProperty(lastCheckKey, now.toISOString());
+
+  try {
+    const ss = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+    const formSheet = ss.getSheetByName(CFG.TAB_FORM_RESPONSES);
+    const lastRow = formSheet.getLastRow();
+
+    if (lastRow &lt; 2) return;  // Only header row or empty
+
+    const unprocessedRows = [];
+
+    for (let row = 2; row &lt;= lastRow; row++) {
+      const rowKey = PROP_FORM_ROW_PREFIX + row;
+      if (!props.getProperty(rowKey)) {
+        // This row was never processed — reprocess it now
+        unprocessedRows.push(row);
+        try {
+          handleFormResponseRow_(formSheet, row);
+        } catch (err) {
+          Logger.log(`validateFormResponseProcessing_: Failed to reprocess row ${row}: ${err.message}`);
+        }
+      }
+    }
+
+    if (unprocessedRows.length &gt; 0) {
+      MailApp.sendEmail({
+        to: CFG.MAIL_TO,
+        subject: `Form Response Validation: Found and reprocessed ${unprocessedRows.length} missed row(s)`,
+        body: `The following Form Responses rows were unprocessed and have been reprocessed:\n\n` +
+          `Rows: ${unprocessedRows.join(&#x27;, &#x27;)}\n\n` +
+          `Employee data has been synced to Current Employees and files moved to their ` +
+          `onboarding folders (if present). Please verify the data looks correct.`,
+      });
+      Logger.log(`validateFormResponseProcessing_: Reprocessed ${unprocessedRows.length} rows: ${unprocessedRows.join(&#x27;, &#x27;)}`);
+    }
+  } catch (err) {
+    Logger.log(&#x27;validateFormResponseProcessing_: &#x27; + err.message);
+    MailApp.sendEmail(CFG.INFO_EMAIL, &#x27;AKWL HR script error (validateFormResponseProcessing_)&#x27;,
+      err.message + &#x27;\n&#x27; + err.stack);
+  }
+}
+
+function sendFollowUpReminder_(entry) {
+  MailApp.sendEmail({
+    to: CFG.MAIL_TO, cc: CFG.MAIL_CC,
+    subject: `Action Required: Final Off-Boarding Steps — ${entry.first} ${entry.last}`,
+    body: `This is the ${CFG.FOLLOW_UP_BUSINESS_DAYS}-business-day follow-up for ` +
+      `${entry.first} ${entry.last} (terminated ${formatDate_(new Date(entry.endDate + &#x27;T00:00:00&#x27;))}).\n\nPlease:\n` +
+      `1. Deactivate/remove them from QuickBooks.\n\n` +
+      `Note: their Drive folder has already been moved to the Former Employees folder automatically.\n\n` +
+      `Please confirm once complete.`,
+  });
+}
+
+
+
+// ─────────────────────────────────────────────────────────────
+// GOOGLE CONTACTS  (replaces &quot;0040&quot;)
+// ─────────────────────────────────────────────────────────────
+function addContactSafely_(first, last, email, phone, role, dob, company) {
+  if (!isValidEmail_(email)) return;
+  try {
+    if (getContactResourceName_(email)) return;
+    const body = {
+      names         : [{ givenName: first, familyName: last, displayName: `${first} ${last}` }],
+      emailAddresses: [{ value: email, type: &#x27;work&#x27; }],
+    };
+    if (phone) body.phoneNumbers = [{ value: phone, type: &#x27;mobile&#x27; }];
+    if (company || role) body.organizations = [{ name: company || &#x27;&#x27;, title: role || &#x27;&#x27;, type: &#x27;work&#x27;, current: true }];
+    if (dob) {
+      const d = new Date(dob);
+      if (!isNaN(d.getTime())) body.birthdays = [{ date: { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() } }];
+    }
+    const contact = People.People.createContact(body);
+    addToTeamGroup_(contact.resourceName);
+    Logger.log(`Contact added: ${first} ${last} &lt;${email}&gt;`);
+  } catch (err) {
+    Logger.log(&#x27;addContactSafely_ error: &#x27; + err.message);
+  }
+}
+
+function removeContactSafely_(email) {
+  if (!isValidEmail_(email)) return;
+  try {
+    const resourceName = getContactResourceName_(email);
+    if (!resourceName) return;
+    People.People.deleteContact(resourceName);
+    Logger.log(`Contact removed: ${email}`);
+  } catch (err) {
+    Logger.log(&#x27;removeContactSafely_ error: &#x27; + err.message);
+  }
+}
+
+function getContactResourceName_(email) {
+  let pageToken = null;
+  do {
+    const params = { personFields: &#x27;emailAddresses&#x27;, pageSize: 1000 };
+    if (pageToken) params.pageToken = pageToken;
+    const response = People.People.Connections.list(&#x27;people/me&#x27;, params);
+    for (const person of (response.connections || [])) {
+      for (const ea of (person.emailAddresses || [])) {
+        if (ea.value &amp;&amp; ea.value.toLowerCase() === String(email).toLowerCase()) return person.resourceName;
+      }
+    }
+    pageToken = response.nextPageToken;
+  } while (pageToken);
+  return null;
+}
+
+function addToTeamGroup_(personResourceName) {
+  const groups = People.ContactGroups.list().contactGroups || [];
+  const existing = groups.find(g =&gt; g.name === CFG.CONTACT_GROUP_NAME);
+  const groupResourceName = existing
+    ? existing.resourceName
+    : People.ContactGroups.create({ contactGroup: { name: CFG.CONTACT_GROUP_NAME } }).resourceName;
+
+  UrlFetchApp.fetch(`https://people.googleapis.com/v1/${groupResourceName}/members:modify`, {
+    method: &#x27;post&#x27;, contentType: &#x27;application/json&#x27;,
+    headers: { Authorization: &#x27;Bearer &#x27; + ScriptApp.getOAuthToken() },
+    payload: JSON.stringify({ resourceNamesToAdd: [personResourceName] }),
+    muteHttpExceptions: true,
+  });
+}
+
+function isValidEmail_(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || &#x27;&#x27;).trim());
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// SHARED HELPERS
+// ─────────────────────────────────────────────────────────────
+function findEmployeeRow_(sheet, headerMap, first, last) {
+  const firstCol = col_(headerMap, &#x27;FIRST_NAME&#x27;);
+  const lastCol  = col_(headerMap, &#x27;LAST_NAME&#x27;);
+  if (!firstCol || !lastCol) return null;
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow &lt; CFG.DATA_START_ROW) return null;
+  const data = sheet.getRange(CFG.DATA_START_ROW, 1, lastRow - CFG.DATA_START_ROW + 1, Math.max(firstCol, lastCol)).getValues();
+  for (let i = 0; i &lt; data.length; i++) {
+    if (String(data[i][firstCol - 1]).trim().toLowerCase() === String(first).trim().toLowerCase() &amp;&amp;
+        String(data[i][lastCol  - 1]).trim().toLowerCase() === String(last).trim().toLowerCase()) {
+      return CFG.DATA_START_ROW + i;
+    }
+  }
+  return null;
+}
+
+function employeeKey_(first, last) {
+  return (first + &#x27;_&#x27; + last).replace(/\s+/g, &#x27;_&#x27;).toLowerCase();
+}
+
+function formatDate_(date) {
+  const months = [&#x27;January&#x27;,&#x27;February&#x27;,&#x27;March&#x27;,&#x27;April&#x27;,&#x27;May&#x27;,&#x27;June&#x27;,
+                  &#x27;July&#x27;,&#x27;August&#x27;,&#x27;September&#x27;,&#x27;October&#x27;,&#x27;November&#x27;,&#x27;December&#x27;];
+  return months[date.getMonth()] + &#x27; &#x27; + date.getDate() + &#x27;, &#x27; + date.getFullYear();
+}
+
+function addBusinessDays_(startDate, days) {
+  const result = new Date(startDate);
+  let added = 0;
+  while (added &lt; days) {
+    result.setDate(result.getDate() + 1);
+    const day = result.getDay();
+    if (day !== 0 &amp;&amp; day !== 6) added++;
+  }
+  return result;
+}
+
+function scheduleDocDeletion_(fileId, daysFromNow) {
+  const deleteOn = new Date();
+  deleteOn.setDate(deleteOn.getDate() + daysFromNow);
+  PropertiesService.getScriptProperties().setProperty(&#x27;DELETE_DOC_&#x27; + fileId, deleteOn.toISOString());
+}
+
+function scheduleDocDeletionOn_(fileId, date) {
+  PropertiesService.getScriptProperties().setProperty(&#x27;DELETE_DOC_&#x27; + fileId, new Date(date).toISOString());
+}
+
+function cleanupScheduledDocDeletions_() {
+  const props = PropertiesService.getScriptProperties();
+  const lastCheckKey = &#x27;CLEANUP_DOCS_LAST_CHECK&#x27;;
+  const lastCheck = props.getProperty(lastCheckKey);
+  const now = new Date();
+  if (lastCheck &amp;&amp; (now - new Date(lastCheck)) / (1000 * 60 * 60 * 24) &lt; 3) return;
+  props.setProperty(lastCheckKey, now.toISOString());
+
+  const all = props.getProperties();
+  Object.keys(all).forEach(key =&gt; {
+    if (!key.startsWith(&#x27;DELETE_DOC_&#x27;)) return;
+    if (new Date(all[key]) &lt;= now) {
+      try { DriveApp.getFileById(key.replace(&#x27;DELETE_DOC_&#x27;, &#x27;&#x27;)).setTrashed(true); } catch (e) { /* already gone */ }
+      props.deleteProperty(key);
+    }
+  });
+}
+
+
+/**
+ * Moves a file (identified by its Google Drive share URL) into the
+ * employee&#x27;s onboarding folder and renames it.
+ * Google Forms file-upload answers arrive as Drive share URLs, e.g.:
+ *   https://drive.google.com/open?id=1abc...
+ *   https://drive.google.com/file/d/1abc.../view?usp=drivesdk
+ */
+function moveFileToEmployeeFolder_(driveUrl, destFolderId, newName) {
+  try {
+    const m = driveUrl.match(/(?:\/d\/|[?&amp;]id=)([\w-]{20,})/);
+    if (!m) { Logger.log(&#x27;moveFileToEmployeeFolder_: could not parse file ID from &#x27; + driveUrl); return; }
+    const file = DriveApp.getFileById(m[1]);
+    file.moveTo(DriveApp.getFolderById(destFolderId));
+    if (newName) file.setName(newName);
+    Logger.log(`Moved &quot;${newName}&quot; to employee folder.`);
+  } catch (err) {
+    Logger.log(&#x27;moveFileToEmployeeFolder_ error: &#x27; + err.message);
+  }
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// CONTACTS HEALTH CHECK + BIRTHDAY REMINDERS
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * Runs every 45 days. Scans Current Employees and adds anyone with a personal
+ * email who is not yet in Google Contacts, including phone if available.
+ * Covers employees added manually (not via form) who were never picked up
+ * by processFormResponseRow_.
+ */
+function checkEmployeeContacts_() {
+  const props = PropertiesService.getScriptProperties();
+  const lastCheckKey = &#x27;CONTACTS_LAST_CHECK&#x27;;
+  const lastCheck = props.getProperty(lastCheckKey);
+  const now = new Date();
+
+  if (lastCheck &amp;&amp; (now - new Date(lastCheck)) / (1000 * 60 * 60 * 24) &lt; 45) return;
+  props.setProperty(lastCheckKey, now.toISOString());
+
+  const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+  const sheet     = ss.getSheetByName(CFG.TAB_CURRENT);
+  const headerMap = getHeaderMap_(sheet);
+  const lastRow   = sheet.getLastRow();
+  if (lastRow &lt; CFG.DATA_START_ROW) return;
+
+  let added = 0;
+  for (let row = CFG.DATA_START_ROW; row &lt;= lastRow; row++) {
+    const first = String(getByField_(sheet, headerMap, row, &#x27;FIRST_NAME&#x27;)     || &#x27;&#x27;).trim();
+    const last  = String(getByField_(sheet, headerMap, row, &#x27;LAST_NAME&#x27;)      || &#x27;&#x27;).trim();
+    const email = String(getByField_(sheet, headerMap, row, &#x27;PERSONAL_EMAIL&#x27;) || &#x27;&#x27;).trim();
+    const phone = String(getByField_(sheet, headerMap, row, &#x27;PHONE&#x27;)          || &#x27;&#x27;).trim();
+    const role  = String(getByField_(sheet, headerMap, row, &#x27;POSITION&#x27;)       || &#x27;&#x27;).trim();
+    const dob   = getByField_(sheet, headerMap, row, &#x27;DOB&#x27;);
+    if (!first || !last || !isValidEmail_(email)) continue;
+    if (/backup/i.test(role)) continue;
+    if (!getContactResourceName_(email)) {
+      addContactSafely_(first, last, email, phone || undefined, role || undefined, dob || undefined, CFG.COMPANY_NAME);
+      added++;
+    }
+  }
+
+  if (added &gt; 0) Logger.log(`checkEmployeeContacts_: added ${added} missing contact(s).`);
+}
+
+/**
+ * Runs daily. Sends a reminder to info@ when an active employee&#x27;s birthday
+ * is exactly 3 days away. Uses BDAY_SENT_&lt;key&gt; in Script Properties to send
+ * only once per calendar year per employee.
+ */
+function checkUpcomingBirthdays_() {
+  const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+  const sheet     = ss.getSheetByName(CFG.TAB_CURRENT);
+  const headerMap = getHeaderMap_(sheet);
+  const lastRow   = sheet.getLastRow();
+  if (lastRow &lt; CFG.DATA_START_ROW) return;
+
+  const props  = PropertiesService.getScriptProperties();
+  const today  = new Date();
+  today.setHours(0, 0, 0, 0);
+  const DAYS_AHEAD = 3;
+
+  for (let row = CFG.DATA_START_ROW; row &lt;= lastRow; row++) {
+    const first = String(getByField_(sheet, headerMap, row, &#x27;FIRST_NAME&#x27;) || &#x27;&#x27;).trim();
+    const last  = String(getByField_(sheet, headerMap, row, &#x27;LAST_NAME&#x27;)  || &#x27;&#x27;).trim();
+    const dob   = getByField_(sheet, headerMap, row, &#x27;DOB&#x27;);
+    if (!first || !last || !dob) continue;
+    if (/backup/i.test(String(getByField_(sheet, headerMap, row, &#x27;POSITION&#x27;) || &#x27;&#x27;))) continue;
+
+    const dobDate = new Date(dob);
+    if (isNaN(dobDate.getTime())) continue;
+
+    // This year&#x27;s birthday; if already passed, check next year
+    const birthday = new Date(today.getFullYear(), dobDate.getMonth(), dobDate.getDate());
+    if (birthday &lt; today) birthday.setFullYear(today.getFullYear() + 1);
+
+    const daysUntil = Math.round((birthday - today) / 86400000);
+    if (daysUntil !== DAYS_AHEAD) continue;
+
+    const propKey   = &#x27;BDAY_SENT_&#x27; + employeeKey_(first, last);
+    const lastYear  = props.getProperty(propKey);
+    if (lastYear === String(birthday.getFullYear())) continue;  // already sent this year
+
+    MailApp.sendEmail({
+      to: CFG.MAIL_TO,
+      subject: `Birthday in 3 days: ${first} ${last}`,
+      body: `${first} ${last}&#x27;s birthday is on ${formatDate_(birthday)}.\n\nConsider sending a birthday message!`,
+    });
+
+    props.setProperty(propKey, String(birthday.getFullYear()));
+    Logger.log(`Birthday reminder sent for ${first} ${last} (${formatDate_(birthday)})`);
+  }
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// DEBUG / MANUAL TEST HELPERS
+// Run these from the Apps Script editor to verify setup.
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * ONE-TIME SETUP — Run this ONCE before installing triggers for the first time.
+ *
+ * Marks all existing employees and all existing Form Responses rows as already
+ * processed so the script never re-runs onboarding on them.
+ *
+ * What it does:
+ *   1. For every employee in Current Employees who has a Date of Hire → sets
+ *      FOLDER_&lt;key&gt; = &#x27;LEGACY&#x27; so runOnboarding skips them permanently.
+ *      (If an employee already has a real folder ID in Script Properties from a
+ *      previous script version, this does NOT overwrite it.)
+ *   2. For every row in Form Responses (row 2+) → sets FORM_ROW_&lt;n&gt; = timestamp
+ *      so validateFormResponseProcessing_ never retries those old submissions.
+ *
+ * Safe to re-run: it never overwrites an existing property value.
+ */
+function markExistingEmployeesAsOnboarded() {
+  const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+  const empSheet  = ss.getSheetByName(CFG.TAB_CURRENT);
+  const headerMap = getHeaderMap_(empSheet);
+  const props     = PropertiesService.getScriptProperties();
+  const now       = new Date().toISOString();
+
+  // ── 1. Mark existing employees ───────────────────────────────
+  const lastEmpRow = empSheet.getLastRow();
+  let markedEmp = 0;
+  for (let row = CFG.DATA_START_ROW; row &lt;= lastEmpRow; row++) {
+    const first      = String(getByField_(empSheet, headerMap, row, &#x27;FIRST_NAME&#x27;)  || &#x27;&#x27;).trim();
+    const last       = String(getByField_(empSheet, headerMap, row, &#x27;LAST_NAME&#x27;)   || &#x27;&#x27;).trim();
+    const dateOfHire = getByField_(empSheet, headerMap, row, &#x27;DATE_OF_HIRE&#x27;);
+    if (!first || !last || !dateOfHire) continue;
+
+    const empKey       = employeeKey_(first, last);
+    const onboardedKey = PROP_ONBOARDED_PREFIX + empKey;
+    if (!props.getProperty(onboardedKey)) {
+      props.setProperty(onboardedKey, &#x27;LEGACY&#x27;);
+      markedEmp++;
+      Logger.log(`  Marked as legacy: ${first} ${last}`);
+    } else {
+      Logger.log(`  Already marked: ${first} ${last} — skipped.`);
+    }
+
+    // Try to locate and register their existing Drive folder so offboarding
+    // puts the termination letter in the right place (not the generic fallback).
+    // Uses fuzzy match (last name + first 4 chars of first name) to handle
+    // inconsistent naming: trailing spaces, underscores, &quot;Josh&quot; vs &quot;Joshua&quot;, etc.
+    const folderKey = PROP_FOLDER_PREFIX + empKey;
+    if (!props.getProperty(folderKey)) {
+      const position  = String(getByField_(empSheet, headerMap, row, &#x27;POSITION&#x27;) || &#x27;&#x27;).trim();
+      const isGuide   = /guide/i.test(position);
+      const parentIds = isGuide
+        ? [CFG.GUIDES_PARENT_FOLDER_ID]
+        : /lead\s*mechanic|\bmechanic\b|detailer/i.test(position)
+          ? [CFG.MAINTENANCE_PARENT_FOLDER_ID]
+          : [CFG.OFFICE_PARENT_FOLDER_ID];
+
+      const lastLower   = last.trim().toLowerCase();
+      const firstShort  = first.trim().toLowerCase().substring(0, 4);  // &quot;Josh&quot; matches &quot;Joshua&quot;, etc.
+      let found = null;
+
+      for (const parentId of parentIds) {
+        try {
+          const iter = DriveApp.getFolderById(parentId).getFolders();
+          while (iter.hasNext()) {
+            const f    = iter.next();
+            const name = f.getName().trim().toLowerCase();
+            if (name.includes(lastLower) &amp;&amp; name.includes(firstShort)) { found = f; break; }
+          }
+        } catch (e) {
+          Logger.log(`    Could not search folder for ${first} ${last}: ${e.message}`);
+        }
+        if (found) break;
+      }
+
+      if (found) {
+        props.setProperty(folderKey, found.getId());
+        Logger.log(`    Folder found and registered: &quot;${found.getName()}&quot;`);
+      } else {
+        Logger.log(`    ⚠️  No folder found for ${first} ${last} — set FOLDER_${empKey} manually in Script Properties if needed.`);
+      }
+    }
+  }
+
+  // ── 2. Mark existing Form Responses rows ────────────────────
+  const formSheet  = ss.getSheetByName(CFG.TAB_FORM_RESPONSES);
+  const lastFormRow = formSheet ? formSheet.getLastRow() : 0;
+  let markedForm = 0;
+  for (let row = 2; row &lt;= lastFormRow; row++) {
+    const rowKey = PROP_FORM_ROW_PREFIX + row;
+    if (!props.getProperty(rowKey)) {
+      props.setProperty(rowKey, now);
+      markedForm++;
+    }
+  }
+
+  Logger.log(`markExistingEmployeesAsOnboarded complete: ${markedEmp} employee(s) marked as legacy, ${markedForm} form row(s) marked as processed.`);
+  Logger.log(&#x27;You can now safely run installTriggers().&#x27;);
+}
+
+/**
+ * Runs all pending offboardings immediately, bypassing the end-date check.
+ * Use when you need to process an offboarding right now instead of waiting for dailyHRTasks.
+ * Only processes entries where executed = false.
+ */
+function runPendingOffboardingsNow() {
+  const props = PropertiesService.getScriptProperties();
+  const all   = props.getProperties();
+  let ran = 0;
+
+  Object.keys(all).forEach(key =&gt; {
+    if (!key.startsWith(PROP_OFFBOARD_PREFIX)) return;
+    let entry;
+    try { entry = JSON.parse(all[key]); } catch (e) { return; }
+    if (entry.executed) return;
+
+    Logger.log(`Running offboarding for ${entry.first} ${entry.last}...`);
+    const ok = executeOffboarding_(entry);
+    if (ok) {
+      entry.executed   = true;
+      entry.executedOn = Utilities.formatDate(new Date(), CFG.TIMEZONE, &#x27;yyyy-MM-dd&#x27;);
+      props.setProperty(key, JSON.stringify(entry));
+      Logger.log(`  ✓ Done.`);
+      ran++;
+    } else {
+      Logger.log(`  ✗ Failed — check logs above.`);
+    }
+  });
+
+  Logger.log(ran ? `runPendingOffboardingsNow complete: ${ran} offboarding(s) executed.` : &#x27;No pending offboardings found.&#x27;);
+}
+
+/**
+ * TEST ONLY — Clears the 30-day throttle for all employees and runs the missing docs check immediately.
+ * Use this to test that drafts are created correctly without waiting 30 days.
+ * Safe to run multiple times — only clears REMINDER_DOCS_ properties.
+ */
+function testMissingDocsNow() {
+  const props = PropertiesService.getScriptProperties();
+  const all   = props.getProperties();
+  let cleared = 0;
+  Object.keys(all).forEach(k =&gt; { if (k.startsWith(&#x27;REMINDER_DOCS_&#x27;)) { props.deleteProperty(k); cleared++; } });
+  Logger.log(`Cleared ${cleared} reminder throttle(s). Running missing docs check now...`);
+  checkMissingOnboardingDocs_();
+}
+
+/** Logs the detected header map for &quot;current employees&quot;. Run this first to verify column detection. */
+function testShowHeaderMap() {
+  const sheet = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID).getSheetByName(CFG.TAB_CURRENT);
+  Logger.log(JSON.stringify(getHeaderMap_(sheet), null, 2));
+}
+
+/** Logs all active scheduled offboarding entries. */
+function testDebugProperties() {
+  Logger.log(JSON.stringify(PropertiesService.getScriptProperties().getProperties(), null, 2));
+}
+
+
+/**
+ * Run this BEFORE markExistingEmployeesAsOnboarded() and any time you suspect
+ * a Form Response didn&#x27;t make it to Current Employees.
+ *
+ * Two-pass check:
+ *   1. Rows with no FORM_ROW_&lt;n&gt; lock → clearly unprocessed.
+ *   2. Rows WITH a lock but whose employee has no Personal Email in Current Employees
+ *      → lock existed but data never arrived (e.g. script crashed mid-run).
+ *      Clears the stale lock and reprocesses.
+ *
+ * No throttle — runs fully every time.
+ */
+function processUnhandledFormResponses() {
+  const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+  const formSheet = ss.getSheetByName(CFG.TAB_FORM_RESPONSES);
+  if (!formSheet) { Logger.log(&#x27;Form Responses tab not found.&#x27;); return; }
+
+  const empSheet  = ss.getSheetByName(CFG.TAB_CURRENT);
+  const headerMap = getHeaderMap_(empSheet);
+  const props     = PropertiesService.getScriptProperties();
+  const lastRow   = formSheet.getLastRow();
+  if (lastRow &lt; 2) { Logger.log(&#x27;Form Responses is empty.&#x27;); return; }
+
+  // Read form headers once (row 1)
+  const formHeaders = {};
+  formSheet.getRange(1, 1, 1, formSheet.getLastColumn()).getValues()[0]
+    .forEach((v, i) =&gt; { if (v) formHeaders[String(v).trim()] = i; });
+
+  const toProcess = [];
+
+  for (let row = 2; row &lt;= lastRow; row++) {
+    const lockKey  = PROP_FORM_ROW_PREFIX + row;
+    const hasLock  = !!props.getProperty(lockKey);
+    const rowVals  = formSheet.getRange(row, 1, 1, formSheet.getLastColumn()).getValues()[0];
+    const first    = String(rowVals[2] || &#x27;&#x27;).trim();  // col C
+    const last     = String(rowVals[3] || &#x27;&#x27;).trim();  // col D
+    if (!first || !last) continue;
+
+    if (!hasLock) {
+      toProcess.push({ row, reason: &#x27;no lock&#x27; });
+      continue;
+    }
+
+    // Lock exists — verify data actually landed in Current Employees
+    const empRow = findEmployeeRow_(empSheet, headerMap, first, last);
+    if (!empRow) continue;  // employee not in sheet yet — skip
+    const emailInSheet = getByField_(empSheet, headerMap, empRow, &#x27;PERSONAL_EMAIL&#x27;);
+    const emailInForm  = formHeaders[&#x27;Email&#x27;] !== undefined ? String(rowVals[formHeaders[&#x27;Email&#x27;]] || &#x27;&#x27;).trim() : &#x27;&#x27;;
+
+    if (emailInForm &amp;&amp; !emailInSheet) {
+      // Form has an email but sheet is empty → data never landed
+      props.deleteProperty(lockKey);
+      toProcess.push({ row, reason: `stale lock — ${first} ${last} has no email in sheet despite form submission` });
+    }
+  }
+
+  if (!toProcess.length) {
+    Logger.log(&#x27;All Form Response rows are confirmed processed. Nothing to do.&#x27;);
+    return;
+  }
+
+  Logger.log(`Found ${toProcess.length} row(s) to process:`);
+  toProcess.forEach(({ row, reason }) =&gt; Logger.log(`  Row ${row}: ${reason}`));
+
+  toProcess.forEach(({ row }) =&gt; {
+    Logger.log(`Processing row ${row}...`);
+    try {
+      handleFormResponseRow_(formSheet, row);
+      Logger.log(`  ✓ Row ${row} done.`);
+    } catch (err) {
+      Logger.log(`  ✗ Row ${row} failed: ${err.message}`);
+    }
+  });
+
+  Logger.log(&#x27;processUnhandledFormResponses complete.&#x27;);
+}
+
+/**
+ * Deletes the profile picture from an employee folder before it&#x27;s archived to
+ * Former Employees. Keeps offer letter (PDF), driving record, and driver&#x27;s license.
+ * Matches any file whose name starts with &quot;Profile Picture&quot; (case-insensitive).
+ */
+/**
+ * Forces an immediate Google Contacts sync, bypassing the 45-day throttle.
+ * Run this when you suspect contacts are out of sync (CONTACTS_LAST_CHECK not in Script Properties
+ * means the sync has never run since installation — this will run it).
+ */
+function runContactSyncNow() {
+  PropertiesService.getScriptProperties().deleteProperty(&#x27;CONTACTS_LAST_CHECK&#x27;);
+  Logger.log(&#x27;Cleared CONTACTS_LAST_CHECK. Running contact sync now...&#x27;);
+  checkEmployeeContacts_();
+}
+
+/**
+ * Interactive undo — opens a dialog to select which offboarding to undo by name.
+ * Run this and type the employee name (first or last name, or both).
+ *
+ * Usage:
+ *   selectOffboardingToUndo()
+ */
+function selectOffboardingToUndo() {
+  const ss = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+  const forSheet = ss.getSheetByName(CFG.TAB_FORMER);
+  const headerMap = getHeaderMap_(forSheet);
+  const lastRow = forSheet.getLastRow();
+
+  if (lastRow &lt;= 1) {
+    Logger.log(&#x27;❌ No offboarded employees found.&#x27;);
+    return;
+  }
+
+  // Build list for display
+  let list = &#x27;===== OFFBOARDED EMPLOYEES =====\n\n&#x27;;
+  for (let row = 2; row &lt;= lastRow; row++) {
+    const first = getByField_(forSheet, headerMap, row, &#x27;FIRST_NAME&#x27;);
+    const last = getByField_(forSheet, headerMap, row, &#x27;LAST_NAME&#x27;);
+    const endDate = getByField_(forSheet, headerMap, row, &#x27;END_DATE&#x27;);
+    list += `${first} ${last} — ended ${endDate}\n`;
+  }
+
+  // Ask user for name
+  const ui = SpreadsheetApp.getUi();
+  const response = ui.prompt(list + &#x27;\n\nEnter the employee name to undo (first or last name):&#x27;);
+
+  if (response.getSelectedButton() === ui.Button.CANCEL) {
+    Logger.log(&#x27;Cancelled.&#x27;);
+    return;
+  }
+
+  const searchName = response.getResponseText().trim().toLowerCase();
+  if (!searchName) {
+    Logger.log(&#x27;No name entered.&#x27;);
+    return;
+  }
+
+  // Find matching employee
+  let matches = [];
+  for (let row = 2; row &lt;= lastRow; row++) {
+    const first = String(getByField_(forSheet, headerMap, row, &#x27;FIRST_NAME&#x27;)).toLowerCase();
+    const last = String(getByField_(forSheet, headerMap, row, &#x27;LAST_NAME&#x27;)).toLowerCase();
+
+    if (first.includes(searchName) || last.includes(searchName)) {
+      matches.push({ row, first, last });
+    }
+  }
+
+  if (matches.length === 0) {
+    Logger.log(`❌ No employee found matching &quot;${searchName}&quot;`);
+    return;
+  }
+
+  if (matches.length &gt; 1) {
+    Logger.log(`⚠️  Found ${matches.length} matches:`);
+    matches.forEach((m, i) =&gt; {
+      Logger.log(`  [${i}] ${m.first} ${m.last}`);
+    });
+    Logger.log(&#x27;Please be more specific or use the exact first/last name.&#x27;);
+    return;
+  }
+
+  // Exact match — undo
+  const match = matches[0];
+  const firstName = getByField_(forSheet, headerMap, match.row, &#x27;FIRST_NAME&#x27;);
+  const lastName = getByField_(forSheet, headerMap, match.row, &#x27;LAST_NAME&#x27;);
+
+  Logger.log(`\n⏳ Undoing offboarding for ${firstName} ${lastName}...\n`);
+  undoOffboarding(firstName, lastName);
+}
+
+/**
+ * Undo a completed offboarding. Restores EVERYTHING:
+ * - Folder back to correct parent (Guides/Maintenance/Office) from Former Employees
+ * - Row back to Current Employees from Former Employees
+ * - Google Contact (recreated with all data from the sheet)
+ * - Clears any scheduled offboarding state
+ *
+ * Call this if you accidentally offboarded the wrong employee.
+ *
+ * Usage: In the GAS editor console, run:
+ *   undoOffboarding(&#x27;First&#x27;, &#x27;Last&#x27;)
+ */
+function undoOffboarding(firstName, lastName) {
+  try {
+    const ss        = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
+    const curSheet  = ss.getSheetByName(CFG.TAB_CURRENT);
+    const forSheet  = ss.getSheetByName(CFG.TAB_FORMER);
+    const props     = PropertiesService.getScriptProperties();
+    const key       = employeeKey_(firstName, lastName);
+
+    // 1. Find row in Former Employees sheet
+    const forHeaderMap = getHeaderMap_(forSheet);
+    const forRow = findEmployeeRow_(forSheet, forHeaderMap, firstName, lastName);
+
+    if (!forRow) {
+      Logger.log(`❌ ${firstName} ${lastName} not found in Former Employees tab.`);
+      return;
+    }
+
+    // 2. Read ALL employee data from Former Employees row (needed for contact restoration)
+    const getData = (fieldKey) =&gt; getByField_(forSheet, forHeaderMap, forRow, fieldKey);
+    const position      = getData(&#x27;POSITION&#x27;);
+    const email         = getData(&#x27;PERSONAL_EMAIL&#x27;);
+    const phone         = getData(&#x27;PHONE&#x27;);
+    const dob           = getData(&#x27;DOB&#x27;);
+
+    // 3. Append new row to Current Employees with all data from Former Employees
+    const curHeaderMap = getHeaderMap_(curSheet);
+    const numCols = Math.max(forSheet.getLastColumn(), curSheet.getLastColumn());
+    const newRow = curSheet.getLastRow() + 1;
+
+    for (let col = 1; col &lt;= numCols; col++) {
+      const val = forSheet.getRange(forRow, col).getValue();
+      if (val) curSheet.getRange(newRow, col).setValue(val);
+    }
+    Logger.log(`✓ Row restored to Current Employees.`);
+
+    // 4. Remove scheduled offboarding property
+    const offboardKey = PROP_OFFBOARD_PREFIX + key;
+    if (props.getProperty(offboardKey)) {
+      props.deleteProperty(offboardKey);
+      Logger.log(`✓ Cleared scheduled offboarding state.`);
+    }
+
+    // 5. Restore Google Contact (using data from the restored row)
+    if (isValidEmail_(email)) {
+      addContactSafely_(firstName, lastName, email, phone || undefined, position || undefined, dob || undefined, CFG.COMPANY_NAME);
+      Logger.log(`✓ Google Contact restored.`);
+    } else {
+      Logger.log(`⚠️  No personal email on file — Google Contact NOT restored. Add email to sheet if needed.`);
+    }
+
+    // 6. Restore folder from Former Employees back to correct parent folder
+    const folderKey = PROP_FOLDER_PREFIX + key;
+    const folderId = props.getProperty(folderKey);
+    if (folderId) {
+      try {
+        const folder = DriveApp.getFolderById(folderId);
+        // Determine correct parent folder based on position
+        const isGuide = /guide/i.test(position || &#x27;&#x27;);
+        const isMaint = /lead\s*mechanic|\bmechanic\b|detailer/i.test(position || &#x27;&#x27;);
+        const parentId = isGuide ? CFG.GUIDES_PARENT_FOLDER_ID
+                        : isMaint ? CFG.MAINTENANCE_PARENT_FOLDER_ID
+                        : CFG.OFFICE_PARENT_FOLDER_ID;
+
+        folder.moveTo(DriveApp.getFolderById(parentId));
+        Logger.log(`✓ Folder restored to ${isGuide ? &#x27;Guides&#x27; : isMaint ? &#x27;Maintenance&#x27; : &#x27;Office&#x27;} folder.`);
+      } catch (e) {
+        Logger.log(`⚠️  Could not restore folder: ${e.message}`);
+      }
+    } else {
+      Logger.log(`⚠️  No folder ID on record for ${firstName} ${lastName}.`);
+    }
+
+    // 7. Delete the row from Former Employees
+    forSheet.deleteRow(forRow);
+
+    Logger.log(`\n✅ UNDO COMPLETE for ${firstName} ${lastName}!`);
+    Logger.log(`   ✓ Row back in Current Employees`);
+    Logger.log(`   ✓ Folder restored`);
+    Logger.log(`   ✓ Google Contact recreated`);
+    Logger.log(`   ✓ Scheduling cleared`);
+    Logger.log(`\nFuture offboardings will work normally if needed. Verify the sheet looks correct.`);
+  } catch (err) {
+    Logger.log(`❌ undoOffboarding error: ${err.message}`);
+    MailApp.sendEmail(CFG.INFO_EMAIL, `AKWL HR script error (undoOffboarding)`, err.message + &#x27;\n&#x27; + err.stack);
+  }
+}
+
+function cleanOffboardingFolder_(folderId) {
+  try {
+    const folder = DriveApp.getFolderById(folderId);
+    const files  = folder.getFiles();
+    while (files.hasNext()) {
+      const file     = files.next();
+      const name     = file.getName();
+      const mime     = file.getMimeType();
+      const isGDoc   = mime === &#x27;application/vnd.google-apps.document&#x27;;
+      // Delete: profile picture, onboarding checklist, unsigned offer letter Google Doc
+      // Keep:   signed offer letter PDF (DocuSeal), driving record, driver&#x27;s license
+      if (/^profile\s*picture/i.test(name) ||
+          /_onboarding checklist/i.test(name) ||
+          (/^offer letter_/i.test(name) &amp;&amp; isGDoc)) {
+        file.setTrashed(true);
+        Logger.log(`cleanOffboardingFolder_: deleted &quot;${name}&quot;`);
+      }
+    }
+  } catch (e) {
+    Logger.log(&#x27;cleanOffboardingFolder_ error: &#x27; + e.message);
+  }
+}
+</pre>
+  </div>
+
+  <script>
+    function copiarTodo() {
+      const codeBlock = document.getElementById('codeBlock');
+      const range = document.createRange();
+      range.selectNodeContents(codeBlock);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      document.execCommand('copy');
+
+      const msg = document.getElementById('copiadoMsg');
+      msg.style.display = 'inline';
+      setTimeout(() => { msg.style.display = 'none'; }, 3000);
+    }
+
+    window.copiarTodo = copiarTodo;
+  </script>
+</body>
+</html>

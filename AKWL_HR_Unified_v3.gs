@@ -1509,58 +1509,78 @@ function runContactSyncNow() {
 }
 
 /**
- * List all completed offboardings. Run this first to see which employees are in Former Employees,
- * then use undoOffboardingByIndex(n) to undo one by its number.
+ * Interactive undo — opens a dialog to select which offboarding to undo by name.
+ * Run this and type the employee name (first or last name, or both).
  *
  * Usage:
- *   listOffboardings()  — shows all offboarded employees with index numbers
- *   undoOffboardingByIndex(0)  — undoes the first one
+ *   selectOffboardingToUndo()
  */
-function listOffboardings() {
+function selectOffboardingToUndo() {
   const ss = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
   const forSheet = ss.getSheetByName(CFG.TAB_FORMER);
   const headerMap = getHeaderMap_(forSheet);
   const lastRow = forSheet.getLastRow();
 
   if (lastRow <= 1) {
-    Logger.log('No offboarded employees found.');
+    Logger.log('❌ No offboarded employees found.');
     return;
   }
 
-  Logger.log('===== OFFBOARDED EMPLOYEES =====');
+  // Build list for display
+  let list = '===== OFFBOARDED EMPLOYEES =====\n\n';
   for (let row = 2; row <= lastRow; row++) {
     const first = getByField_(forSheet, headerMap, row, 'FIRST_NAME');
     const last = getByField_(forSheet, headerMap, row, 'LAST_NAME');
     const endDate = getByField_(forSheet, headerMap, row, 'END_DATE');
-    Logger.log(`[${row - 2}] ${first} ${last} — ended ${endDate}`);
+    list += `${first} ${last} — ended ${endDate}\n`;
   }
-  Logger.log('');
-  Logger.log(`Run: undoOffboardingByIndex(0)  to undo the first, undoOffboardingByIndex(1) for the second, etc.`);
-}
 
-/**
- * Undo a specific offboarding by its index. First run listOffboardings() to see the list.
- *
- * Usage:
- *   undoOffboardingByIndex(0)  — undoes employee at index 0
- *   undoOffboardingByIndex(2)  — undoes employee at index 2
- */
-function undoOffboardingByIndex(index) {
-  const ss = SpreadsheetApp.openById(CFG.EMPLOYEE_SHEET_ID);
-  const forSheet = ss.getSheetByName(CFG.TAB_FORMER);
-  const headerMap = getHeaderMap_(forSheet);
-  const lastRow = forSheet.getLastRow();
+  // Ask user for name
+  const ui = SpreadsheetApp.getUi();
+  const response = ui.prompt(list + '\n\nEnter the employee name to undo (first or last name):');
 
-  const actualRow = index + 2;  // row 0 = header row + 1 + index
-  if (actualRow > lastRow || actualRow < 2) {
-    Logger.log(`ERROR: Index ${index} out of range. Run listOffboardings() to see valid indices.`);
+  if (response.getSelectedButton() === ui.Button.CANCEL) {
+    Logger.log('Cancelled.');
     return;
   }
 
-  const firstName = getByField_(forSheet, headerMap, actualRow, 'FIRST_NAME');
-  const lastName = getByField_(forSheet, headerMap, actualRow, 'LAST_NAME');
+  const searchName = response.getResponseText().trim().toLowerCase();
+  if (!searchName) {
+    Logger.log('No name entered.');
+    return;
+  }
 
-  Logger.log(`Undoing offboarding for ${firstName} ${lastName}...`);
+  // Find matching employee
+  let matches = [];
+  for (let row = 2; row <= lastRow; row++) {
+    const first = String(getByField_(forSheet, headerMap, row, 'FIRST_NAME')).toLowerCase();
+    const last = String(getByField_(forSheet, headerMap, row, 'LAST_NAME')).toLowerCase();
+
+    if (first.includes(searchName) || last.includes(searchName)) {
+      matches.push({ row, first, last });
+    }
+  }
+
+  if (matches.length === 0) {
+    Logger.log(`❌ No employee found matching "${searchName}"`);
+    return;
+  }
+
+  if (matches.length > 1) {
+    Logger.log(`⚠️  Found ${matches.length} matches:`);
+    matches.forEach((m, i) => {
+      Logger.log(`  [${i}] ${m.first} ${m.last}`);
+    });
+    Logger.log('Please be more specific or use the exact first/last name.');
+    return;
+  }
+
+  // Exact match — undo
+  const match = matches[0];
+  const firstName = getByField_(forSheet, headerMap, match.row, 'FIRST_NAME');
+  const lastName = getByField_(forSheet, headerMap, match.row, 'LAST_NAME');
+
+  Logger.log(`\n⏳ Undoing offboarding for ${firstName} ${lastName}...\n`);
   undoOffboarding(firstName, lastName);
 }
 
